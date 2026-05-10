@@ -1,0 +1,109 @@
+{
+  "_comment": "Hand-verified expectations for tests/fixtures/*.json. Each per-fixture entry assumes a fresh PropertyGraph; the aggregate entry assumes all 5 fixtures ingested in filename order.",
+  "per_fixture": {
+    "1000001": {
+      "description": "T20I, Pakistan v England at Karachi. 1 innings, 7 deliveries (incl. 1 wide and 1 wicket). No event.",
+      "nodes_total": 18,
+      "edges_total": 32,
+      "nodes_by_label": {
+        "Match": 1, "Venue": 1, "Team": 2, "Player": 6, "Innings": 1, "Delivery": 7
+      },
+      "edges_by_label": {
+        "PLAYED_AT": 1, "PLAYED_FOR": 6, "CAPTAINED": 2,
+        "IN_INNINGS": 7, "NEXT_DELIVERY": 6,
+        "BATTED_IN": 3, "BOWLED_IN": 1, "TEAMMATES_WITH": 6
+      },
+      "match_id": "1000001",
+      "venue_id": "national-stadium@karachi",
+      "tournaments": 0,
+      "teammates_with_pairs": 6,
+      "batter_runs": {"11111111": 11, "22222222": 0, "33333333": 2},
+      "bowler_wickets": {"66666666": 1}
+    },
+    "1000002": {
+      "description": "Test, Pakistan v Australia at Lahore. 2 innings (first declared), 9 deliveries with 2 wickets in 2nd innings.",
+      "nodes_total": 21,
+      "edges_total": 38,
+      "nodes_by_label": {
+        "Match": 1, "Venue": 1, "Team": 2, "Player": 6, "Innings": 2, "Delivery": 9
+      },
+      "edges_by_label": {
+        "PLAYED_AT": 1, "PLAYED_FOR": 6, "CAPTAINED": 2,
+        "IN_INNINGS": 9, "NEXT_DELIVERY": 7,
+        "BATTED_IN": 5, "BOWLED_IN": 2, "TEAMMATES_WITH": 6
+      },
+      "match_id": "1000002",
+      "venue_id": "gaddafi-stadium@lahore",
+      "tournaments": 0,
+      "innings_first_declared": true
+    },
+    "1000003": {
+      "description": "T20I, Pakistan v India at Dubai during Asia Cup 2024. 1 innings, 6 maiden balls (Shaheen).",
+      "nodes_total": 18,
+      "edges_total": 29,
+      "nodes_by_label": {
+        "Match": 1, "Venue": 1, "Team": 2, "Player": 6, "Tournament": 1, "Innings": 1, "Delivery": 6
+      },
+      "edges_by_label": {
+        "PLAYED_AT": 1, "PLAYED_FOR": 6, "CAPTAINED": 2,
+        "IN_INNINGS": 6, "NEXT_DELIVERY": 5,
+        "BATTED_IN": 1, "BOWLED_IN": 1, "TEAMMATES_WITH": 6,
+        "PART_OF_TOURNAMENT": 1
+      },
+      "match_id": "1000003",
+      "tournament_id": "asia-cup-2024",
+      "bowler_maidens": {"33333333": 1}
+    },
+    "1000004": {
+      "description": "T20I, Pakistan v Sri Lanka — venue and city missing in JSON. Should fall back to unknown@unknown.",
+      "nodes_total": 11,
+      "edges_total": 14,
+      "nodes_by_label": {
+        "Match": 1, "Venue": 1, "Team": 2, "Player": 4, "Innings": 1, "Delivery": 2
+      },
+      "edges_by_label": {
+        "PLAYED_AT": 1, "PLAYED_FOR": 4, "CAPTAINED": 2,
+        "IN_INNINGS": 2, "NEXT_DELIVERY": 1,
+        "BATTED_IN": 1, "BOWLED_IN": 1, "TEAMMATES_WITH": 2
+      },
+      "match_id": "1000004",
+      "venue_id": "unknown@unknown",
+      "tournaments": 0
+    },
+    "1000005": {
+      "description": "T20I tied + super-over second innings. Two single-delivery innings; NEXT_DELIVERY = 0.",
+      "nodes_total": 14,
+      "edges_total": 21,
+      "nodes_by_label": {
+        "Match": 1, "Venue": 1, "Team": 2, "Player": 6, "Innings": 2, "Delivery": 2
+      },
+      "edges_by_label": {
+        "PLAYED_AT": 1, "PLAYED_FOR": 6, "CAPTAINED": 2,
+        "IN_INNINGS": 2, "BATTED_IN": 2, "BOWLED_IN": 2, "TEAMMATES_WITH": 6
+      },
+      "match_id": "1000005",
+      "super_over_innings_idx": 2
+    }
+  },
+  "aggregate_after_all_five": {
+    "description": "After ingesting 1000001..1000005 in order into one PropertyGraph.",
+    "nodes_total": 65,
+    "edges_total": 112,
+    "nodes_by_label": {
+      "Match": 5, "Venue": 5, "Team": 5, "Player": 16,
+      "Innings": 7, "Delivery": 26, "Tournament": 1
+    },
+    "edges_by_label": {
+      "PLAYED_AT": 5, "PLAYED_FOR": 16, "CAPTAINED": 10,
+      "IN_INNINGS": 26, "NEXT_DELIVERY": 19,
+      "BATTED_IN": 12, "BOWLED_IN": 7, "TEAMMATES_WITH": 16,
+      "PART_OF_TOURNAMENT": 1
+    },
+    "teammates_match_count_for_pak_core_pair": {
+      "src": "11111111",
+      "dst": "22222222",
+      "match_count": 4,
+      "comment": "Babar Azam + Mohammad Rizwan teammates in fixtures 1, 3, 4, 5 (not 2)."
+    }
+  }
+}

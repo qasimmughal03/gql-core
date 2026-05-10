@@ -1,0 +1,80 @@
+// GQL-Core: a documented subset of ISO/IEC 39075:2024 (GQL).
+// Implements MATCH ... WHERE ... RETURN with regular path queries (RPQ)
+// and aggregation. Single-clause queries only — no chaining yet.
+
+start: query
+
+query: match_clause where_clause? return_clause
+
+// ── MATCH ────────────────────────────────────────────────────────
+match_clause: "MATCH" pattern ("," pattern)*
+pattern: node_pat (rel_pat node_pat)*
+
+node_pat: "(" CNAME (":" LABEL)? prop_filter_block? ")"
+
+prop_filter_block: "{" prop_filter ("," prop_filter)* "}"
+prop_filter: CNAME ":" value
+
+// Edge patterns: directed forward, reverse, and undirected.
+rel_pat: "-[" edge_var? edge_label? quantifier? "]->"   -> rel_out
+       | "<-[" edge_var? edge_label? quantifier? "]-"   -> rel_in
+       | "-[" edge_var? edge_label? quantifier? "]-"    -> rel_undirected
+edge_var: CNAME
+edge_label: ":" LABEL
+
+// Quantifiers — RPQ core. * is unbounded Kleene; + is one-or-more;
+// {n} is exactly n; {m..n} is bounded range.
+quantifier: "*"                                          -> q_star
+          | "+"                                          -> q_plus
+          | "*" INT                                      -> q_exactly
+          | "*" INT ".." INT                             -> q_range
+
+// ── WHERE ────────────────────────────────────────────────────────
+where_clause: "WHERE" or_expr
+or_expr: and_expr ("OR" and_expr)*
+and_expr: not_expr ("AND" not_expr)*
+not_expr: "NOT" not_expr                                 -> negate
+        | atom_expr
+atom_expr: comparison
+         | "(" or_expr ")"
+comparison: ref OP value
+
+OP: "<=" | ">=" | "!=" | "<" | ">" | "="
+
+ref: CNAME ("." CNAME)?
+
+// ── RETURN ───────────────────────────────────────────────────────
+return_clause: "RETURN" projection ("," projection)* order_by? limit?
+projection: agg_call alias?                              -> proj_agg
+          | ref alias?                                   -> proj_ref
+agg_call: AGG "(" ref ")"
+alias: "AS" CNAME
+
+order_by: "ORDER" "BY" ref direction?
+direction: ASC | DESC
+ASC: "ASC"
+DESC: "DESC"
+
+limit: "LIMIT" INT
+
+// ── Values ───────────────────────────────────────────────────────
+value: ESCAPED_STRING                                    -> str_val
+     | SIGNED_NUMBER                                     -> num_val
+     | TRUE                                              -> true_val
+     | FALSE                                             -> false_val
+     | NULL                                              -> null_val
+
+TRUE: "true"
+FALSE: "false"
+NULL: "null"
+
+// ── Terminals ────────────────────────────────────────────────────
+AGG.2: "COUNT" | "SUM" | "AVG" | "MIN" | "MAX"
+LABEL: /[A-Z][a-zA-Z_0-9]*/
+
+%import common.CNAME
+%import common.INT
+%import common.SIGNED_NUMBER
+%import common.ESCAPED_STRING
+%import common.WS
+%ignore WS

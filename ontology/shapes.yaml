@@ -1,0 +1,222 @@
+# SHACL-inspired shape definitions for the cricket knowledge graph.
+# Each node label maps to a shape with required/optional fields, declared
+# property types, enums, regex patterns, and numeric min/max constraints.
+# The validator runs every (label, props) pair through the matching shape
+# before the graph store accepts an insert.
+#
+# Node-label and edge-label vocabulary:
+#   Nodes  : Player, Match, Venue, Team, Innings, Delivery, Tournament
+#   Edges  : PLAYED_FOR, BATTED_IN, BOWLED_IN, CAPTAINED, PLAYED_AT,
+#            TEAMMATES_WITH, IN_INNINGS, NEXT_DELIVERY, PART_OF_TOURNAMENT
+
+nodes:
+
+  Player:
+    required: [id, name, country]
+    optional: [dob, batting_style, bowling_style, role]
+    types:
+      id: str
+      name: str
+      country: str
+      dob: str
+      batting_style: str
+      bowling_style: str
+      role: str
+    patterns:
+      # 8-char lowercase hex (cricsheet registry id) OR a slugged fallback.
+      id: "^[a-f0-9]{8}$|^[a-z0-9-]+$"
+      dob: "^\\d{4}-\\d{2}-\\d{2}$"
+
+  Match:
+    required: [id, date, format, gender, season]
+    optional:
+      - venue_id
+      - city
+      - team_type
+      - balls_per_over
+      - outcome_winner
+      - outcome_method
+    types:
+      id: str
+      date: str
+      format: str
+      gender: str
+      season: str
+      venue_id: str
+      city: str
+      team_type: str
+      balls_per_over: int
+      outcome_winner: str
+      outcome_method: str
+    enums:
+      # Cricsheet match_type values, used verbatim. T20 (not T20I) and IT20
+      # are distinct: T20 = T20 international, IT20 = other-international T20.
+      format: [Test, ODI, T20, IT20, ODM, MDM]
+      gender: [male, female]
+      team_type: [international, club]
+    min:
+      balls_per_over: 1
+    max:
+      balls_per_over: 10
+
+  Venue:
+    required: [id, name]
+    optional: [city]
+    types:
+      id: str
+      name: str
+      city: str
+
+  Team:
+    required: [id, name]
+    optional: [country_code, type]
+    types:
+      id: str
+      name: str
+      country_code: str
+      type: str
+    enums:
+      type: [international, club]
+
+  Innings:
+    required: [id, match_id, team_id, innings_idx]
+    optional: [declared, forfeited, super_over, target_runs, target_overs]
+    types:
+      id: str
+      match_id: str
+      team_id: str
+      innings_idx: int
+      declared: bool
+      forfeited: bool
+      super_over: bool
+      target_runs: int
+      target_overs: int
+    min:
+      innings_idx: 1
+
+  Delivery:
+    required:
+      - id
+      - innings_id
+      - over
+      - ball
+      - batter_id
+      - bowler_id
+      - runs_total
+    optional:
+      - runs_batter
+      - runs_extras
+      - wicket_kind
+      - player_out
+      - fielders
+      - extras_wides
+      - extras_noballs
+      - extras_byes
+      - extras_legbyes
+      - extras_penalty
+    types:
+      id: str
+      innings_id: str
+      over: int
+      ball: int
+      batter_id: str
+      bowler_id: str
+      runs_total: int
+      runs_batter: int
+      runs_extras: int
+      wicket_kind: str
+      player_out: str
+      fielders: list
+      extras_wides: int
+      extras_noballs: int
+      extras_byes: int
+      extras_legbyes: int
+      extras_penalty: int
+    enums:
+      wicket_kind:
+        - bowled
+        - caught
+        - lbw
+        - run out
+        - stumped
+        - hit wicket
+        - retired hurt
+        - retired out
+        - retired not out
+        - caught and bowled
+        - obstructing the field
+        - handled the ball
+        - hit the ball twice
+        - timed out
+    min:
+      over: 0
+      ball: 1
+      runs_total: 0
+
+  Tournament:
+    required: [id, name]
+    optional: [match_type, season]
+    types:
+      id: str
+      name: str
+      match_type: str
+      season: str
+
+edges:
+
+  PLAYED_FOR:
+    src: Player
+    dst: Team
+    properties:
+      first_match_date: str
+      last_match_date: str
+
+  BATTED_IN:
+    src: Player
+    dst: Match
+    properties:
+      runs: int
+      balls_faced: int
+      fours: int
+      sixes: int
+
+  BOWLED_IN:
+    src: Player
+    dst: Match
+    properties:
+      overs: float
+      runs_conceded: int
+      wickets: int
+      maidens: int
+
+  CAPTAINED:
+    src: Player
+    dst: Match
+    properties: {}
+
+  PLAYED_AT:
+    src: Match
+    dst: Venue
+    properties: {}
+
+  TEAMMATES_WITH:
+    src: Player
+    dst: Player
+    undirected: true
+    properties:
+      match_count: int
+
+  IN_INNINGS:
+    src: Delivery
+    dst: Innings
+    properties: {}
+
+  NEXT_DELIVERY:
+    src: Delivery
+    dst: Delivery
+    properties: {}
+
+  PART_OF_TOURNAMENT:
+    src: Match
+    dst: Tournament
+    properties: {}

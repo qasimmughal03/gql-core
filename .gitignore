@@ -1,0 +1,43 @@
+# Project artifacts: data/* is ignored, but keep both .gitkeep markers and the
+# pakistan/ subdir itself so the layout survives a fresh clone.
+data/*
+!data/.gitkeep
+!data/pakistan/
+data/pakistan/*
+!data/pakistan/.gitkeep
+
+# Benchmark output — keep canonical results.json + .gitkeep, ignore the rest.
+benchmark/results/*
+!benchmark/results/.gitkeep
+!benchmark/results/results.json
+
+# SQLite mirror
+*.db
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Test/coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Virtualenvs
+.venv/
+venv/
+env/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store

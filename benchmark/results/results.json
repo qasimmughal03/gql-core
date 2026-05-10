@@ -1,0 +1,163 @@
+{
+  "meta": {
+    "timestamp": "2026-05-10T23:02:54",
+    "git_rev": "unknown",
+    "iters": 100,
+    "graph_stats": {
+      "nodes": 65,
+      "edges": 112,
+      "by_label": {
+        "Venue": 5,
+        "Match": 5,
+        "Team": 5,
+        "Player": 16,
+        "Innings": 7,
+        "Delivery": 26,
+        "Tournament": 1
+      },
+      "edges_by_label": {
+        "PLAYED_AT": 5,
+        "PLAYED_FOR": 16,
+        "CAPTAINED": 10,
+        "IN_INNINGS": 26,
+        "NEXT_DELIVERY": 19,
+        "BATTED_IN": 12,
+        "BOWLED_IN": 7,
+        "TEAMMATES_WITH": 16,
+        "PART_OF_TOURNAMENT": 1
+      }
+    }
+  },
+  "queries": [
+    {
+      "name": "Q1_career_runs",
+      "purpose": "Top run scorers (per-player aggregate over BATTED_IN edges).",
+      "row_count": 9,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 0.0976,
+        "p95_ms": 0.119,
+        "mean_ms": 0.1008,
+        "stdev_ms": 0.0098,
+        "iters": 100
+      },
+      "sql": {
+        "median_ms": 0.0127,
+        "p95_ms": 0.0163,
+        "mean_ms": 0.0133,
+        "stdev_ms": 0.0031,
+        "iters": 100
+      },
+      "expressibility": {
+        "cypher_tokens": 15,
+        "sql_tokens": 29,
+        "ratio_sql_over_cypher": 1.93,
+        "sql_recursive": false
+      }
+    },
+    {
+      "name": "Q2_best_bowling_at_karachi",
+      "purpose": "Best single-match bowling figures filtered by venue city.",
+      "row_count": 1,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 0.1247,
+        "p95_ms": 0.1527,
+        "mean_ms": 0.1295,
+        "stdev_ms": 0.0108,
+        "iters": 100
+      },
+      "sql": {
+        "median_ms": 0.0101,
+        "p95_ms": 0.0171,
+        "mean_ms": 0.012,
+        "stdev_ms": 0.0054,
+        "iters": 100
+      },
+      "expressibility": {
+        "cypher_tokens": 19,
+        "sql_tokens": 47,
+        "ratio_sql_over_cypher": 2.47,
+        "sql_recursive": false
+      }
+    },
+    {
+      "name": "Q3_pakistan_captain_wins",
+      "purpose": "Most-winning Pakistani captains.",
+      "row_count": 1,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 0.1139,
+        "p95_ms": 0.1332,
+        "mean_ms": 0.1171,
+        "stdev_ms": 0.007,
+        "iters": 100
+      },
+      "sql": {
+        "median_ms": 0.0097,
+        "p95_ms": 0.0108,
+        "mean_ms": 0.0099,
+        "stdev_ms": 0.0008,
+        "iters": 100
+      },
+      "expressibility": {
+        "cypher_tokens": 23,
+        "sql_tokens": 44,
+        "ratio_sql_over_cypher": 1.91,
+        "sql_recursive": false
+      }
+    },
+    {
+      "name": "Q4_babar_partners",
+      "purpose": "Babar Azam's most-frequent teammates (TEAMMATES_WITH undirected).",
+      "row_count": 4,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 0.0957,
+        "p95_ms": 0.1126,
+        "mean_ms": 0.098,
+        "stdev_ms": 0.0076,
+        "iters": 100
+      },
+      "sql": {
+        "median_ms": 0.0148,
+        "p95_ms": 0.0173,
+        "mean_ms": 0.0154,
+        "stdev_ms": 0.0024,
+        "iters": 100
+      },
+      "expressibility": {
+        "cypher_tokens": 20,
+        "sql_tokens": 68,
+        "ratio_sql_over_cypher": 3.4,
+        "sql_recursive": false
+      }
+    },
+    {
+      "name": "Q5_rpq_next_delivery",
+      "purpose": "Bounded Kleene-star RPQ: deliveries reachable within 3 hops.",
+      "row_count": 1,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 0.09,
+        "p95_ms": 0.1163,
+        "mean_ms": 0.0929,
+        "stdev_ms": 0.0093,
+        "iters": 100
+      },
+      "sql": {
+        "median_ms": 0.008,
+        "p95_ms": 0.0107,
+        "mean_ms": 0.0085,
+        "stdev_ms": 0.002,
+        "iters": 100
+      },
+      "expressibility": {
+        "cypher_tokens": 13,
+        "sql_tokens": 48,
+        "ratio_sql_over_cypher": 3.69,
+        "sql_recursive": true
+      }
+    }
+  ]
+}

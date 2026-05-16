@@ -1,0 +1,1095 @@
+{
+  "meta": {
+    "timestamp": "2026-05-16T21:29:41",
+    "git_rev": "882e741",
+    "iters": 30,
+    "total_queries": 35,
+    "passed": 35,
+    "failed": 0,
+    "graph_stats": {
+      "nodes": 712053,
+      "edges": 1470084,
+      "by_label": {
+        "Venue": 210,
+        "Match": 1123,
+        "Tournament": 155,
+        "Team": 27,
+        "Player": 1920,
+        "Innings": 2524,
+        "Delivery": 706094
+      },
+      "edges_by_label": {
+        "PLAYED_AT": 1123,
+        "PART_OF_TOURNAMENT": 1109,
+        "PLAYED_FOR": 1951,
+        "CAPTAINED": 2246,
+        "IN_INNINGS": 706094,
+        "NEXT_DELIVERY": 703570,
+        "BATTED_IN": 19447,
+        "BOWLED_IN": 13174,
+        "TEAMMATES_WITH": 21370
+      }
+    }
+  },
+  "class_summary": {
+    "simple_lookup": {
+      "total": 4,
+      "passed": 4
+    },
+    "aggregation": {
+      "total": 5,
+      "passed": 5
+    },
+    "multi_hop": {
+      "total": 4,
+      "passed": 4
+    },
+    "multi_pattern": {
+      "total": 4,
+      "passed": 4
+    },
+    "undirected": {
+      "total": 3,
+      "passed": 3
+    },
+    "rpq": {
+      "total": 5,
+      "passed": 5
+    },
+    "rpq_filter": {
+      "total": 3,
+      "passed": 3
+    },
+    "negation": {
+      "total": 4,
+      "passed": 4
+    },
+    "hard": {
+      "total": 3,
+      "passed": 3
+    }
+  },
+  "results": [
+    {
+      "name": "NQ01_total_matches",
+      "question": "How many matches are in Pakistan's cricket history dataset?",
+      "query_class": "simple_lookup",
+      "ground_truth_note": "Must equal the number of JSON files ingested from cricsheet. Full Pakistan corpus = 1,123 men's matches.",
+      "row_count": 1,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 0.4486,
+        "p95_ms": 0.4547,
+        "mean_ms": 0.4493,
+        "stdev_ms": 0.0051,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 0.0042,
+        "p95_ms": 0.0055,
+        "mean_ms": 0.0048,
+        "stdev_ms": 0.002,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 6,
+        "sql_tokens": 6,
+        "ratio_sql_over_cypher": 1.0,
+        "sql_recursive": false,
+        "query_class": "simple_lookup"
+      }
+    },
+    {
+      "name": "NQ02_total_players",
+      "question": "How many unique players (both Pakistani and opponents) are in the dataset?",
+      "query_class": "simple_lookup",
+      "ground_truth_note": "Full corpus: ~1,920 players. Must include Pakistani players AND every opponent player Pakistan has faced.",
+      "row_count": 1,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 0.7433,
+        "p95_ms": 0.7623,
+        "mean_ms": 0.7408,
+        "stdev_ms": 0.021,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 0.004,
+        "p95_ms": 0.0049,
+        "mean_ms": 0.0054,
+        "stdev_ms": 0.0069,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 6,
+        "sql_tokens": 6,
+        "ratio_sql_over_cypher": 1.0,
+        "sql_recursive": false,
+        "query_class": "simple_lookup"
+      }
+    },
+    {
+      "name": "NQ03_test_match_count",
+      "question": "How many Test matches did Pakistan play?",
+      "query_class": "simple_lookup",
+      "ground_truth_note": "Pakistan has played ~450+ Tests historically. This corpus covers the digitized cricsheet matches only.",
+      "row_count": 1,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 0.3714,
+        "p95_ms": 0.3864,
+        "mean_ms": 0.37,
+        "stdev_ms": 0.013,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 0.0335,
+        "p95_ms": 0.0342,
+        "mean_ms": 0.0342,
+        "stdev_ms": 0.0044,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 10,
+        "sql_tokens": 10,
+        "ratio_sql_over_cypher": 1.0,
+        "sql_recursive": false,
+        "query_class": "simple_lookup"
+      }
+    },
+    {
+      "name": "NQ04_venue_count",
+      "question": "How many distinct venues have hosted Pakistan matches?",
+      "query_class": "simple_lookup",
+      "ground_truth_note": "Full corpus: 210 venues. Includes domestic and overseas grounds where Pakistan has played.",
+      "row_count": 1,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 0.1147,
+        "p95_ms": 0.1171,
+        "mean_ms": 0.1144,
+        "stdev_ms": 0.0024,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 0.0045,
+        "p95_ms": 0.0049,
+        "mean_ms": 0.0046,
+        "stdev_ms": 0.0008,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 6,
+        "sql_tokens": 6,
+        "ratio_sql_over_cypher": 1.0,
+        "sql_recursive": false,
+        "query_class": "simple_lookup"
+      }
+    },
+    {
+      "name": "NQ05_top_test_run_scorers",
+      "question": "Who are Pakistan's top-5 Test match run-scorers of all time?",
+      "query_class": "aggregation",
+      "ground_truth_note": "Younis Khan leads all Pakistan Test batters with 10,099 runs. Inzamam-ul-Haq (~8,830) and Mohammad Yousuf (~7,530) follow. Misbah-ul-Haq (~5,222) and Azhar Ali (~7,142) also in top 5.",
+      "row_count": 5,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 23.5018,
+        "p95_ms": 26.0661,
+        "mean_ms": 23.8438,
+        "stdev_ms": 1.4104,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 9.2805,
+        "p95_ms": 9.5195,
+        "mean_ms": 9.2995,
+        "stdev_ms": 0.1853,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 21,
+        "sql_tokens": 40,
+        "ratio_sql_over_cypher": 1.9,
+        "sql_recursive": false,
+        "query_class": "aggregation"
+      }
+    },
+    {
+      "name": "NQ06_top_t20_six_hitters",
+      "question": "Who hit the most sixes in Pakistan's T20 international matches?",
+      "query_class": "aggregation",
+      "ground_truth_note": "Shahid Afridi is Pakistan's all-time T20I six-hitting champion; Babar Azam and Mohammad Hafeez also feature prominently.",
+      "row_count": 5,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 29.0567,
+        "p95_ms": 32.84,
+        "mean_ms": 29.0261,
+        "stdev_ms": 2.6666,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 10.3873,
+        "p95_ms": 10.704,
+        "mean_ms": 10.433,
+        "stdev_ms": 0.1925,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 21,
+        "sql_tokens": 40,
+        "ratio_sql_over_cypher": 1.9,
+        "sql_recursive": false,
+        "query_class": "aggregation"
+      }
+    },
+    {
+      "name": "NQ07_top_wicket_takers",
+      "question": "Who are the top-5 overall wicket-takers across all formats in this dataset?",
+      "query_class": "aggregation",
+      "ground_truth_note": "Wasim Akram, Waqar Younis, and Shahid Afridi are historically Pakistan's top wicket-takers. Imran Khan also features. Result depends on which formats are included in the corpus.",
+      "row_count": 5,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 25.6366,
+        "p95_ms": 27.9602,
+        "mean_ms": 25.9144,
+        "stdev_ms": 1.5046,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 5.7279,
+        "p95_ms": 5.8466,
+        "mean_ms": 5.7301,
+        "stdev_ms": 0.0839,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 17,
+        "sql_tokens": 29,
+        "ratio_sql_over_cypher": 1.71,
+        "sql_recursive": false,
+        "query_class": "aggregation"
+      }
+    },
+    {
+      "name": "NQ08_top_odi_fours_pakistan",
+      "question": "Which Pakistani batters scored the most boundaries (fours) in ODI cricket?",
+      "query_class": "aggregation",
+      "ground_truth_note": "Saeed Anwar was famous for elegant boundaries. Inzamam-ul-Haq, Mohammad Hafeez, and Babar Azam are also prolific ODI boundary-scorers.",
+      "row_count": 5,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 10.2052,
+        "p95_ms": 12.428,
+        "mean_ms": 10.5522,
+        "stdev_ms": 1.2022,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 5.3604,
+        "p95_ms": 5.4922,
+        "mean_ms": 5.3589,
+        "stdev_ms": 0.1268,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 25,
+        "sql_tokens": 44,
+        "ratio_sql_over_cypher": 1.76,
+        "sql_recursive": false,
+        "query_class": "aggregation"
+      }
+    },
+    {
+      "name": "NQ09_avg_runs_conceded_test_pak",
+      "question": "What is the average runs conceded per match by Pakistani bowlers in Test cricket?",
+      "query_class": "aggregation",
+      "ground_truth_note": "Economy-oriented spinners (e.g., Saqlain Mushtaq, Danish Kaneria) should appear near the top. Pace bowlers (Wasim, Waqar) concede more runs per match but also take more wickets.",
+      "row_count": 10,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 5.8051,
+        "p95_ms": 6.9364,
+        "mean_ms": 6.0279,
+        "stdev_ms": 0.5589,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 3.2151,
+        "p95_ms": 3.2619,
+        "mean_ms": 3.2098,
+        "stdev_ms": 0.0602,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 25,
+        "sql_tokens": 44,
+        "ratio_sql_over_cypher": 1.76,
+        "sql_recursive": false,
+        "query_class": "aggregation"
+      }
+    },
+    {
+      "name": "NQ10_batters_at_karachi",
+      "question": "Which players have batted the most times in matches played at Karachi?",
+      "query_class": "multi_hop",
+      "ground_truth_note": "National Stadium, Karachi is Pakistan's home fortress. Pakistani players (Inzamam, Younis, Salman Butt) dominate due to frequent home appearances.",
+      "row_count": 10,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 37.0171,
+        "p95_ms": 38.6749,
+        "mean_ms": 37.1314,
+        "stdev_ms": 1.2514,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 12.1723,
+        "p95_ms": 12.5931,
+        "mean_ms": 12.5296,
+        "stdev_ms": 1.6388,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 21,
+        "sql_tokens": 47,
+        "ratio_sql_over_cypher": 2.24,
+        "sql_recursive": false,
+        "query_class": "multi_hop"
+      }
+    },
+    {
+      "name": "NQ11_matches_at_dubai_venues",
+      "question": "How many matches were played at each venue in Dubai?",
+      "query_class": "multi_hop",
+      "ground_truth_note": "Dubai International Cricket Stadium is Pakistan's de-facto home. The dataset shows it hosted 100+ Pakistan matches.",
+      "row_count": 2,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 1.2689,
+        "p95_ms": 1.303,
+        "mean_ms": 1.2713,
+        "stdev_ms": 0.0192,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 0.213,
+        "p95_ms": 0.2497,
+        "mean_ms": 0.2168,
+        "stdev_ms": 0.0162,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 21,
+        "sql_tokens": 33,
+        "ratio_sql_over_cypher": 1.57,
+        "sql_recursive": false,
+        "query_class": "multi_hop"
+      }
+    },
+    {
+      "name": "NQ12_bowlers_at_abu_dhabi",
+      "question": "Which bowlers took the most wickets in matches played at Abu Dhabi?",
+      "query_class": "multi_hop",
+      "ground_truth_note": "Saeed Ajmal, Junaid Khan, and Mohammad Hafeez performed well at Sheikh Zayed Stadium, Abu Dhabi \u2014 Pakistan's frequent neutral venue.",
+      "row_count": 5,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 31.6734,
+        "p95_ms": 33.3239,
+        "mean_ms": 31.4824,
+        "stdev_ms": 1.7185,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 8.1482,
+        "p95_ms": 8.3537,
+        "mean_ms": 8.1774,
+        "stdev_ms": 0.1193,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 22,
+        "sql_tokens": 48,
+        "ratio_sql_over_cypher": 2.18,
+        "sql_recursive": false,
+        "query_class": "multi_hop"
+      }
+    },
+    {
+      "name": "NQ13_matches_per_tournament",
+      "question": "Which tournaments featured the most matches in the dataset?",
+      "query_class": "multi_hop",
+      "ground_truth_note": "Asia Cup, ICC World Cup, and Champions Trophy series should top the list alongside bilateral series (Pakistan vs Australia, etc.).",
+      "row_count": 10,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 1.641,
+        "p95_ms": 1.6841,
+        "mean_ms": 1.6315,
+        "stdev_ms": 0.039,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 0.2683,
+        "p95_ms": 0.2798,
+        "mean_ms": 0.2713,
+        "stdev_ms": 0.0148,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 17,
+        "sql_tokens": 29,
+        "ratio_sql_over_cypher": 1.71,
+        "sql_recursive": false,
+        "query_class": "multi_hop"
+      }
+    },
+    {
+      "name": "NQ14_all_rounders_by_dual_match_count",
+      "question": "Which players contributed to both batting and bowling in the most matches?",
+      "query_class": "multi_pattern",
+      "ground_truth_note": "Shahid Afridi (163 matches), Mohammad Hafeez (146), and Shoaib Malik top the list \u2014 Pakistan's classic all-rounders who both batted and bowled across their careers.",
+      "row_count": 10,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 619.2643,
+        "p95_ms": 639.8097,
+        "mean_ms": 622.0243,
+        "stdev_ms": 11.3084,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 144.6709,
+        "p95_ms": 146.1668,
+        "mean_ms": 144.73,
+        "stdev_ms": 0.9005,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 18,
+        "sql_tokens": 41,
+        "ratio_sql_over_cypher": 2.28,
+        "sql_recursive": false,
+        "query_class": "multi_pattern"
+      }
+    },
+    {
+      "name": "NQ15_quality_karachi_innings",
+      "question": "Which players batted at Karachi AND scored at least 30 runs in those innings?",
+      "query_class": "multi_pattern",
+      "ground_truth_note": "Younis Khan and Inzamam-ul-Haq have historically made many meaningful contributions at their home ground in Karachi.",
+      "row_count": 10,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 28.9218,
+        "p95_ms": 30.7775,
+        "mean_ms": 29.2023,
+        "stdev_ms": 1.0652,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 3.9794,
+        "p95_ms": 4.024,
+        "mean_ms": 3.9826,
+        "stdev_ms": 0.0833,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 25,
+        "sql_tokens": 51,
+        "ratio_sql_over_cypher": 2.04,
+        "sql_recursive": false,
+        "query_class": "multi_pattern"
+      }
+    },
+    {
+      "name": "NQ16_pak_test_allrounders",
+      "question": "Which Pakistani players batted AND bowled in the same Test match?",
+      "query_class": "multi_pattern",
+      "ground_truth_note": "Imran Khan (75 Tests), Wasim Akram (104 Tests), and Shahid Afridi are definitive Pakistan Test all-rounders. Shoaib Malik, Mushtaq Ahmed also feature.",
+      "row_count": 10,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 599.2451,
+        "p95_ms": 619.9304,
+        "mean_ms": 604.8077,
+        "stdev_ms": 15.5746,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 9.6089,
+        "p95_ms": 9.9098,
+        "mean_ms": 9.6447,
+        "stdev_ms": 0.1658,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 26,
+        "sql_tokens": 56,
+        "ratio_sql_over_cypher": 2.15,
+        "sql_recursive": false,
+        "query_class": "multi_pattern"
+      }
+    },
+    {
+      "name": "NQ17_match_best_batting_bowling",
+      "question": "Which players scored 50+ runs AND took at least 1 wicket in the same match?",
+      "query_class": "multi_pattern",
+      "ground_truth_note": "Imran Khan's legendary performances (e.g., 117 & 6 wkts vs India 1982) should appear. Shahid Afridi and Wasim Akram also had such matches.",
+      "row_count": 10,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 619.4008,
+        "p95_ms": 636.1898,
+        "mean_ms": 622.1843,
+        "stdev_ms": 10.7019,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 10.2209,
+        "p95_ms": 10.471,
+        "mean_ms": 10.2607,
+        "stdev_ms": 0.1511,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 32,
+        "sql_tokens": 57,
+        "ratio_sql_over_cypher": 1.78,
+        "sql_recursive": false,
+        "query_class": "multi_pattern"
+      }
+    },
+    {
+      "name": "NQ18_rizwan_teammates",
+      "question": "Who are Mohammad Rizwan's most frequent teammates?",
+      "query_class": "undirected",
+      "ground_truth_note": "Babar Azam, Shaheen Afridi, and Fakhar Zaman should top Rizwan's list \u2014 they are Pakistan's core T20I and ODI eleven since ~2019.",
+      "row_count": 10,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 0.6763,
+        "p95_ms": 0.6908,
+        "mean_ms": 0.6789,
+        "stdev_ms": 0.0104,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 16.5522,
+        "p95_ms": 16.716,
+        "mean_ms": 16.5673,
+        "stdev_ms": 0.1016,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 22,
+        "sql_tokens": 68,
+        "ratio_sql_over_cypher": 3.09,
+        "sql_recursive": false,
+        "query_class": "undirected"
+      }
+    },
+    {
+      "name": "NQ19_most_connected_player",
+      "question": "Which players have the most unique teammates in the dataset?",
+      "query_class": "undirected",
+      "ground_truth_note": "Long-serving Pakistan stalwarts (Shahid Afridi, Inzamam-ul-Haq, Shoaib Malik) played with the most diverse sets of teammates across eras.",
+      "row_count": 5,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 49.5926,
+        "p95_ms": 51.3656,
+        "mean_ms": 49.6676,
+        "stdev_ms": 1.2073,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 15.4532,
+        "p95_ms": 15.7175,
+        "mean_ms": 15.4644,
+        "stdev_ms": 0.1581,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 17,
+        "sql_tokens": 44,
+        "ratio_sql_over_cypher": 2.59,
+        "sql_recursive": false,
+        "query_class": "undirected"
+      }
+    },
+    {
+      "name": "NQ20_babar_shaheen_shared_matches",
+      "question": "How many matches have Babar Azam and Shaheen Shah Afridi been in the same team?",
+      "query_class": "undirected",
+      "ground_truth_note": "Babar and Shaheen Shah Afridi have been Pakistan's captain-spearhead duo since 2020. Full corpus shows 100+ shared appearances across all formats.",
+      "row_count": 1,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 0.595,
+        "p95_ms": 0.6254,
+        "mean_ms": 0.5982,
+        "stdev_ms": 0.0163,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 8.5078,
+        "p95_ms": 8.633,
+        "mean_ms": 8.4987,
+        "stdev_ms": 0.0979,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 17,
+        "sql_tokens": 43,
+        "ratio_sql_over_cypher": 2.53,
+        "sql_recursive": false,
+        "query_class": "undirected"
+      }
+    },
+    {
+      "name": "NQ21_rpq_five_hops",
+      "question": "How many deliveries are reachable within 5 hops of a starting delivery?",
+      "query_class": "rpq",
+      "ground_truth_note": "NEXT_DELIVERY is a linear chain (1:1). From any delivery that has at least 5 successors, reachable = 5. If the chain ends earlier, reachable < 5. The Cypher BFS and SQL WITH RECURSIVE must agree.",
+      "row_count": 1,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 386.6036,
+        "p95_ms": 390.9733,
+        "mean_ms": 386.9849,
+        "stdev_ms": 2.4412,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 0.0101,
+        "p95_ms": 0.015,
+        "mean_ms": 0.014,
+        "stdev_ms": 0.0175,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 10,
+        "sql_tokens": 48,
+        "ratio_sql_over_cypher": 4.8,
+        "sql_recursive": true,
+        "query_class": "rpq"
+      },
+      "resolved_start_id": "64022:1:44.2"
+    },
+    {
+      "name": "NQ22_rpq_exact_two_hops",
+      "question": "Which delivery is exactly 2 hops after a starting delivery?",
+      "query_class": "rpq",
+      "ground_truth_note": "Since NEXT_DELIVERY is 1:1, there is at most one delivery 2 hops away. Cypher `*2` and SQL two-CTE expansion must return the same single row.",
+      "row_count": 1,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 386.2958,
+        "p95_ms": 391.4775,
+        "mean_ms": 386.8467,
+        "stdev_ms": 2.4526,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 0.0097,
+        "p95_ms": 0.0138,
+        "mean_ms": 0.0138,
+        "stdev_ms": 0.0194,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 10,
+        "sql_tokens": 47,
+        "ratio_sql_over_cypher": 4.7,
+        "sql_recursive": true,
+        "query_class": "rpq"
+      },
+      "resolved_start_id": "64022:1:44.2"
+    },
+    {
+      "name": "NQ23_rpq_teammates_3_hops",
+      "question": "Who are the players reachable from Babar Azam within 3 TEAMMATES_WITH hops?",
+      "query_class": "rpq",
+      "ground_truth_note": "Babar's direct teammates span ~50+ players. Within 3 hops the cricket community is highly interconnected, so the result set is large. Cypher's node-deduplication and SQL's UNION (not UNION ALL) must agree.",
+      "row_count": 197,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 3.042,
+        "p95_ms": 3.5945,
+        "mean_ms": 3.156,
+        "stdev_ms": 0.2522,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 5.0115,
+        "p95_ms": 5.1377,
+        "mean_ms": 5.0308,
+        "stdev_ms": 0.1118,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 15,
+        "sql_tokens": 108,
+        "ratio_sql_over_cypher": 7.2,
+        "sql_recursive": true,
+        "query_class": "rpq"
+      }
+    },
+    {
+      "name": "NQ24_rpq_zero_or_more",
+      "question": "How many deliveries (including itself) are reachable within 3 hops using zero-or-more?",
+      "query_class": "rpq",
+      "ground_truth_note": "`*0..3` includes depth-0 (the start node itself). Expected = 4 when the chain has >= 3 successors: start + 3 next deliveries. Tests the zero-or-more quantifier implementation.",
+      "row_count": 1,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 388.4753,
+        "p95_ms": 410.9865,
+        "mean_ms": 391.9412,
+        "stdev_ms": 9.4321,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 0.0101,
+        "p95_ms": 0.0189,
+        "mean_ms": 0.0152,
+        "stdev_ms": 0.021,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 10,
+        "sql_tokens": 46,
+        "ratio_sql_over_cypher": 4.6,
+        "sql_recursive": true,
+        "query_class": "rpq"
+      },
+      "resolved_start_id": "64022:1:44.2"
+    },
+    {
+      "name": "NQ25_rpq_one_or_more_capped",
+      "question": "How many deliveries are reachable within 8 hops using one-or-more?",
+      "query_class": "rpq",
+      "ground_truth_note": "This tests `*1..8` which is equivalent to `[:NEXT_DELIVERY+]` bounded to 8 hops. For a chain with >= 8 successors, reachable_plus = 8. The SQL uses the same bound. Engines must agree.",
+      "row_count": 1,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 387.6177,
+        "p95_ms": 392.6963,
+        "mean_ms": 388.1479,
+        "stdev_ms": 2.5129,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 0.0119,
+        "p95_ms": 0.0165,
+        "mean_ms": 0.0165,
+        "stdev_ms": 0.0193,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 10,
+        "sql_tokens": 48,
+        "ratio_sql_over_cypher": 4.8,
+        "sql_recursive": true,
+        "query_class": "rpq"
+      },
+      "resolved_start_id": "64022:1:44.2"
+    },
+    {
+      "name": "NQ26_rpq_scoring_within_10",
+      "question": "How many of the next 10 deliveries after a starting ball scored runs?",
+      "query_class": "rpq_filter",
+      "ground_truth_note": "Typically 4-7 of 10 deliveries score runs (strike rate ~40-70%). The RPQ traverses the chain and filters only scoring deliveries. Result must match between Cypher BFS+filter and SQL CTE+join.",
+      "row_count": 1,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 388.8695,
+        "p95_ms": 399.0296,
+        "mean_ms": 390.2518,
+        "stdev_ms": 4.6621,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 34.5217,
+        "p95_ms": 34.8399,
+        "mean_ms": 34.5235,
+        "stdev_ms": 0.3898,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 14,
+        "sql_tokens": 55,
+        "ratio_sql_over_cypher": 3.93,
+        "sql_recursive": true,
+        "query_class": "rpq_filter"
+      },
+      "resolved_start_id": "64022:1:44.2"
+    },
+    {
+      "name": "NQ27_pak_teammates_within_2_hops",
+      "question": "Which Pakistani players are within 2 teammate-hops of Babar Azam?",
+      "query_class": "rpq_filter",
+      "ground_truth_note": "Direct PAK teammates of Babar = his entire XI. Within 2 hops = anyone who played with any of Babar's direct teammates. In a ~30 year corpus, nearly all PAK players qualify.",
+      "row_count": 187,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 2.1977,
+        "p95_ms": 2.5504,
+        "mean_ms": 2.2849,
+        "stdev_ms": 0.1775,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 2.0828,
+        "p95_ms": 2.2096,
+        "mean_ms": 2.1114,
+        "stdev_ms": 0.0874,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 19,
+        "sql_tokens": 112,
+        "ratio_sql_over_cypher": 5.89,
+        "sql_recursive": true,
+        "query_class": "rpq_filter"
+      }
+    },
+    {
+      "name": "NQ28_rpq_boundary_deliveries",
+      "question": "How many of the next 6 deliveries were boundaries (4+ runs for batter)?",
+      "query_class": "rpq_filter",
+      "ground_truth_note": "Boundary rate in cricket is typically ~10-15% of deliveries. From 6 deliveries expect 0-2 boundaries. Tests `>=` comparison operator on target-side node property after RPQ.",
+      "row_count": 1,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 387.9906,
+        "p95_ms": 393.9745,
+        "mean_ms": 388.9401,
+        "stdev_ms": 2.7796,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 22.6478,
+        "p95_ms": 23.2142,
+        "mean_ms": 22.7049,
+        "stdev_ms": 0.3638,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 14,
+        "sql_tokens": 55,
+        "ratio_sql_over_cypher": 3.93,
+        "sql_recursive": true,
+        "query_class": "rpq_filter"
+      },
+      "resolved_start_id": "64022:1:44.2"
+    },
+    {
+      "name": "NQ29_boundaryless_innings",
+      "question": "Which players batted in the most innings without scoring any boundary?",
+      "query_class": "negation",
+      "ground_truth_note": "Tailenders and specialist bowlers appear most often (low scores without boundaries). Openers rarely appear here. Tests AND composition of two equality comparisons (fours=0 AND sixes=0).",
+      "row_count": 10,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 27.6046,
+        "p95_ms": 29.5518,
+        "mean_ms": 27.8367,
+        "stdev_ms": 1.0607,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 3.5022,
+        "p95_ms": 3.5725,
+        "mean_ms": 3.5098,
+        "stdev_ms": 0.0546,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 25,
+        "sql_tokens": 37,
+        "ratio_sql_over_cypher": 1.48,
+        "sql_recursive": false,
+        "query_class": "negation"
+      }
+    },
+    {
+      "name": "NQ30_non_pak_players",
+      "question": "Which non-Pakistani players (opponents) have played against Pakistan, by country?",
+      "query_class": "negation",
+      "ground_truth_note": "Should include players from AUS, ENG, IND, SA, NZ, WI, SL, ZIM, BAN. Tests `!=` operator on a string field.",
+      "row_count": 15,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 2.1364,
+        "p95_ms": 2.1779,
+        "mean_ms": 2.1355,
+        "stdev_ms": 0.0269,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 0.1179,
+        "p95_ms": 0.1218,
+        "mean_ms": 0.1192,
+        "stdev_ms": 0.0055,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 21,
+        "sql_tokens": 19,
+        "ratio_sql_over_cypher": 0.9,
+        "sql_recursive": false,
+        "query_class": "negation"
+      }
+    },
+    {
+      "name": "NQ31_non_test_format_innings",
+      "question": "Which players batted the most times in non-Test matches (T20 or ODI)?",
+      "query_class": "negation",
+      "ground_truth_note": "Limited-overs specialists dominate. Shahid Afridi, Mohammad Hafeez, Shoaib Malik played massive numbers of T20I and ODI innings for Pakistan.",
+      "row_count": 10,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 30.3274,
+        "p95_ms": 32.1002,
+        "mean_ms": 30.2863,
+        "stdev_ms": 1.2393,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 13.7103,
+        "p95_ms": 13.8619,
+        "mean_ms": 13.7188,
+        "stdev_ms": 0.1698,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 21,
+        "sql_tokens": 40,
+        "ratio_sql_over_cypher": 1.9,
+        "sql_recursive": false,
+        "query_class": "negation"
+      }
+    },
+    {
+      "name": "NQ32_expensive_wicket_takers_t20",
+      "question": "Which bowlers took wickets in T20s but conceded more than 30 runs in the same match?",
+      "query_class": "negation",
+      "ground_truth_note": "Common in T20Is: a bowler takes wickets but still gets hit hard. Tests compound AND with >, > comparisons. Both engines must agree.",
+      "row_count": 10,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 20.3365,
+        "p95_ms": 21.9655,
+        "mean_ms": 20.3933,
+        "stdev_ms": 1.2085,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 2.5606,
+        "p95_ms": 2.6498,
+        "mean_ms": 2.5776,
+        "stdev_ms": 0.0728,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 29,
+        "sql_tokens": 48,
+        "ratio_sql_over_cypher": 1.66,
+        "sql_recursive": false,
+        "query_class": "negation"
+      }
+    },
+    {
+      "name": "NQ33_highest_single_match_score",
+      "question": "Which players recorded the highest single-match batting score?",
+      "query_class": "hard",
+      "ground_truth_note": "Hanif Mohammad's 337 (1958) and Younis Khan's 313 are Pakistan's highest individual scores. In the cricsheet corpus (mostly modern matches), Azhar Ali 302* and Younis Khan's big knocks dominate.",
+      "row_count": 5,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 36.1676,
+        "p95_ms": 37.538,
+        "mean_ms": 35.8623,
+        "stdev_ms": 1.405,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 9.364,
+        "p95_ms": 9.433,
+        "mean_ms": 9.3579,
+        "stdev_ms": 0.0895,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 17,
+        "sql_tokens": 29,
+        "ratio_sql_over_cypher": 1.71,
+        "sql_recursive": false,
+        "query_class": "hard"
+      }
+    },
+    {
+      "name": "NQ34_highest_match_batting_total",
+      "question": "Which match had the highest combined batting total from all players?",
+      "query_class": "hard",
+      "ground_truth_note": "High-scoring Test matches (700+ aggregate runs) and ODI run-fests (350+ per side) should appear. A 4-innings Test can accumulate 1000+ total batting runs.",
+      "row_count": 5,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 35.8021,
+        "p95_ms": 37.5769,
+        "mean_ms": 35.9999,
+        "stdev_ms": 1.1388,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 9.5704,
+        "p95_ms": 9.6838,
+        "mean_ms": 9.5541,
+        "stdev_ms": 0.129,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 20,
+        "sql_tokens": 32,
+        "ratio_sql_over_cypher": 1.6,
+        "sql_recursive": false,
+        "query_class": "hard"
+      }
+    },
+    {
+      "name": "NQ35_most_hosted_venues",
+      "question": "Which venues have hosted the most matches, and where are they located?",
+      "query_class": "hard",
+      "ground_truth_note": "Dubai International Cricket Stadium (100+ matches) is Pakistan's most-used neutral venue. National Stadium Karachi and Gaddafi Stadium Lahore lead the domestic list.",
+      "row_count": 10,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 1.8522,
+        "p95_ms": 1.887,
+        "mean_ms": 1.8622,
+        "stdev_ms": 0.0659,
+        "iters": 30
+      },
+      "sql": {
+        "median_ms": 0.4948,
+        "p95_ms": 0.5483,
+        "mean_ms": 0.5081,
+        "stdev_ms": 0.0321,
+        "iters": 30
+      },
+      "expressibility": {
+        "cypher_tokens": 20,
+        "sql_tokens": 33,
+        "ratio_sql_over_cypher": 1.65,
+        "sql_recursive": false,
+        "query_class": "hard"
+      }
+    }
+  ]
+}

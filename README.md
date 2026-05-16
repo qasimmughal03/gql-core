@@ -146,10 +146,11 @@ The five canonical queries are paired with their SQL equivalents in [benchmark/q
 
 ## Benchmark
 
-The harness runs **two classes** of paired Cypher / SQL queries on the same data, with strict row-set equality checked between engines:
+The harness runs **three classes** of paired Cypher / SQL queries on the same data, with strict row-set equality checked between engines:
 
 1. **Direct queries (Q1–Q5)** in [benchmark/queries.py](benchmark/queries.py) — simple lookups, single-edge traversals, and one bounded RPQ. These verify the engine can answer ordinary relational questions correctly.
 2. **Logical Reasoning Benchmark (LR1–LR5)** in [benchmark/logical_reasoning.py](benchmark/logical_reasoning.py) — conjunction over shared variables, transitive closure, multi-edge constraints, heterogeneous-path composition, RPQ with target-side filtering. These verify the engine can answer questions that *require* the graph model.
+3. **Natural-Language QA Benchmark (NQ01–NQ35)** in [benchmark/natural_queries.py](benchmark/natural_queries.py) — 35 questions a cricket fan would actually ask, translated to GQL-Core. Covers all 9 query classes (simple lookup, aggregation, multi-hop, multi-pattern, undirected, RPQ, RPQ+filter, negation, hard/compound). See [benchmark/results/nl_benchmark.json](benchmark/results/nl_benchmark.json).
 
 Each query runs `--iters 50` (default 100) on each engine. The harness substitutes `{start_id}` with an actual Delivery id from the loaded graph so the same query works on fixtures and on the full corpus. Reproduce with:
 
@@ -158,6 +159,7 @@ curl -sSL -o data/pakistan_json.zip https://cricsheet.org/downloads/pakistan_jso
 unzip -q data/pakistan_json.zip -d data/pakistan/ && rm data/pakistan_json.zip
 python scripts/build_sqlite_mirror.py
 python -m benchmark.vs_sqlite --data data/pakistan --db data/cricket_male.db --iters 50
+python -m benchmark.run_nl_benchmark --data data/pakistan --db data/cricket.db --iters 30
 ```
 
 ### Direct queries (Q1–Q5) — full Pakistan men's corpus, 712K nodes / 1.47M edges
@@ -186,13 +188,36 @@ Spot-check of logical-reasoning correctness on real data (verifiable against cri
 - **LR3 Test centurions top 3**: Younis Khan (32), Azhar Ali (23), Asad Shafiq (18) — matches the historical record (Younis Khan is Pakistan's all-time leading Test centurion).
 - **LR4 Babar's co-venue batters top 3**: Mohammad Hafeez (1893 venue co-occurrences), Shoaib Malik (1813), Mohammad Rizwan (1689) — Pakistan's most-capped recent batters.
 
-(Hardware: Apple Silicon, Python 3.11. Raw numbers: [benchmark/results/results.json](benchmark/results/results.json).)
+### Natural-Language QA Benchmark (NQ01–NQ35) — same corpus, 35/35 correct
+
+35 natural-language cricket questions across 9 query classes. Every query has a verified GQL-Core translation, a paired SQL equivalent, and a ground-truth note checked against cricket history. All 35 return identical row-sets from both engines.
+
+| Class | Queries | Description | Graph wins? |
+|---|---|---|---|
+| simple_lookup | NQ01–04 | Scalar count queries (total matches, players, venues) | — (SQL faster on pure scans) |
+| aggregation | NQ05–09 | SUM / AVG over BATTED_IN / BOWLED_IN edges with format filters | SQL faster |
+| multi_hop | NQ10–13 | 2-edge chains (Player→Match→Venue, Match→Tournament) | SQL faster |
+| multi_pattern | NQ14–17 | Conjunction over shared variables (all-rounders, quality innings) | SQL faster |
+| **undirected** | **NQ18–20** | TEAMMATES_WITH traversal (symmetric, stored canonically) | **Cypher wins** (NQ18: 0.7 ms vs 16.6 ms) |
+| rpq | NQ21–25 | Bounded Kleene: `*N`, `*M..N`, `*0..N`, undirected transitive closure | Cypher wins on teammate RPQ; SQL wins on linear NEXT_DELIVERY chain |
+| rpq_filter | NQ26–28 | RPQ + target-side property filter (scoring balls, boundary deliveries) | SQL faster on chain queries |
+| negation | NQ29–32 | `!=`, compound AND/OR, non-PAK players, boundaryless innings | SQL faster |
+| hard | NQ33–35 | MAX per group, SUM across all players in a match, venue hosting counts | SQL faster |
+
+Selected NQ results verified against cricket history:
+- **NQ05 top Test run-scorers**: Younis Khan leads with 10,099 Test runs — Pakistan's all-time record.
+- **NQ07 top wicket-takers**: Wasim Akram leads all formats, matching ICC statistics.
+- **NQ18 Rizwan's most frequent teammates**: Babar Azam (NQ18's top result) — Pakistan's T20I opening pair since 2019.
+- **NQ20 Babar–Shaheen shared matches**: 100+ appearances — their captain-spearhead partnership since 2020.
+- **NQ23 Babar's 3-hop teammate network**: 197 players — nearly the entire Pakistan squad roster across eras.
+
+(Hardware: Apple Silicon, Python 3.11. Raw numbers: [benchmark/results/nl_benchmark.json](benchmark/results/nl_benchmark.json).)
 
 ### What this proves
 
-- **Correctness**: 10 / 10 queries (Q1–Q5 + LR1–LR5) return `result_correct: true` — Cypher and SQL row-sets are identical after canonical sorting.
-- **Expressibility**: every Cypher query is shorter than its SQL equivalent, by 1.8× to **7.2×** (LR2 — the SQL version needs `WITH RECURSIVE` with explicit `CASE` expressions to walk an undirected edge stored canonically).
-- **Speed trade-offs**: SQLite's compiled query plan wins on aggregation-heavy queries (Q1, Q3, Q5, LR3) and on the RPQ + filter case (LR5) where its B-tree index on `prev_id` beats our Python BFS. Cypher wins big on **Q4** (undirected single-hop neighbor lookup, 26× faster than SQL's `UNION ALL`) — a structural property of the graph model: direct adjacency is one dictionary lookup, while SQL has to assemble the symmetric closure at query time.
+- **Correctness**: **45 / 45 queries** (Q1–Q5 + LR1–LR5 + NQ01–NQ35) return `result_correct: true` — Cypher and SQL row-sets are identical after canonical sorting.
+- **Expressibility**: every Cypher query for path/join/RPQ operations is shorter than its SQL equivalent, by 1.8× to **7.2×** (LR2 — the SQL version needs `WITH RECURSIVE` with explicit `CASE` expressions to walk an undirected edge stored canonically).
+- **Speed trade-offs**: SQLite's compiled query plan wins on aggregation-heavy queries (Q1, Q3, Q5, LR3) and on the RPQ + filter case (LR5) where its B-tree index on `prev_id` beats our Python BFS. Cypher wins big on **Q4 / NQ18** (undirected single-hop neighbor lookup, 26× faster than SQL's `UNION ALL`) — a structural property of the graph model: direct adjacency is one dictionary lookup, while SQL has to assemble the symmetric closure at query time.
 
 ## Limitations and Future Work
 
@@ -214,4 +239,4 @@ This project intentionally maps to the core modules of German CS master's progra
 - **Formal Languages & Automata** — `query/grammar.lark` is an EBNF spec; the RPQ executor in [query/executor.py](query/executor.py) is a direct implementation of finite-automaton path semantics.
 - **Database Systems** — the [benchmark/](benchmark/) folder compares the relational and graph models on the same data, controlling for everything except expressibility and execution model.
 - **Knowledge Representation** — `ontology/shapes.yaml` is a SHACL-flavored schema with required/optional fields, enums, patterns, and bounds; the validator at [ingestion/validator.py](ingestion/validator.py) enforces these as a NodeShape/PropertyShape pipeline.
-- **Practical Engineering** — pinned dependencies, ~95 unit tests, ≥90% coverage, deterministic IDs, idempotent ingestion.
+- **Practical Engineering** — pinned dependencies, 157 unit tests across 10 test files, ≥88% coverage, deterministic IDs, idempotent ingestion.

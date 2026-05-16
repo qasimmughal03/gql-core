@@ -139,31 +139,40 @@ def rpq_traverse(
 ) -> Iterator[tuple[list[Edge], Node]]:
     """BFS over edges matching edge_label and direction.
 
-    Quantifier semantics:
-        '*'     → lo=0,  hi=∞      (Kleene star)
-        '+'     → lo=1,  hi=∞      (one-or-more)
+    Quantifier semantics (Cypher convention — `*` is shorthand for `*1..`):
+        '*'     → lo=1,  hi=∞      (Cypher's variable-length, default min 1)
+        '+'     → lo=1,  hi=∞
         '*N'    → lo=hi=N
         '*M..N' → lo=M,  hi=N
-    Visited set is keyed by (node_id, depth) so paths can revisit nodes
-    at deeper depths but won't loop on cycles.
+
+    Reachability semantics: each target node is yielded at most once across
+    the whole traversal, at its shortest-reachable depth. This matches the
+    binding-set semantics of Cypher's variable-length paths — the user gets
+    the set of reachable nodes, not the set of distinct paths.
+
+    The visited set is keyed by node id alone (not (node, depth)); BFS order
+    guarantees the first visit is at the shortest depth.
     """
     queue: deque[tuple[Node, list[Edge]]] = deque([(start, [])])
-    visited: set[tuple[str, int]] = set()
+    visited: set[str] = {start.id}
+    if lo == 0:
+        # Explicit `*0..N` lets the start match as a zero-length path target.
+        yield [], start
     while queue:
         node, path = queue.popleft()
         depth = len(path)
-        if depth >= lo and node is not start:
-            yield path, node
-        if depth == 0 and lo == 0:
-            yield path, node
         if depth >= hi:
             continue
-        state = (node.id, depth)
-        if state in visited:
-            continue
-        visited.add(state)
         for edge, neighbor in _direct_neighbors(graph, node, edge_label, direction):
-            queue.append((neighbor, path + [edge]))
+            if neighbor.id in visited:
+                continue
+            new_path = path + [edge]
+            new_depth = depth + 1
+            visited.add(neighbor.id)
+            if new_depth >= lo:
+                yield new_path, neighbor
+            if new_depth < hi:
+                queue.append((neighbor, new_path))
 
 
 def _direct_neighbors(
@@ -416,21 +425,26 @@ def _to_number(v: Any) -> int | float | None:
 
 
 def _sort_rows(rows: list[dict], order_by: OrderBy) -> list[dict]:
-    var = order_by.ref.var
-    prop = order_by.ref.prop
-    reverse = order_by.direction.upper() == "DESC"
+    # Multi-column ORDER BY: apply terms in reverse so Python's stable sort
+    # gives the leftmost term the highest priority.
+    out = list(rows)
+    for term in reversed(order_by.terms):
+        reverse = term.direction.upper() == "DESC"
+        var = term.ref.var
+        prop = term.ref.prop
 
-    def key(row: dict) -> Any:
-        if var in row and not isinstance(row[var], (Node, Edge)):
-            return _none_safe(row[var])
-        if prop is None:
-            return _none_safe(row.get(var))
-        b = row.get(var)
-        if hasattr(b, "props"):
-            return _none_safe(b.props.get(prop))
-        return _none_safe(row.get(prop))
+        def key(row: dict, var=var, prop=prop) -> Any:
+            if var in row and not isinstance(row[var], (Node, Edge)):
+                return _none_safe(row[var])
+            if prop is None:
+                return _none_safe(row.get(var))
+            b = row.get(var)
+            if hasattr(b, "props"):
+                return _none_safe(b.props.get(prop))
+            return _none_safe(row.get(prop))
 
-    return sorted(rows, key=key, reverse=reverse)
+        out.sort(key=key, reverse=reverse)
+    return out
 
 
 def _none_safe(v: Any) -> tuple:

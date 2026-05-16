@@ -17,6 +17,10 @@ import sys
 from collections.abc import Iterable
 from pathlib import Path
 
+# Allow running as a plain script (python scripts/build_sqlite_mirror.py)
+# in addition to `python -m scripts.build_sqlite_mirror` once it's a package.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from graph.store import PropertyGraph
 from ingestion.cricsheet_parser import CricsheetParser
 from ingestion.validator import ShapeValidator

@@ -75,9 +75,14 @@ class Projection:
 
 
 @dataclass(frozen=True)
-class OrderBy:
+class OrderTerm:
     ref: Ref
     direction: str         # 'ASC' or 'DESC'
+
+
+@dataclass(frozen=True)
+class OrderBy:
+    terms: tuple[OrderTerm, ...]
 
 
 @dataclass(frozen=True)

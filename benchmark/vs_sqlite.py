@@ -29,9 +29,34 @@ from ingestion.cricsheet_parser import CricsheetParser
 from ingestion.validator import ShapeValidator
 from query.executor import run as run_cypher
 from benchmark.queries import QUERIES, expressibility
+from benchmark.logical_reasoning import (
+    LR_QUERIES,
+    expressibility as lr_expressibility,
+)
 from scripts.build_sqlite_mirror import build_mirror
 
 DEFAULT_RESULTS = Path("benchmark/results/results.json")
+
+
+def _resolve_start_id(query: dict, graph: PropertyGraph) -> dict:
+    """Substitute the `{start_id}` placeholder with a real Delivery id.
+
+    Picks any node whose label is Delivery so the query never points at a
+    non-existent id (which would create the Cypher-empty vs SQL-zero-row
+    semantic mismatch noted in the README). Returns a shallow-copied query
+    with the placeholder filled in; the original dict is untouched.
+    """
+    if not query.get("needs_start_id"):
+        return query
+    delivery = next(iter(graph.nodes_by_label("Delivery")), None)
+    if delivery is None:
+        return query
+    start_id = delivery.id
+    q = dict(query)
+    q["cypher"] = q["cypher"].format(start_id=start_id)
+    q["sql"] = q["sql"].format(start_id=start_id)
+    q["_resolved_start_id"] = start_id
+    return q
 
 
 def _git_rev() -> str:
@@ -90,12 +115,17 @@ def _time(fn, iters: int) -> dict[str, float]:
     }
 
 
-def benchmark(graph: PropertyGraph, db_path: Path, *, iters: int = 100) -> dict:
-    conn = sqlite3.connect(str(db_path))
-    cursor = conn.cursor()
-
+def _run_class(
+    queries: list[dict],
+    expressibility_fn,
+    graph: PropertyGraph,
+    cursor,
+    conn,
+    iters: int,
+) -> list[dict]:
     rows_out: list[dict] = []
-    for q in QUERIES:
+    for raw_q in queries:
+        q = _resolve_start_id(raw_q, graph)
         cypher_rows = run_cypher(q["cypher"], graph)
         sql_rows = cursor.execute(q["sql"]).fetchall()
         canon_cypher = _canonical_rows(cypher_rows, q["key_columns"])
@@ -109,18 +139,26 @@ def benchmark(graph: PropertyGraph, db_path: Path, *, iters: int = 100) -> dict:
         cypher_timing = _time(lambda q=q: run_cypher(q["cypher"], graph), iters)
         sql_timing = _time(lambda q=q: conn.cursor().execute(q["sql"]).fetchall(), iters)
 
-        rows_out.append(
-            {
-                "name": q["name"],
-                "purpose": q["purpose"],
-                "row_count": len(canon_cypher),
-                "result_correct": correct,
-                "cypher": cypher_timing,
-                "sql": sql_timing,
-                "expressibility": expressibility(q),
-            }
-        )
+        entry = {
+            "name": q["name"],
+            "purpose": q["purpose"],
+            "row_count": len(canon_cypher),
+            "result_correct": correct,
+            "cypher": cypher_timing,
+            "sql": sql_timing,
+            "expressibility": expressibility_fn(q),
+        }
+        if "_resolved_start_id" in q:
+            entry["resolved_start_id"] = q["_resolved_start_id"]
+        rows_out.append(entry)
+    return rows_out
 
+
+def benchmark(graph: PropertyGraph, db_path: Path, *, iters: int = 100) -> dict:
+    conn = sqlite3.connect(str(db_path))
+    cursor = conn.cursor()
+    direct = _run_class(QUERIES, expressibility, graph, cursor, conn, iters)
+    reasoning = _run_class(LR_QUERIES, lr_expressibility, graph, cursor, conn, iters)
     conn.close()
     return {
         "meta": {
@@ -129,7 +167,8 @@ def benchmark(graph: PropertyGraph, db_path: Path, *, iters: int = 100) -> dict:
             "iters": iters,
             "graph_stats": graph.stats(),
         },
-        "queries": rows_out,
+        "direct_queries": direct,
+        "logical_reasoning": reasoning,
     }
 
 
@@ -178,7 +217,11 @@ def main(argv=None) -> int:
     print(f"[done] wrote {args.out}", file=sys.stderr)
 
     # Console summary.
-    print(json.dumps(out["queries"], indent=2, default=str))
+    print(json.dumps(
+        {"direct_queries": out["direct_queries"], "logical_reasoning": out["logical_reasoning"]},
+        indent=2,
+        default=str,
+    ))
     return 0
 
 

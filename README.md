@@ -14,7 +14,7 @@ JSON files  ─►  Ingestion  ─►  Validation  ─►  Property Graph  ─�
 
 - **Ingestion** parses cricsheet match JSON ([format spec](https://cricsheet.org/format/json/)).
 - **Validation** enforces SHACL-style shape constraints on every node and edge (W3C SHACL Recommendation).
-- **Property Graph** is in-memory dict-of-dicts (~50K nodes / ~300K edges expected for the full Pakistan corpus; 65 / 112 on the test fixtures).
+- **Property Graph** is in-memory dict-of-dicts. The full Pakistan corpus (1,123 men's matches downloaded from cricsheet) materializes to **712K nodes / 1.47M edges** — most of that bulk is ball-by-ball Delivery nodes (706K of them) and the NEXT_DELIVERY chain (703K). The bundled test fixtures are 65 nodes / 112 edges.
 - **Query Engine** parses a documented subset of [ISO/IEC 39075:2024 (GQL)](https://www.iso.org/standard/76120.html) — `MATCH ... WHERE ... RETURN` with regular path queries (RPQ) via path quantifiers and full aggregation (`COUNT`, `SUM`, `AVG`, `MIN`, `MAX`).
 - **Benchmark** compares the engine vs SQLite on five canonical queries: latency, expressibility (token count + recursion), correctness.
 
@@ -146,25 +146,59 @@ The five canonical queries are paired with their SQL equivalents in [benchmark/q
 
 ## Benchmark
 
-Results below are measured on the bundled test fixtures (5 synthetic matches, 65 nodes / 112 edges). Run `python -m benchmark.vs_sqlite` to reproduce on your machine, or against the full Pakistan corpus once you've downloaded it. Each query runs 100 iterations on each engine; we report median latency and the row-set equality between Cypher and SQL results.
+The harness runs **two classes** of paired Cypher / SQL queries on the same data, with strict row-set equality checked between engines:
+
+1. **Direct queries (Q1–Q5)** in [benchmark/queries.py](benchmark/queries.py) — simple lookups, single-edge traversals, and one bounded RPQ. These verify the engine can answer ordinary relational questions correctly.
+2. **Logical Reasoning Benchmark (LR1–LR5)** in [benchmark/logical_reasoning.py](benchmark/logical_reasoning.py) — conjunction over shared variables, transitive closure, multi-edge constraints, heterogeneous-path composition, RPQ with target-side filtering. These verify the engine can answer questions that *require* the graph model.
+
+Each query runs `--iters 50` (default 100) on each engine. The harness substitutes `{start_id}` with an actual Delivery id from the loaded graph so the same query works on fixtures and on the full corpus. Reproduce with:
+
+```bash
+curl -sSL -o data/pakistan_json.zip https://cricsheet.org/downloads/pakistan_json.zip
+unzip -q data/pakistan_json.zip -d data/pakistan/ && rm data/pakistan_json.zip
+python scripts/build_sqlite_mirror.py
+python -m benchmark.vs_sqlite --data data/pakistan --db data/cricket_male.db --iters 50
+```
+
+### Direct queries (Q1–Q5) — full Pakistan men's corpus, 712K nodes / 1.47M edges
 
 | Query | Purpose | Cypher (ms) | SQL (ms) | SQL/Cypher tokens | Recursive SQL? | Match? |
 |---|---|---:|---:|:---:|:---:|:---:|
-| Q1 | Top run scorers | 0.098 | 0.013 | 29 / 15 (1.9×) | no | ✓ |
-| Q2 | Best bowling at Karachi | 0.125 | 0.010 | 47 / 19 (2.5×) | no | ✓ |
-| Q3 | Pakistani captain wins | 0.114 | 0.010 | 44 / 23 (1.9×) | no | ✓ |
-| Q4 | Babar's frequent partners (undirected) | 0.096 | 0.015 | 68 / 20 (3.4×) | no (UNION ALL) | ✓ |
-| Q5 | Bounded RPQ on `NEXT_DELIVERY*1..3` | 0.090 | 0.008 | 48 / 13 (3.7×) | **yes** | ✓ |
+| Q1 | Top run scorers | 32.5 | 8.6 | 29 / 15 (1.9×) | no | ✓ |
+| Q2 | Best bowling at Karachi | 28.4 | 8.3 | 47 / 21 (2.2×) | no | ✓ |
+| Q3 | Pakistani captain wins | 3.0 | 0.8 | 44 / 23 (1.9×) | no | ✓ |
+| **Q4** | Babar's frequent partners (undirected) | **0.6** | **16.6** | 68 / 20 (3.4×) | no (`UNION ALL`) | ✓ |
+| Q5 | Bounded RPQ on `NEXT_DELIVERY*1..3` | 382.8 | 0.01 | 53 / 13 (4.1×) | **yes** | ✓ |
 
-(Hardware: Apple Silicon laptop, Python 3.11. Numbers source: [benchmark/results/results.json](benchmark/results/results.json).)
+### Logical Reasoning Benchmark (LR1–LR5) — same corpus
 
-The thesis claim: **Cypher is more expressible** (fewer tokens, no recursion required for path queries), at the cost of in-memory traversal being slower than SQLite's compiled query plan on this small dataset. The Cypher / SQL row-sets agree on all five queries.
+| Query | Reasoning pattern | Cypher (ms) | SQL (ms) | SQL/Cypher tokens | Recursive SQL? | Match? |
+|---|---|---:|---:|:---:|:---:|:---:|
+| LR1 | Conjunctive multi-pattern (all-rounders) | 619.9 | 128.0 | 49 / 24 (2.0×) | no | ✓ |
+| **LR2** | Bounded transitive closure (2-hop teammates) | **2.3** | **1.9** | 108 / 15 (**7.2×**) | **yes** | ✓ |
+| LR3 | Multi-edge constraint + threshold (Test centurions) | 22.1 | 0.7 | 44 / 25 (1.8×) | no | ✓ |
+| LR4 | Heterogeneous-path composition (co-venue batters) | 117.0 | 78.3 | 74 / 28 (2.6×) | no | ✓ |
+| LR5 | RPQ + target-side property filter | 382.9 | 34.0 | 55 / 14 (3.9×) | **yes** | ✓ |
+
+Spot-check of logical-reasoning correctness on real data (verifiable against cricket history):
+
+- **LR1 all-rounders top 3**: Shahid Afridi (163 matches), Mohammad Hafeez (146), Shoaib Malik (87) — textbook Pakistani all-rounders.
+- **LR3 Test centurions top 3**: Younis Khan (32), Azhar Ali (23), Asad Shafiq (18) — matches the historical record (Younis Khan is Pakistan's all-time leading Test centurion).
+- **LR4 Babar's co-venue batters top 3**: Mohammad Hafeez (1893 venue co-occurrences), Shoaib Malik (1813), Mohammad Rizwan (1689) — Pakistan's most-capped recent batters.
+
+(Hardware: Apple Silicon, Python 3.11. Raw numbers: [benchmark/results/results.json](benchmark/results/results.json).)
+
+### What this proves
+
+- **Correctness**: 10 / 10 queries (Q1–Q5 + LR1–LR5) return `result_correct: true` — Cypher and SQL row-sets are identical after canonical sorting.
+- **Expressibility**: every Cypher query is shorter than its SQL equivalent, by 1.8× to **7.2×** (LR2 — the SQL version needs `WITH RECURSIVE` with explicit `CASE` expressions to walk an undirected edge stored canonically).
+- **Speed trade-offs**: SQLite's compiled query plan wins on aggregation-heavy queries (Q1, Q3, Q5, LR3) and on the RPQ + filter case (LR5) where its B-tree index on `prev_id` beats our Python BFS. Cypher wins big on **Q4** (undirected single-hop neighbor lookup, 26× faster than SQL's `UNION ALL`) — a structural property of the graph model: direct adjacency is one dictionary lookup, while SQL has to assemble the symmetric closure at query time.
 
 ## Limitations and Future Work
 
-- **Out of scope (v1)**: full ISO 39075 (multi-clause queries with `WITH`, set quantifiers, schema-DDL); SHACL-SPARQL constraints (sub-query constraints); disk-backed graph store; LDBC SNB micro-benchmark; LLM hallucination comparison.
-- **Captain heuristic**: cricsheet has no canonical per-match captain field. The parser uses the first-listed player on each team's roster for that match. A more robust mapping would pull from cricinfo and cross-reference via `info.registry.people`.
-- **Q5's Kleene-star demo**: the bundled fixtures use bounded `*1..3` against a 7-delivery innings to keep the result count predictable; on the full corpus, increasing the bound (or using `*` unbounded) is what the genuine RPQ executor exercises.
+- **Out of scope (v1)**: full ISO 39075 (multi-clause queries with `WITH`, set quantifiers, schema-DDL); SHACL-SPARQL constraints (sub-query constraints); disk-backed graph store; LDBC SNB micro-benchmark; LLM hallucination comparison; `DISTINCT` keyword (the executor dedupes RPQ targets automatically, but `RETURN DISTINCT x` is not a parsed keyword); `EXISTS` / `NOT EXISTS` pattern predicates in WHERE.
+- **Captain heuristic is unreliable**: cricsheet has no canonical per-match captain field. The parser uses the first-listed player on each team's roster for that match — so the captain edges reflect listing order, not historical truth. Q3 ("Pakistani captain wins") returns plausible-but-wrong names (Mohammad Hafeez and Fakhar Zaman at the top instead of Babar Azam and Misbah-ul-Haq). The Logical Reasoning class deliberately avoids `CAPTAINED` for this reason. A real fix would cross-reference cricinfo's captain registry.
+- **Cypher slower than SQLite for compiled-plan-friendly queries**: the Python BFS in [query/executor.py](query/executor.py) is a tens-of-lines implementation; SQLite's recursive CTE engine is decades of C optimization. The benchmark shows Cypher wins only on structurally graph-shaped operations (Q4 undirected lookup, LR2 transitive closure tokens). Everything else is slower than SQL on this dataset. A C/Rust implementation of the executor would close most of the gap.
 
 ## References
 

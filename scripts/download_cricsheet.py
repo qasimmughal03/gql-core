@@ -17,6 +17,9 @@ import tempfile
 import zipfile
 from pathlib import Path
 
+# Allow plain `python scripts/download_cricsheet.py` invocation.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import requests
 
 DEFAULT_URL = "https://cricsheet.org/downloads/pakistan_json.zip"

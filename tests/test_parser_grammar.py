@@ -78,8 +78,21 @@ def test_parse_aggregations():
 
 def test_parse_order_by_limit():
     q = parse("MATCH (p:Player) RETURN p.name ORDER BY p.name DESC LIMIT 10")
-    assert q.order_by.direction == "DESC"
+    assert len(q.order_by.terms) == 1
+    assert q.order_by.terms[0].direction == "DESC"
+    assert q.order_by.terms[0].ref.var == "p"
+    assert q.order_by.terms[0].ref.prop == "name"
     assert q.limit == 10
+
+
+def test_parse_multi_column_order_by():
+    q = parse(
+        "MATCH (p:Player) RETURN p.name, p.country "
+        "ORDER BY p.country ASC, p.name DESC"
+    )
+    assert len(q.order_by.terms) == 2
+    assert q.order_by.terms[0].direction == "ASC"
+    assert q.order_by.terms[1].direction == "DESC"
 
 
 def test_parse_multi_pattern():

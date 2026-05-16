@@ -1,52 +1,52 @@
 {
   "meta": {
-    "timestamp": "2026-05-10T23:02:54",
-    "git_rev": "unknown",
-    "iters": 100,
+    "timestamp": "2026-05-16T20:54:19",
+    "git_rev": "27745af",
+    "iters": 50,
     "graph_stats": {
-      "nodes": 65,
-      "edges": 112,
+      "nodes": 712053,
+      "edges": 1470084,
       "by_label": {
-        "Venue": 5,
-        "Match": 5,
-        "Team": 5,
-        "Player": 16,
-        "Innings": 7,
-        "Delivery": 26,
-        "Tournament": 1
+        "Venue": 210,
+        "Match": 1123,
+        "Tournament": 155,
+        "Team": 27,
+        "Player": 1920,
+        "Innings": 2524,
+        "Delivery": 706094
       },
       "edges_by_label": {
-        "PLAYED_AT": 5,
-        "PLAYED_FOR": 16,
-        "CAPTAINED": 10,
-        "IN_INNINGS": 26,
-        "NEXT_DELIVERY": 19,
-        "BATTED_IN": 12,
-        "BOWLED_IN": 7,
-        "TEAMMATES_WITH": 16,
-        "PART_OF_TOURNAMENT": 1
+        "PLAYED_AT": 1123,
+        "PART_OF_TOURNAMENT": 1109,
+        "PLAYED_FOR": 1951,
+        "CAPTAINED": 2246,
+        "IN_INNINGS": 706094,
+        "NEXT_DELIVERY": 703570,
+        "BATTED_IN": 19447,
+        "BOWLED_IN": 13174,
+        "TEAMMATES_WITH": 21370
       }
     }
   },
-  "queries": [
+  "direct_queries": [
     {
       "name": "Q1_career_runs",
       "purpose": "Top run scorers (per-player aggregate over BATTED_IN edges).",
-      "row_count": 9,
+      "row_count": 10,
       "result_correct": true,
       "cypher": {
-        "median_ms": 0.0976,
-        "p95_ms": 0.119,
-        "mean_ms": 0.1008,
-        "stdev_ms": 0.0098,
-        "iters": 100
+        "median_ms": 32.4561,
+        "p95_ms": 35.6372,
+        "mean_ms": 32.5607,
+        "stdev_ms": 1.8393,
+        "iters": 50
       },
       "sql": {
-        "median_ms": 0.0127,
-        "p95_ms": 0.0163,
-        "mean_ms": 0.0133,
-        "stdev_ms": 0.0031,
-        "iters": 100
+        "median_ms": 8.5626,
+        "p95_ms": 8.7248,
+        "mean_ms": 8.545,
+        "stdev_ms": 0.141,
+        "iters": 50
       },
       "expressibility": {
         "cypher_tokens": 15,
@@ -58,47 +58,47 @@
     {
       "name": "Q2_best_bowling_at_karachi",
       "purpose": "Best single-match bowling figures filtered by venue city.",
-      "row_count": 1,
+      "row_count": 5,
       "result_correct": true,
       "cypher": {
-        "median_ms": 0.1247,
-        "p95_ms": 0.1527,
-        "mean_ms": 0.1295,
-        "stdev_ms": 0.0108,
-        "iters": 100
+        "median_ms": 28.4488,
+        "p95_ms": 30.2725,
+        "mean_ms": 28.6684,
+        "stdev_ms": 1.1023,
+        "iters": 50
       },
       "sql": {
-        "median_ms": 0.0101,
-        "p95_ms": 0.0171,
-        "mean_ms": 0.012,
-        "stdev_ms": 0.0054,
-        "iters": 100
+        "median_ms": 8.2702,
+        "p95_ms": 8.3859,
+        "mean_ms": 8.2521,
+        "stdev_ms": 0.1165,
+        "iters": 50
       },
       "expressibility": {
-        "cypher_tokens": 19,
+        "cypher_tokens": 21,
         "sql_tokens": 47,
-        "ratio_sql_over_cypher": 2.47,
+        "ratio_sql_over_cypher": 2.24,
         "sql_recursive": false
       }
     },
     {
       "name": "Q3_pakistan_captain_wins",
       "purpose": "Most-winning Pakistani captains.",
-      "row_count": 1,
+      "row_count": 5,
       "result_correct": true,
       "cypher": {
-        "median_ms": 0.1139,
-        "p95_ms": 0.1332,
-        "mean_ms": 0.1171,
-        "stdev_ms": 0.007,
-        "iters": 100
+        "median_ms": 3.0052,
+        "p95_ms": 4.7393,
+        "mean_ms": 3.2895,
+        "stdev_ms": 0.7654,
+        "iters": 50
       },
       "sql": {
-        "median_ms": 0.0097,
-        "p95_ms": 0.0108,
-        "mean_ms": 0.0099,
-        "stdev_ms": 0.0008,
-        "iters": 100
+        "median_ms": 0.7804,
+        "p95_ms": 0.8788,
+        "mean_ms": 0.7935,
+        "stdev_ms": 0.0463,
+        "iters": 50
       },
       "expressibility": {
         "cypher_tokens": 23,
@@ -110,21 +110,21 @@
     {
       "name": "Q4_babar_partners",
       "purpose": "Babar Azam's most-frequent teammates (TEAMMATES_WITH undirected).",
-      "row_count": 4,
+      "row_count": 10,
       "result_correct": true,
       "cypher": {
-        "median_ms": 0.0957,
-        "p95_ms": 0.1126,
-        "mean_ms": 0.098,
-        "stdev_ms": 0.0076,
-        "iters": 100
+        "median_ms": 0.6424,
+        "p95_ms": 0.6733,
+        "mean_ms": 0.6475,
+        "stdev_ms": 0.0615,
+        "iters": 50
       },
       "sql": {
-        "median_ms": 0.0148,
-        "p95_ms": 0.0173,
-        "mean_ms": 0.0154,
-        "stdev_ms": 0.0024,
-        "iters": 100
+        "median_ms": 16.6307,
+        "p95_ms": 17.0041,
+        "mean_ms": 16.6534,
+        "stdev_ms": 0.1683,
+        "iters": 50
       },
       "expressibility": {
         "cypher_tokens": 20,
@@ -139,25 +139,164 @@
       "row_count": 1,
       "result_correct": true,
       "cypher": {
-        "median_ms": 0.09,
-        "p95_ms": 0.1163,
-        "mean_ms": 0.0929,
-        "stdev_ms": 0.0093,
-        "iters": 100
+        "median_ms": 382.8005,
+        "p95_ms": 392.1078,
+        "mean_ms": 384.1523,
+        "stdev_ms": 4.1966,
+        "iters": 50
       },
       "sql": {
-        "median_ms": 0.008,
-        "p95_ms": 0.0107,
-        "mean_ms": 0.0085,
-        "stdev_ms": 0.002,
-        "iters": 100
+        "median_ms": 0.01,
+        "p95_ms": 0.0169,
+        "mean_ms": 0.0129,
+        "stdev_ms": 0.0154,
+        "iters": 50
       },
       "expressibility": {
         "cypher_tokens": 13,
-        "sql_tokens": 48,
-        "ratio_sql_over_cypher": 3.69,
+        "sql_tokens": 53,
+        "ratio_sql_over_cypher": 4.08,
         "sql_recursive": true
+      },
+      "resolved_start_id": "1127284:4:19.2"
+    }
+  ],
+  "logical_reasoning": [
+    {
+      "name": "LR1_all_rounders",
+      "purpose": "Conjunction over shared variables: players who both batted AND bowled in the same match. Tests multi-pattern join with two shared bindings (p, m).",
+      "row_count": 10,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 619.927,
+        "p95_ms": 650.7866,
+        "mean_ms": 625.2814,
+        "stdev_ms": 17.8228,
+        "iters": 50
+      },
+      "sql": {
+        "median_ms": 127.9541,
+        "p95_ms": 129.5993,
+        "mean_ms": 127.8631,
+        "stdev_ms": 1.3112,
+        "iters": 50
+      },
+      "expressibility": {
+        "cypher_tokens": 24,
+        "sql_tokens": 49,
+        "ratio_sql_over_cypher": 2.04,
+        "sql_recursive": false,
+        "reasoning_pattern": "conjunctive multi-pattern"
       }
+    },
+    {
+      "name": "LR2_teammates_within_two_hops",
+      "purpose": "Bounded transitive closure: players reachable from a seed via 1 OR 2 TEAMMATES_WITH hops (undirected). Tests RPQ bounded Kleene over an undirected edge.",
+      "row_count": 187,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 2.3147,
+        "p95_ms": 2.4086,
+        "mean_ms": 2.3141,
+        "stdev_ms": 0.1318,
+        "iters": 50
+      },
+      "sql": {
+        "median_ms": 1.8652,
+        "p95_ms": 1.9509,
+        "mean_ms": 1.8703,
+        "stdev_ms": 0.0576,
+        "iters": 50
+      },
+      "expressibility": {
+        "cypher_tokens": 15,
+        "sql_tokens": 108,
+        "ratio_sql_over_cypher": 7.2,
+        "sql_recursive": true,
+        "reasoning_pattern": "bounded transitive closure (RPQ)"
+      }
+    },
+    {
+      "name": "LR3_test_centurions",
+      "purpose": "Multi-edge constraint + format filter: players who scored a century (runs >= 100) in a Test match. Tests numeric threshold predicates over an edge property combined with a node property.",
+      "row_count": 10,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 22.0803,
+        "p95_ms": 23.3639,
+        "mean_ms": 22.1194,
+        "stdev_ms": 0.78,
+        "iters": 50
+      },
+      "sql": {
+        "median_ms": 0.7233,
+        "p95_ms": 0.767,
+        "mean_ms": 0.7313,
+        "stdev_ms": 0.0454,
+        "iters": 50
+      },
+      "expressibility": {
+        "cypher_tokens": 25,
+        "sql_tokens": 44,
+        "ratio_sql_over_cypher": 1.76,
+        "sql_recursive": false,
+        "reasoning_pattern": "multi-edge constraint with threshold"
+      }
+    },
+    {
+      "name": "LR4_co_venue_batters",
+      "purpose": "Heterogeneous-path composition: players who have batted at a venue where Babar Azam also batted. Joins on a shared Venue node across two independent path patterns. Tests inequality filter (`!=`) and 4-edge graph composition.",
+      "row_count": 10,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 116.9503,
+        "p95_ms": 119.2676,
+        "mean_ms": 117.6734,
+        "stdev_ms": 3.6282,
+        "iters": 50
+      },
+      "sql": {
+        "median_ms": 78.3215,
+        "p95_ms": 79.2484,
+        "mean_ms": 78.3939,
+        "stdev_ms": 0.6539,
+        "iters": 50
+      },
+      "expressibility": {
+        "cypher_tokens": 28,
+        "sql_tokens": 74,
+        "ratio_sql_over_cypher": 2.64,
+        "sql_recursive": false,
+        "reasoning_pattern": "heterogeneous-path composition (self-join on venue)"
+      }
+    },
+    {
+      "name": "LR5_scoring_chain_from_first_ball",
+      "purpose": "RPQ + numeric filter: from a specific starting delivery, how many balls within 12 hops scored runs? Tests bounded Kleene plus a comparison operator (`runs_batter > 0`) on the target node. {start_id} is resolved at run time.",
+      "row_count": 1,
+      "result_correct": true,
+      "cypher": {
+        "median_ms": 382.8517,
+        "p95_ms": 389.4867,
+        "mean_ms": 384.5992,
+        "stdev_ms": 6.6066,
+        "iters": 50
+      },
+      "sql": {
+        "median_ms": 33.9915,
+        "p95_ms": 34.4653,
+        "mean_ms": 33.9462,
+        "stdev_ms": 0.3957,
+        "iters": 50
+      },
+      "expressibility": {
+        "cypher_tokens": 14,
+        "sql_tokens": 55,
+        "ratio_sql_over_cypher": 3.93,
+        "sql_recursive": true,
+        "reasoning_pattern": "RPQ with target-side property filter"
+      },
+      "resolved_start_id": "1127284:4:19.2"
     }
   ]
 }

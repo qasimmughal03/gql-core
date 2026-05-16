@@ -32,11 +32,12 @@ QUERIES: list[dict] = [
     {
         "name": "Q2_best_bowling_at_karachi",
         "purpose": "Best single-match bowling figures filtered by venue city.",
+        # Tie-break on bowler name so the LIMIT 5 boundary matches SQL.
         "cypher": (
             "MATCH (p:Player)-[r:BOWLED_IN]->(m:Match)-[:PLAYED_AT]->(v:Venue) "
             'WHERE v.city = "Karachi" '
             "RETURN p.name AS bowler, MAX(r.wickets) AS best_haul "
-            "ORDER BY best_haul DESC LIMIT 5"
+            "ORDER BY best_haul DESC, bowler ASC LIMIT 5"
         ),
         "sql": (
             "SELECT pl.name AS bowler, MAX(b.wickets) AS best_haul "
@@ -100,23 +101,28 @@ QUERIES: list[dict] = [
     {
         "name": "Q5_rpq_next_delivery",
         "purpose": "Bounded Kleene-star RPQ: deliveries reachable within 3 hops.",
+        # The {start_id} placeholder is resolved by the harness to an actual
+        # Delivery node id present in the graph (so the same query works on
+        # fixtures and on the real Pakistan corpus).
         "cypher": (
             "MATCH (d:Delivery)-[:NEXT_DELIVERY*1..3]->(d2:Delivery) "
-            'WHERE d.id = "1000001:1:0.1" '
+            'WHERE d.id = "{start_id}" '
             "RETURN d.id AS start, COUNT(d2) AS reachable"
         ),
         "sql": (
             "WITH RECURSIVE chain(start_id, end_id, depth) AS ("
             "  SELECT prev_id, next_id, 1 FROM next_delivery "
-            "  WHERE prev_id = '1000001:1:0.1' "
+            "  WHERE prev_id = '{start_id}' "
             "  UNION ALL "
             "  SELECT c.start_id, n.next_id, c.depth + 1 "
             "  FROM chain c JOIN next_delivery n ON n.prev_id = c.end_id "
             "  WHERE c.depth < 3"
             ") "
-            "SELECT '1000001:1:0.1' AS start, COUNT(*) AS reachable FROM chain"
+            "SELECT '{start_id}' AS start, COUNT(*) AS reachable "
+            "FROM chain WHERE end_id IS NOT NULL"
         ),
         "key_columns": ("start", "reachable"),
+        "needs_start_id": True,
     },
 ]
 

@@ -19,6 +19,7 @@ from query.ast import (
     NodePat,
     Or,
     OrderBy,
+    OrderTerm,
     Pattern,
     Projection,
     Query,
@@ -179,10 +180,13 @@ class _ToAST(Transformer):
     def direction(self, items):
         return str(items[0])
 
-    def order_by(self, items):
+    def order_term(self, items):
         ref = items[0]
         direction = items[1] if len(items) > 1 else "ASC"
-        return OrderBy(ref=ref, direction=direction)
+        return OrderTerm(ref=ref, direction=direction)
+
+    def order_by(self, items):
+        return OrderBy(terms=tuple(items))
 
     def limit(self, items):
         return int(items[0])

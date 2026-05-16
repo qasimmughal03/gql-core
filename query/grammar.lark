@@ -50,7 +50,8 @@ projection: agg_call alias?                              -> proj_agg
 agg_call: AGG "(" ref ")"
 alias: "AS" CNAME
 
-order_by: "ORDER" "BY" ref direction?
+order_by: "ORDER" "BY" order_term ("," order_term)*
+order_term: ref direction?
 direction: ASC | DESC
 ASC: "ASC"
 DESC: "DESC"

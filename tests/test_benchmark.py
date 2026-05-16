@@ -9,7 +9,13 @@ from pathlib import Path
 import pytest
 
 from benchmark.queries import QUERIES, expressibility
-from benchmark.vs_sqlite import _canonical_rows, _rows_equal, benchmark
+from benchmark.logical_reasoning import LR_QUERIES
+from benchmark.vs_sqlite import (
+    _canonical_rows,
+    _resolve_start_id,
+    _rows_equal,
+    benchmark,
+)
 from graph.store import PropertyGraph
 from ingestion.cricsheet_parser import CricsheetParser
 from ingestion.validator import ShapeValidator
@@ -57,7 +63,8 @@ def test_sqlite_mirror_row_counts_match_graph(graph: PropertyGraph, mirror: sqli
 
 def test_q1_q5_results_match_between_engines(graph: PropertyGraph, mirror: sqlite3.Connection):
     cur = mirror.cursor()
-    for q in QUERIES:
+    for raw_q in QUERIES + LR_QUERIES:
+        q = _resolve_start_id(raw_q, graph)
         cypher_rows = run_cypher(q["cypher"], graph)
         sql_rows = cur.execute(q["sql"]).fetchall()
         canon_cypher = _canonical_rows(cypher_rows, q["key_columns"])
@@ -74,13 +81,17 @@ def test_q1_q5_results_match_between_engines(graph: PropertyGraph, mirror: sqlit
 def test_benchmark_writes_results_json_with_required_keys(
     graph: PropertyGraph, tmp_path: Path
 ):
+    from benchmark.logical_reasoning import LR_QUERIES
+
     db_path = tmp_path / "cricket.db"
     build_mirror(graph, db_path).close()
     out = benchmark(graph, db_path, iters=2)
-    assert "meta" in out and "queries" in out
+    assert "meta" in out
+    assert "direct_queries" in out and "logical_reasoning" in out
     assert out["meta"]["iters"] == 2
-    assert len(out["queries"]) == len(QUERIES)
-    for q in out["queries"]:
+    assert len(out["direct_queries"]) == len(QUERIES)
+    assert len(out["logical_reasoning"]) == len(LR_QUERIES)
+    for q in out["direct_queries"] + out["logical_reasoning"]:
         for key in ("name", "cypher", "sql", "expressibility", "result_correct"):
             assert key in q
         assert "median_ms" in q["cypher"]

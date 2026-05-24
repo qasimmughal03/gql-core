@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import platform
 import sqlite3
 import statistics
 import subprocess
@@ -27,7 +28,10 @@ from typing import Any
 from graph.store import PropertyGraph
 from ingestion.cricsheet_parser import CricsheetParser
 from ingestion.validator import ShapeValidator
-from query.executor import run as run_cypher
+from query.executor import execute, run as run_cypher
+from query.parser import parse
+from query.planner import plan as plan_query
+from query.semantic import validate_query
 from benchmark.queries import QUERIES, expressibility
 from benchmark.logical_reasoning import (
     LR_QUERIES,
@@ -48,7 +52,7 @@ def _resolve_start_id(query: dict, graph: PropertyGraph) -> dict:
     """
     if not query.get("needs_start_id"):
         return query
-    delivery = next(iter(graph.nodes_by_label("Delivery")), None)
+    delivery = _select_start_delivery(graph)
     if delivery is None:
         return query
     start_id = delivery.id
@@ -57,6 +61,15 @@ def _resolve_start_id(query: dict, graph: PropertyGraph) -> dict:
     q["sql"] = q["sql"].format(start_id=start_id)
     q["_resolved_start_id"] = start_id
     return q
+
+
+def _select_start_delivery(graph: PropertyGraph):
+    """Pick a deterministic Delivery node with at least one successor when possible."""
+    deliveries = sorted(graph.nodes_by_label("Delivery"), key=lambda n: n.id)
+    for delivery in deliveries:
+        if any(graph.neighbors(delivery.id, label="NEXT_DELIVERY", direction="out")):
+            return delivery
+    return deliveries[0] if deliveries else None
 
 
 def _git_rev() -> str:
@@ -74,12 +87,90 @@ def _git_rev() -> str:
     return "unknown"
 
 
+def _git_dirty() -> bool | None:
+    try:
+        out = subprocess.run(
+            ["git", "status", "--short"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if out.returncode == 0:
+            return bool(out.stdout.strip())
+    except Exception:
+        pass
+    return None
+
+
+def _environment_meta() -> dict[str, str]:
+    return {
+        "python": platform.python_version(),
+        "platform": platform.platform(),
+        "processor": platform.processor() or "unknown",
+    }
+
+
+def _methodology_meta() -> dict:
+    return {
+        "tracks": [
+            {
+                "name": "fixture_gold_oracle",
+                "source": "tests/test_regression.py",
+                "purpose": "Hand-computed fixture answers catch shared graph/SQL bugs.",
+            },
+            {
+                "name": "full_corpus_sql_parity",
+                "source": "benchmark.vs_sqlite + benchmark.run_nl_benchmark",
+                "purpose": "GQL-Core and SQLite row-set equality on the same materialized corpus.",
+            },
+            {
+                "name": "expressibility",
+                "source": "benchmark query metadata",
+                "purpose": "Structural query-size and recursive-SQL indicators.",
+            },
+            {
+                "name": "nl_to_gql_model_accuracy",
+                "source": "benchmark.run_suite_benchmark",
+                "purpose": "Model translation accuracy against hidden SQL oracles.",
+            },
+        ],
+        "oracle_note": (
+            "SQLite parity validates executor agreement with a mirror derived from the "
+            "graph; independent fixture gold tests are required to catch shared ingestion "
+            "or modeling errors."
+        ),
+        "timing_scopes": {
+            "cypher": "parse + semantic validation + plan + execute",
+            "cypher_parse_plan": "parse + semantic validation + plan only",
+            "cypher_execute": "execute a prebuilt plan only",
+            "sql": "SQLite execute + fetchall on an indexed mirror",
+        },
+    }
+
+
+def _prepare_cypher(source: str, graph: PropertyGraph):
+    parsed = parse(source)
+    validate_query(parsed)
+    return plan_query(parsed, graph)
+
+
 def _canonical_rows(rows: list, key_columns: tuple[str, ...]) -> list[tuple]:
-    """Return a sorted list-of-tuples for deterministic comparison."""
+    """Return a sorted list-of-tuples for deterministic comparison.
+
+    GQL rows are dicts keyed by the alias chosen by the model, which may differ
+    from the SQL alias in key_columns.  Named extraction is used only when ALL
+    expected keys are present in the dict; otherwise we fall back to positional
+    (dict insertion order = RETURN clause order) to survive alias mismatches.
+    SQL rows are plain tuples — always positional.
+    """
     canon: list[tuple] = []
     for r in rows:
         if isinstance(r, dict):
-            canon.append(tuple(r.get(c) for c in key_columns))
+            if all(c in r for c in key_columns):
+                canon.append(tuple(r[c] for c in key_columns))
+            else:
+                # Model used different alias names — compare positionally.
+                canon.append(tuple(r.values()))
         else:
             canon.append(tuple(r))
     canon.sort(key=lambda t: tuple((v is None, v if v is not None else "") for v in t))
@@ -126,7 +217,8 @@ def _run_class(
     rows_out: list[dict] = []
     for raw_q in queries:
         q = _resolve_start_id(raw_q, graph)
-        cypher_rows = run_cypher(q["cypher"], graph)
+        cypher_plan = _prepare_cypher(q["cypher"], graph)
+        cypher_rows = execute(cypher_plan, graph)
         sql_rows = cursor.execute(q["sql"]).fetchall()
         canon_cypher = _canonical_rows(cypher_rows, q["key_columns"])
         canon_sql = _canonical_rows(sql_rows, q["key_columns"])
@@ -134,9 +226,16 @@ def _run_class(
 
         # Warm up once each to avoid first-call effects.
         run_cypher(q["cypher"], graph)
+        execute(cypher_plan, graph)
         cursor.execute(q["sql"]).fetchall()
 
         cypher_timing = _time(lambda q=q: run_cypher(q["cypher"], graph), iters)
+        cypher_parse_plan_timing = _time(
+            lambda q=q: _prepare_cypher(q["cypher"], graph), iters
+        )
+        cypher_execute_timing = _time(
+            lambda plan_obj=cypher_plan: execute(plan_obj, graph), iters
+        )
         sql_timing = _time(lambda q=q: conn.cursor().execute(q["sql"]).fetchall(), iters)
 
         entry = {
@@ -145,6 +244,8 @@ def _run_class(
             "row_count": len(canon_cypher),
             "result_correct": correct,
             "cypher": cypher_timing,
+            "cypher_parse_plan": cypher_parse_plan_timing,
+            "cypher_execute": cypher_execute_timing,
             "sql": sql_timing,
             "expressibility": expressibility_fn(q),
         }
@@ -164,8 +265,11 @@ def benchmark(graph: PropertyGraph, db_path: Path, *, iters: int = 100) -> dict:
         "meta": {
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
             "git_rev": _git_rev(),
+            "git_dirty": _git_dirty(),
             "iters": iters,
+            "environment": _environment_meta(),
             "graph_stats": graph.stats(),
+            "methodology": _methodology_meta(),
         },
         "direct_queries": direct,
         "logical_reasoning": reasoning,

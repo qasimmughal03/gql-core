@@ -89,12 +89,22 @@ def test_benchmark_writes_results_json_with_required_keys(
     assert "meta" in out
     assert "direct_queries" in out and "logical_reasoning" in out
     assert out["meta"]["iters"] == 2
+    assert "methodology" in out["meta"]
+    assert "environment" in out["meta"]
+    assert {t["name"] for t in out["meta"]["methodology"]["tracks"]} >= {
+        "fixture_gold_oracle",
+        "full_corpus_sql_parity",
+        "expressibility",
+        "nl_to_gql_model_accuracy",
+    }
     assert len(out["direct_queries"]) == len(QUERIES)
     assert len(out["logical_reasoning"]) == len(LR_QUERIES)
     for q in out["direct_queries"] + out["logical_reasoning"]:
         for key in ("name", "cypher", "sql", "expressibility", "result_correct"):
             assert key in q
         assert "median_ms" in q["cypher"]
+        assert "median_ms" in q["cypher_parse_plan"]
+        assert "median_ms" in q["cypher_execute"]
         assert "median_ms" in q["sql"]
         assert q["result_correct"] is True
 
@@ -128,3 +138,15 @@ def test_build_mirror_overwrites_existing_db(graph: PropertyGraph, tmp_path: Pat
     n = cur.execute("SELECT COUNT(*) FROM matches").fetchone()[0]
     conn.close()
     assert n == 5
+
+
+def test_sqlite_mirror_has_benchmark_indexes(graph: PropertyGraph, mirror: sqlite3.Connection):
+    cur = mirror.cursor()
+    index_names = set()
+    for table in ("players", "matches", "venues", "deliveries", "batted_in"):
+        index_names |= {row[1] for row in cur.execute(f"PRAGMA index_list({table})")}
+    assert "idx_players_name" in index_names
+    assert "idx_matches_format" in index_names
+    assert "idx_venues_city" in index_names
+    assert "idx_deliveries_runs_batter" in index_names
+    assert "idx_batted_in_match_player" in index_names

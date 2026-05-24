@@ -213,11 +213,19 @@ Selected NQ results verified against cricket history:
 
 (Hardware: Apple Silicon, Python 3.11. Raw numbers: [benchmark/results/nl_benchmark.json](benchmark/results/nl_benchmark.json).)
 
+### NL-to-GQL Model Benchmark (SQ_A01–SQ_I12) — same corpus, 50/100 correct
+
+The 100-query suite in [benchmark/query_suite.py](benchmark/query_suite.py) is a stricter methodology test: the model sees only the natural-language question and schema prompt, generates GQL-Core, and is scored against a hidden SQL oracle. The current local Ollama run in [benchmark/results/suite_benchmark.json](benchmark/results/suite_benchmark.json) passes 50/100 queries. Simple lookups and RPQs are strong; hard compound, multi-pattern, multi-hop, and undirected aggregate queries expose the remaining translation gap.
+
+This is intentionally reported separately from NQ01–NQ35: NQ validates the hand-authored benchmark translations; SQ validates model translation reliability.
+
 ### What this proves
 
-- **Correctness**: **45 / 45 queries** (Q1–Q5 + LR1–LR5 + NQ01–NQ35) return `result_correct: true` — Cypher and SQL row-sets are identical after canonical sorting.
+- **Executor parity**: **45 / 45 hand-authored queries** (Q1–Q5 + LR1–LR5 + NQ01–NQ35) return `result_correct: true` — GQL-Core and SQL row-sets are identical after canonical sorting.
+- **Independent fixture oracle**: the regression tests include hand-computed fixture answers so the project is not relying only on SQL parity, which would miss bugs shared by graph ingestion and the SQLite mirror.
+- **Model translation accuracy**: the stricter 100-query NL-to-GQL benchmark currently passes **50 / 100** queries; this is the main remaining methodology gap.
 - **Expressibility**: every Cypher query for path/join/RPQ operations is shorter than its SQL equivalent, by 1.8× to **7.2×** (LR2 — the SQL version needs `WITH RECURSIVE` with explicit `CASE` expressions to walk an undirected edge stored canonically).
-- **Speed trade-offs**: SQLite's compiled query plan wins on aggregation-heavy queries (Q1, Q3, Q5, LR3) and on the RPQ + filter case (LR5) where its B-tree index on `prev_id` beats our Python BFS. Cypher wins big on **Q4 / NQ18** (undirected single-hop neighbor lookup, 26× faster than SQL's `UNION ALL`) — a structural property of the graph model: direct adjacency is one dictionary lookup, while SQL has to assemble the symmetric closure at query time.
+- **Speed trade-offs**: SQLite's compiled query plan wins on aggregation-heavy queries and on linear `NEXT_DELIVERY` RPQs. The benchmark now records both total GQL time (`parse + semantic validation + plan + execute`) and prepared-plan execution time, so engine cost can be separated from parser/planner overhead.
 
 ## Limitations and Future Work
 

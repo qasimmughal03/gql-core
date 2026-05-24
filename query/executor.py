@@ -37,6 +37,7 @@ from query.planner import (
     ScanOp,
     plan as plan_query,
 )
+from query.semantic import validate_query
 
 
 def execute(plan_obj: Plan, graph: PropertyGraph) -> list[dict]:
@@ -50,7 +51,9 @@ def execute(plan_obj: Plan, graph: PropertyGraph) -> list[dict]:
 
 def run(source: str, graph: PropertyGraph) -> list[dict]:
     """Convenience: parse + plan + execute in one call."""
-    return execute(plan_query(parse(source), graph), graph)
+    query = parse(source)
+    validate_query(query)
+    return execute(plan_query(query, graph), graph)
 
 
 # ── Dispatch ────────────────────────────────────────────────────────
@@ -111,8 +114,18 @@ def _expand(op: ExpandOp, rows: Iterable[dict], graph: PropertyGraph) -> Iterato
             if op.edge_var:
                 if not edge_path:
                     continue
-                # Bind the last (and for one-hop, only) edge.
-                new_row[op.edge_var] = edge_path[-1]
+                if len(edge_path) > 1:
+                    # Cypher binds a relationship list for variable-length patterns;
+                    # this engine only tracks the last edge in the path. Accessing
+                    # edge properties via an edge variable on a multi-hop RPQ would
+                    # silently read the wrong edge, so we fail fast instead.
+                    raise NotImplementedError(
+                        f"Edge variable '{op.edge_var}' on a multi-hop RPQ pattern "
+                        f"(path length {len(edge_path)}) is not supported. "
+                        "Cypher binds a relationship list; this engine does not. "
+                        "Remove the edge variable or use a single-hop pattern."
+                    )
+                new_row[op.edge_var] = edge_path[0]
             if not _matches_pushed(target, op.pushed, edge_var=op.edge_var, edge=edge_path[-1] if edge_path else None):
                 continue
             yield new_row

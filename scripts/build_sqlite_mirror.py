@@ -119,7 +119,41 @@ def _create_schema(conn: sqlite3.Connection) -> None:
         cur.execute(f"CREATE TABLE {table} ({col_defs})")
         cur.execute(f"CREATE INDEX idx_{table}_{src_col} ON {table}({src_col})")
         cur.execute(f"CREATE INDEX idx_{table}_{dst_col} ON {table}({dst_col})")
+    _create_benchmark_indexes(cur)
     conn.commit()
+
+
+def _create_benchmark_indexes(cur: sqlite3.Cursor) -> None:
+    """Indexes for the SQL benchmark workload.
+
+    The initial mirror indexed only edge join columns. The benchmark also
+    filters heavily by player name/country, match format/outcome/venue, venue
+    city, tournament metadata, and delivery scoring fields; indexing those
+    columns gives SQLite a fairer baseline.
+    """
+    statements = [
+        "CREATE INDEX idx_players_name ON players(name)",
+        "CREATE INDEX idx_players_country ON players(country)",
+        "CREATE INDEX idx_players_country_name ON players(country, name)",
+        "CREATE INDEX idx_matches_format ON matches(format)",
+        "CREATE INDEX idx_matches_outcome_winner ON matches(outcome_winner)",
+        "CREATE INDEX idx_matches_venue_id ON matches(venue_id)",
+        "CREATE INDEX idx_matches_season ON matches(season)",
+        "CREATE INDEX idx_venues_city ON venues(city)",
+        "CREATE INDEX idx_venues_name ON venues(name)",
+        "CREATE INDEX idx_tournaments_name ON tournaments(name)",
+        "CREATE INDEX idx_tournaments_match_type ON tournaments(match_type)",
+        "CREATE INDEX idx_tournaments_season ON tournaments(season)",
+        "CREATE INDEX idx_deliveries_runs_batter ON deliveries(runs_batter)",
+        "CREATE INDEX idx_batted_in_match_player ON batted_in(match_id, player_id)",
+        "CREATE INDEX idx_bowled_in_match_player ON bowled_in(match_id, player_id)",
+        "CREATE INDEX idx_captained_match_player ON captained(match_id, player_id)",
+        "CREATE INDEX idx_played_at_venue_match ON played_at(venue_id, match_id)",
+        "CREATE INDEX idx_part_of_tournament_tournament_match ON part_of_tournament(tournament_id, match_id)",
+        "CREATE INDEX idx_teammates_with_pair ON teammates_with(player_a_id, player_b_id)",
+    ]
+    for statement in statements:
+        cur.execute(statement)
 
 
 def _insert_nodes(conn: sqlite3.Connection, graph: PropertyGraph) -> None:

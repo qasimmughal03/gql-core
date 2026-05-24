@@ -38,12 +38,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from graph.store import PropertyGraph
 from ingestion.cricsheet_parser import CricsheetParser
 from ingestion.validator import ShapeValidator
-from query.executor import run as run_cypher
+from query.executor import execute, run as run_cypher
+from query.parser import parse
+from query.planner import plan as plan_query
+from query.semantic import validate_query
 from benchmark.natural_queries import NL_QUERIES, expressibility
 from benchmark.vs_sqlite import (
     _canonical_rows,
+    _environment_meta,
+    _methodology_meta,
     _resolve_start_id,
     _rows_equal,
+    _git_dirty,
     _git_rev,
 )
 from scripts.build_sqlite_mirror import build_mirror
@@ -65,6 +71,12 @@ def _time(fn, iters: int) -> dict[str, float]:
     }
 
 
+def _prepare_cypher(source: str, graph: PropertyGraph):
+    parsed = parse(source)
+    validate_query(parsed)
+    return plan_query(parsed, graph)
+
+
 # ── Per-query execution ──────────────────────────────────────────────────
 
 
@@ -78,7 +90,8 @@ def _run_query(
     cursor = conn.cursor()
 
     # Correctness check (single pass first)
-    cypher_rows = run_cypher(q["cypher"], graph)
+    cypher_plan = _prepare_cypher(q["cypher"], graph)
+    cypher_rows = execute(cypher_plan, graph)
     sql_rows = cursor.execute(q["sql"]).fetchall()
     canon_c = _canonical_rows(cypher_rows, q["key_columns"])
     canon_s = _canonical_rows(sql_rows, q["key_columns"])
@@ -86,10 +99,17 @@ def _run_query(
 
     # Warm-up
     run_cypher(q["cypher"], graph)
+    execute(cypher_plan, graph)
     conn.cursor().execute(q["sql"]).fetchall()
 
     # Timing
     cypher_timing = _time(lambda q=q: run_cypher(q["cypher"], graph), iters)
+    cypher_parse_plan_timing = _time(
+        lambda q=q: _prepare_cypher(q["cypher"], graph), iters
+    )
+    cypher_execute_timing = _time(
+        lambda plan_obj=cypher_plan: execute(plan_obj, graph), iters
+    )
     sql_timing = _time(
         lambda q=q: conn.cursor().execute(q["sql"]).fetchall(), iters
     )
@@ -102,6 +122,8 @@ def _run_query(
         "row_count": len(canon_c),
         "result_correct": correct,
         "cypher": cypher_timing,
+        "cypher_parse_plan": cypher_parse_plan_timing,
+        "cypher_execute": cypher_execute_timing,
         "sql": sql_timing,
         "expressibility": expressibility(q),
     }
@@ -167,11 +189,14 @@ def run_nl_benchmark(
         "meta": {
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
             "git_rev": _git_rev(),
+            "git_dirty": _git_dirty(),
             "iters": iters,
             "total_queries": len(NL_QUERIES),
             "passed": passed,
             "failed": failed,
+            "environment": _environment_meta(),
             "graph_stats": graph.stats(),
+            "methodology": _methodology_meta(),
         },
         "class_summary": class_summary,
         "results": results,

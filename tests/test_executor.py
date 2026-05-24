@@ -12,6 +12,7 @@ from ingestion.validator import ShapeValidator
 from query.executor import run
 from query.parser import parse
 from query.planner import ScanOp, plan as plan_query
+from query.semantic import SemanticError
 
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURES = ROOT / "tests" / "fixtures"
@@ -224,3 +225,38 @@ def test_filter_with_or(graph: PropertyGraph):
     assert "Babar Azam" in countries
     assert "Joe Root" in countries
     assert "Virat Kohli" not in countries
+
+
+# ── Semantic validation ────────────────────────────────────────────
+
+
+def test_semantic_rejects_unbound_projection_variable(graph: PropertyGraph):
+    with pytest.raises(SemanticError, match="unbound variable"):
+        run(
+            "MATCH (p:Player)-[:BATTED_IN]->(m:Match) "
+            "RETURN b.runs AS runs",
+            graph,
+        )
+
+
+def test_semantic_rejects_unknown_property_on_known_label(graph: PropertyGraph):
+    with pytest.raises(SemanticError, match="unknown node property"):
+        run("MATCH (p:Player) RETURN p.wickets AS wickets", graph)
+
+
+def test_semantic_rejects_unknown_edge_label(graph: PropertyGraph):
+    with pytest.raises(SemanticError, match="Unknown edge label"):
+        run(
+            'MATCH (m:Match)-[:OUTCOME_WINNER]->(w:Match) '
+            'WHERE w.outcome_winner = "Pakistan" RETURN COUNT(m) AS n',
+            graph,
+        )
+
+
+def test_semantic_rejects_impossible_directed_endpoint_order(graph: PropertyGraph):
+    with pytest.raises(SemanticError, match="expects endpoints Match -> Venue"):
+        run(
+            "MATCH (v:Venue)-[:PLAYED_AT]->(m:Match) "
+            "RETURN COUNT(m) AS n",
+            graph,
+        )

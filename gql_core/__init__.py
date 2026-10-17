@@ -33,9 +33,11 @@ from gql_core.graph import Edge, Node, PropertyGraph
 from gql_core.ingester import GraphIngester, IngestReport
 from gql_core.validator import ShapeValidator, ShapeViolationError
 from gql_core.query.executor import run as run_query
+from gql_core.ai import ask, translate_to_gql
 
 __all__ = [
     "__version__",
+    "ask",
     "Edge",
     "GraphIngester",
     "IngestReport",
@@ -44,4 +46,6 @@ __all__ = [
     "run_query",
     "ShapeValidator",
     "ShapeViolationError",
+    "translate_to_gql",
 ]
+

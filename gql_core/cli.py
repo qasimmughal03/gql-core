@@ -21,20 +21,47 @@ from gql_core.validator import ShapeValidator
 
 
 def _load_graph(
-    data_path: Path, shapes_path: Path, *, validate_only: bool = False
-) -> tuple[PropertyGraph, GraphIngester, dict]:
+    data_path: Path, shapes_path: Path | None = None, *, validate_only: bool = False
+) -> tuple[PropertyGraph, GraphIngester | None, dict]:
     """Shared graph-loading helper for all subcommands."""
     graph = PropertyGraph()
-    validator = ShapeValidator(shapes_path)
-    ingester = GraphIngester(graph, validator)
 
+    if shapes_path is not None and Path(shapes_path).exists():
+        validator = ShapeValidator(shapes_path)
+        ingester = GraphIngester(graph, validator)
+        if data_path.is_dir():
+            report = ingester.ingest_directory(data_path)
+        else:
+            n, e = ingester.ingest_file(data_path)
+            report = {"files": 1, "nodes": n, "edges": e, "errors": []}
+        return graph, ingester, report
+
+    # Schema-free / direct ingestion mode
     if data_path.is_dir():
-        report = ingester.ingest_directory(data_path)
+        files = sorted(data_path.glob("*.json"))
+        for f in files:
+            with f.open() as fp:
+                d = json.load(fp)
+            if isinstance(d, dict):
+                g = PropertyGraph.from_dict(d)
+                for nid, n in g._nodes.items():
+                    graph.add_node(n)
+                for eid, e in g._edges.items():
+                    graph.add_edge(e)
+        report = {"files": len(files), "nodes": len(graph), "edges": len(graph._edges), "errors": []}
     else:
-        n, e = ingester.ingest_file(data_path)
-        report = {"files": 1, "nodes": n, "edges": e, "errors": []}
+        with data_path.open() as fp:
+            d = json.load(fp)
+        if isinstance(d, dict):
+            g = PropertyGraph.from_dict(d)
+            for nid, n in g._nodes.items():
+                graph.add_node(n)
+            for eid, e in g._edges.items():
+                graph.add_edge(e)
+        report = {"files": 1, "nodes": len(graph), "edges": len(graph._edges), "errors": []}
 
-    return graph, ingester, report
+    return graph, None, report
+
 
 
 # ── Subcommands ───────────────────────────────────────────────────────
@@ -117,7 +144,7 @@ def cmd_ingest(args: argparse.Namespace) -> int:
 def cmd_query(args: argparse.Namespace) -> int:
     """Run a GQL-Core query against a loaded graph."""
     data_path = Path(args.data)
-    shapes_path = Path(args.schema)
+    shapes_path = Path(args.schema) if getattr(args, "schema", None) else None
 
     # Read query from file or positional argument.
     if args.file:
@@ -141,6 +168,29 @@ def cmd_query(args: argparse.Namespace) -> int:
     else:
         print(json.dumps(rows, indent=2, default=str))
     return 0
+
+
+def cmd_ask(args: argparse.Namespace) -> int:
+    """Ask a natural-language question against a graph."""
+    data_path = Path(args.data)
+    shapes_path = Path(args.schema) if getattr(args, "schema", None) else None
+    question = " ".join(args.question)
+
+    graph, _, _ = _load_graph(data_path, shapes_path)
+    try:
+        from gql_core.ai import ask
+        result = ask(graph, question, model=args.model, explain=args.explain)
+        if args.explain:
+            print(json.dumps(result, indent=2, default=str))
+        elif args.table and isinstance(result, list):
+            _print_table(result)
+        else:
+            print(json.dumps(result, indent=2, default=str))
+        return 0
+    except Exception as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
 
 
 def cmd_mirror(args: argparse.Namespace) -> int:
@@ -264,7 +314,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # query
     p = sub.add_parser("query", help="Run a GQL-Core query")
-    p.add_argument("--schema", required=True, help="Path to shapes.yaml")
+    p.add_argument("--schema", default=None, help="Optional path to shapes.yaml")
     p.add_argument("--data", required=True, help="Graph JSON file or directory")
     p.add_argument("--file", default=None, help="Read query from file")
     p.add_argument("--table", action="store_true", help="Output as aligned text table")
@@ -272,6 +322,19 @@ def main(argv: list[str] | None = None) -> int:
         "query", nargs="*", help="GQL-Core query string (or use --file)"
     )
     p.set_defaults(func=cmd_query)
+
+    # ask (natural language query)
+    p = sub.add_parser("ask", help="Ask a natural-language question against a graph")
+    p.add_argument("--data", required=True, help="Graph JSON file or directory")
+    p.add_argument("--schema", default=None, help="Optional path to shapes.yaml")
+    p.add_argument("--model", default="llama3", help="Model name for translation (default: llama3)")
+    p.add_argument("--explain", action="store_true", help="Include translated GQL query in output")
+    p.add_argument("--table", action="store_true", help="Output as aligned text table")
+    p.add_argument(
+        "question", nargs="+", help="Natural language question"
+    )
+    p.set_defaults(func=cmd_ask)
+
 
     # mirror
     p = sub.add_parser("mirror", help="Build SQLite mirror from a graph")

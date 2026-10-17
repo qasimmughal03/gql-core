@@ -132,3 +132,99 @@ class PropertyGraph:
                 label: len(ids) for label, ids in self._edge_by_label.items()
             },
         }
+
+    # ── Zero-Friction Ingestion Adapters ──────────────────────────
+
+    @classmethod
+    def from_networkx(
+        cls,
+        G: Any,
+        *,
+        default_node_label: str = "Node",
+        default_edge_label: str = "CONNECTED_TO",
+    ) -> PropertyGraph:
+        """Construct a PropertyGraph from any NetworkX graph or graph-like object."""
+        graph = cls()
+        for node_id, data in G.nodes(data=True):
+            props = dict(data)
+            label = str(props.pop("label", None) or props.pop("@type", None) or default_node_label)
+            graph.add_node(Node(id=str(node_id), label=label, props=props))
+
+        for idx, (src, dst, *rest) in enumerate(G.edges(data=True)):
+            data = rest[0] if rest else {}
+            props = dict(data)
+            label = str(props.pop("label", None) or props.pop("@type", None) or default_edge_label)
+            edge_id = str(props.pop("id", None) or props.pop("@id", None) or f"{label}:{src}:{dst}:{idx}")
+            graph.add_edge(Edge(id=edge_id, label=label, src=str(src), dst=str(dst), props=props))
+        return graph
+
+    @classmethod
+    def from_edges(
+        cls,
+        edges: Iterable[tuple],
+        *,
+        directed: bool = True,
+        default_node_label: str = "Node",
+        default_edge_label: str = "CONNECTED_TO",
+    ) -> PropertyGraph:
+        """Construct a PropertyGraph from an iterable of edge tuples."""
+        graph = cls()
+        for idx, item in enumerate(edges):
+            if len(item) == 2:
+                src, dst = item
+                label = default_edge_label
+                props = {}
+            elif len(item) == 3:
+                src, dst, label = item
+                props = {}
+            elif len(item) >= 4:
+                src, dst, label, props = item[:4]
+                props = dict(props)
+            else:
+                continue
+
+            src_str, dst_str = str(src), str(dst)
+            if src_str not in graph._nodes:
+                graph.add_node(Node(id=src_str, label=default_node_label))
+            if dst_str not in graph._nodes:
+                graph.add_node(Node(id=dst_str, label=default_node_label))
+
+            eid = f"{label}:{src_str}:{dst_str}:{idx}"
+            graph.add_edge(Edge(id=eid, label=str(label), src=src_str, dst=dst_str, props=props))
+            if not directed:
+                rev_eid = f"{label}:{dst_str}:{src_str}:{idx}_rev"
+                graph.add_edge(Edge(id=rev_eid, label=str(label), src=dst_str, dst=src_str, props=props))
+        return graph
+
+    @classmethod
+    def from_records(
+        cls,
+        nodes: Iterable[dict[str, Any]],
+        edges: Iterable[dict[str, Any]] = (),
+    ) -> PropertyGraph:
+        """Construct a PropertyGraph from lists/iterables of node and edge dictionaries."""
+        graph = cls()
+        for raw in nodes:
+            item = dict(raw)
+            nid = str(item.pop("id", None) or item.pop("@id", None) or item.pop("name", None))
+            label = str(item.pop("label", None) or item.pop("@type", None) or "Node")
+            graph.add_node(Node(id=nid, label=label, props=item))
+
+        for idx, raw in enumerate(edges):
+            item = dict(raw)
+            src = str(item.pop("src", None) or item.pop("@src", None) or item.pop("source", None) or item.pop("from", None))
+            dst = str(item.pop("dst", None) or item.pop("@dst", None) or item.pop("target", None) or item.pop("to", None))
+            label = str(item.pop("label", None) or item.pop("@type", None) or "CONNECTED_TO")
+            eid = str(item.pop("id", None) or item.pop("@id", None) or f"{label}:{src}:{dst}:{idx}")
+            if src not in graph._nodes:
+                graph.add_node(Node(id=src, label="Node"))
+            if dst not in graph._nodes:
+                graph.add_node(Node(id=dst, label="Node"))
+            graph.add_edge(Edge(id=eid, label=label, src=src, dst=dst, props=item))
+        return graph
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> PropertyGraph:
+        """Construct a PropertyGraph from a dictionary with 'nodes' and 'edges' lists."""
+        return cls.from_records(data.get("nodes", ()), data.get("edges", ()))
+

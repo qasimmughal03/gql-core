@@ -323,8 +323,12 @@ def _read_ref(ref: Ref, row: dict) -> Any:
         return None
     if ref.prop is None:
         return binding
-    if hasattr(binding, "props"):
-        return binding.props.get(ref.prop)
+    if hasattr(binding, "props") and ref.prop in binding.props:
+        return binding.props[ref.prop]
+    if ref.prop == "id" and hasattr(binding, "id"):
+        return binding.id
+    if ref.prop == "label" and hasattr(binding, "label"):
+        return binding.label
     return None
 
 
@@ -334,7 +338,13 @@ def _matches_inline_filters(
     if not filters:
         return True
     for prop, value in filters:
-        if node.props.get(prop) != value:
+        if prop == "id" and prop not in node.props:
+            if node.id != value:
+                return False
+        elif prop == "label" and prop not in node.props:
+            if node.label != value:
+                return False
+        elif node.props.get(prop) != value:
             return False
     return True
 
@@ -356,8 +366,14 @@ def _matches_pushed(
             return False
         if cmp.lhs.prop is None:
             value = target
+        elif hasattr(target, "props") and cmp.lhs.prop in target.props:
+            value = target.props[cmp.lhs.prop]
+        elif cmp.lhs.prop == "id" and hasattr(target, "id"):
+            value = target.id
+        elif cmp.lhs.prop == "label" and hasattr(target, "label"):
+            value = target.label
         else:
-            value = target.props.get(cmp.lhs.prop) if hasattr(target, "props") else None
+            value = None
         if not _apply_op(cmp.op, value, cmp.rhs):
             return False
     return True

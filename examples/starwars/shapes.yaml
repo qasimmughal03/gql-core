@@ -1,0 +1,75 @@
+# Star Wars Knowledge Graph Ontology
+nodes:
+  Character:
+    required: [id, name]
+    optional: [gender, birth_year]
+    types:
+      id: str
+      name: str
+      gender: str
+      birth_year: float
+
+  Film:
+    required: [id, title, episode]
+    optional: [release_year, director, budget, revenue]
+    types:
+      id: str
+      title: str
+      episode: int
+      release_year: int
+      director: str
+      budget: int
+      revenue: int
+
+  Planet:
+    required: [id, name]
+    optional: [climate, terrain]
+    types:
+      id: str
+      name: str
+      climate: str
+      terrain: str
+
+  Species:
+    required: [id, name]
+    optional: [classification, homeworld]
+    types:
+      id: str
+      name: str
+      classification: str
+      homeworld: str
+
+  Starship:
+    required: [id, name]
+    optional: [model, class]
+    types:
+      id: str
+      name: str
+      model: str
+      class: str
+
+edges:
+  APPEARS_IN:
+    src: Character
+    dst: Film
+    properties: {}
+
+  HOME_PLANET:
+    src: Character
+    dst: Planet
+    properties: {}
+
+  BELONGS_TO:
+    src: Character
+    dst: Species
+    properties: {}
+
+  PILOTED:
+    src: Character
+    dst: Starship
+    properties: {}
+
+  FEATURED_PLANET:
+    src: Film
+    dst: Planet
+    properties: {}

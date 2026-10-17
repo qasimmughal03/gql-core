@@ -1,0 +1,67 @@
+{
+  "meta": {"data_version": "1.1.0", "created": "2024-02-01", "revision": 1},
+  "info": {
+    "balls_per_over": 6,
+    "dates": ["2024-02-01", "2024-02-02"],
+    "gender": "male",
+    "match_type": "Test",
+    "season": "2023/24",
+    "team_type": "international",
+    "teams": ["Pakistan", "Australia"],
+    "venue": "Gaddafi Stadium",
+    "city": "Lahore",
+    "outcome": {"winner": "Pakistan", "by": {"innings": 1}},
+    "toss": {"winner": "Pakistan", "decision": "bat"},
+    "players": {
+      "Pakistan": ["Babar Azam", "Shan Masood", "Naseem Shah"],
+      "Australia": ["Pat Cummins", "Steve Smith", "Mitchell Starc"]
+    },
+    "registry": {
+      "people": {
+        "Babar Azam": "11111111",
+        "Shan Masood": "77777777",
+        "Naseem Shah": "88888888",
+        "Pat Cummins": "aaaaaaaa",
+        "Steve Smith": "bbbbbbbb",
+        "Mitchell Starc": "cccccccc"
+      }
+    }
+  },
+  "innings": [
+    {
+      "team": "Pakistan",
+      "declared": true,
+      "overs": [
+        {"over": 0, "deliveries": [
+          {"batter": "Babar Azam", "bowler": "Mitchell Starc", "non_striker": "Shan Masood",
+           "runs": {"batter": 4, "extras": 0, "total": 4}},
+          {"batter": "Babar Azam", "bowler": "Mitchell Starc", "non_striker": "Shan Masood",
+           "runs": {"batter": 4, "extras": 0, "total": 4}},
+          {"batter": "Babar Azam", "bowler": "Mitchell Starc", "non_striker": "Shan Masood",
+           "runs": {"batter": 1, "extras": 0, "total": 1}},
+          {"batter": "Shan Masood", "bowler": "Mitchell Starc", "non_striker": "Babar Azam",
+           "runs": {"batter": 0, "extras": 0, "total": 0}},
+          {"batter": "Shan Masood", "bowler": "Mitchell Starc", "non_striker": "Babar Azam",
+           "runs": {"batter": 0, "extras": 0, "total": 0}},
+          {"batter": "Shan Masood", "bowler": "Mitchell Starc", "non_striker": "Babar Azam",
+           "runs": {"batter": 0, "extras": 0, "total": 0}}
+        ]}
+      ]
+    },
+    {
+      "team": "Australia",
+      "overs": [
+        {"over": 0, "deliveries": [
+          {"batter": "Pat Cummins", "bowler": "Naseem Shah", "non_striker": "Steve Smith",
+           "runs": {"batter": 0, "extras": 0, "total": 0},
+           "wickets": [{"kind": "bowled", "player_out": "Pat Cummins"}]},
+          {"batter": "Steve Smith", "bowler": "Naseem Shah", "non_striker": "Mitchell Starc",
+           "runs": {"batter": 0, "extras": 0, "total": 0},
+           "wickets": [{"kind": "lbw", "player_out": "Steve Smith"}]},
+          {"batter": "Mitchell Starc", "bowler": "Naseem Shah", "non_striker": "Pat Cummins",
+           "runs": {"batter": 0, "extras": 0, "total": 0}}
+        ]}
+      ]
+    }
+  ]
+}

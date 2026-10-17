@@ -1,0 +1,84 @@
+name: social-graph-benchmark
+description: Benchmark queries over a simple social graph
+queries:
+- name: count_people
+  purpose: Count all Person nodes
+  gql: MATCH (p:Person) RETURN COUNT(p) AS count
+  sql: SELECT COUNT(*) AS count FROM person
+  key_columns:
+  - count
+  expected:
+  - - 4
+  query_class: simple_lookup
+- name: count_cities
+  purpose: Count all City nodes
+  gql: MATCH (c:City) RETURN COUNT(c) AS count
+  key_columns:
+  - count
+  expected:
+  - - 2
+  query_class: simple_lookup
+- name: friends_of_alice
+  purpose: Find all friends of Alice via undirected KNOWS
+  gql: 'MATCH (a:Person)-[:KNOWS]-(f:Person)
+
+    WHERE a.name = "Alice"
+
+    RETURN f.name AS friend
+
+    ORDER BY friend ASC
+
+    '
+  key_columns:
+  - friend
+  expected:
+  - - Bob
+  - - Charlie
+  query_class: undirected
+- name: people_in_nyc
+  purpose: 'Two-hop: Person -> LIVES_IN -> City, filter by city name'
+  gql: 'MATCH (p:Person)-[:LIVES_IN]->(c:City)
+
+    WHERE c.name = "New York"
+
+    RETURN p.name AS name
+
+    ORDER BY name ASC
+
+    '
+  key_columns:
+  - name
+  expected:
+  - - Alice
+  - - Charlie
+  query_class: multi_hop
+- name: friends_of_friends
+  purpose: 'RPQ: Alice''s friends-of-friends via KNOWS*1..2'
+  gql: 'MATCH (a:Person)-[:KNOWS*1..2]-(f:Person)
+
+    WHERE a.name = "Alice"
+
+    RETURN f.name AS name
+
+    ORDER BY name ASC
+
+    '
+  key_columns:
+  - name
+  expected:
+  - - Bob
+  - - Charlie
+  - - Diana
+  query_class: rpq
+- name: oldest_person
+  purpose: MAX aggregation
+  gql: 'MATCH (p:Person)
+
+    RETURN MAX(p.age) AS max_age
+
+    '
+  key_columns:
+  - max_age
+  expected:
+  - - 35
+  query_class: aggregation

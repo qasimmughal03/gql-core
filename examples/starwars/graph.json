@@ -1,0 +1,1182 @@
+{
+  "nodes": [
+    {
+      "@id": "luke_skywalker",
+      "@type": "Character",
+      "name": "Luke Skywalker",
+      "gender": "male",
+      "birth_year": -19
+    },
+    {
+      "@id": "leia_organa",
+      "@type": "Character",
+      "name": "Leia Organa",
+      "gender": "female",
+      "birth_year": -19
+    },
+    {
+      "@id": "han_solo",
+      "@type": "Character",
+      "name": "Han Solo",
+      "gender": "male",
+      "birth_year": -29
+    },
+    {
+      "@id": "chewbacca",
+      "@type": "Character",
+      "name": "Chewbacca",
+      "gender": "male",
+      "birth_year": -200
+    },
+    {
+      "@id": "darth_vader",
+      "@type": "Character",
+      "name": "Darth Vader",
+      "gender": "male",
+      "birth_year": -41
+    },
+    {
+      "@id": "obi_wan_kenobi",
+      "@type": "Character",
+      "name": "Obi-Wan Kenobi",
+      "gender": "male",
+      "birth_year": -57
+    },
+    {
+      "@id": "yoda",
+      "@type": "Character",
+      "name": "Yoda",
+      "gender": "male",
+      "birth_year": -896
+    },
+    {
+      "@id": "r2d2",
+      "@type": "Character",
+      "name": "R2-D2",
+      "gender": "droid",
+      "birth_year": -33
+    },
+    {
+      "@id": "c3po",
+      "@type": "Character",
+      "name": "C-3PO",
+      "gender": "droid",
+      "birth_year": -32
+    },
+    {
+      "@id": "palpatine",
+      "@type": "Character",
+      "name": "Emperor Palpatine",
+      "gender": "male",
+      "birth_year": -84
+    },
+    {
+      "@id": "boba_fett",
+      "@type": "Character",
+      "name": "Boba Fett",
+      "gender": "male",
+      "birth_year": -32
+    },
+    {
+      "@id": "lando_calrissian",
+      "@type": "Character",
+      "name": "Lando Calrissian",
+      "gender": "male",
+      "birth_year": -31
+    },
+    {
+      "@id": "padme_amidala",
+      "@type": "Character",
+      "name": "Padme Amidala",
+      "gender": "female",
+      "birth_year": -46
+    },
+    {
+      "@id": "anakin_skywalker",
+      "@type": "Character",
+      "name": "Anakin Skywalker",
+      "gender": "male",
+      "birth_year": -41
+    },
+    {
+      "@id": "qui_gon_jinn",
+      "@type": "Character",
+      "name": "Qui-Gon Jinn",
+      "gender": "male",
+      "birth_year": -92
+    },
+    {
+      "@id": "mace_windu",
+      "@type": "Character",
+      "name": "Mace Windu",
+      "gender": "male",
+      "birth_year": -72
+    },
+    {
+      "@id": "darth_maul",
+      "@type": "Character",
+      "name": "Darth Maul",
+      "gender": "male",
+      "birth_year": -54
+    },
+    {
+      "@id": "count_dooku",
+      "@type": "Character",
+      "name": "Count Dooku",
+      "gender": "male",
+      "birth_year": -102
+    },
+    {
+      "@id": "jar_jar_binks",
+      "@type": "Character",
+      "name": "Jar Jar Binks",
+      "gender": "male",
+      "birth_year": -52
+    },
+    {
+      "@id": "jabba_the_hutt",
+      "@type": "Character",
+      "name": "Jabba the Hutt",
+      "gender": "male",
+      "birth_year": -600
+    },
+    {
+      "@id": "rey",
+      "@type": "Character",
+      "name": "Rey",
+      "gender": "female",
+      "birth_year": 15
+    },
+    {
+      "@id": "finn",
+      "@type": "Character",
+      "name": "Finn",
+      "gender": "male",
+      "birth_year": 11
+    },
+    {
+      "@id": "kylo_ren",
+      "@type": "Character",
+      "name": "Kylo Ren",
+      "gender": "male",
+      "birth_year": 5
+    },
+    {
+      "@id": "poe_dameron",
+      "@type": "Character",
+      "name": "Poe Dameron",
+      "gender": "male",
+      "birth_year": 2
+    },
+    {
+      "@id": "bb8",
+      "@type": "Character",
+      "name": "BB-8",
+      "gender": "droid",
+      "birth_year": 29
+    },
+    {
+      "@id": "general_hux",
+      "@type": "Character",
+      "name": "General Hux",
+      "gender": "male",
+      "birth_year": 0
+    },
+    {
+      "@id": "snoke",
+      "@type": "Character",
+      "name": "Supreme Leader Snoke",
+      "gender": "male",
+      "birth_year": 0
+    },
+    {
+      "@id": "wedge_antilles",
+      "@type": "Character",
+      "name": "Wedge Antilles",
+      "gender": "male",
+      "birth_year": -21
+    },
+    {
+      "@id": "admiral_ackbar",
+      "@type": "Character",
+      "name": "Admiral Ackbar",
+      "gender": "male",
+      "birth_year": -41
+    },
+    {
+      "@id": "grand_moff_tarkin",
+      "@type": "Character",
+      "name": "Grand Moff Tarkin",
+      "gender": "male",
+      "birth_year": -64
+    },
+    {
+      "@id": "the_phantom_menace",
+      "@type": "Film",
+      "title": "The Phantom Menace",
+      "episode": 1,
+      "release_year": 1999,
+      "director": "George Lucas",
+      "budget": 115000000,
+      "revenue": 1027000000
+    },
+    {
+      "@id": "attack_of_the_clones",
+      "@type": "Film",
+      "title": "Attack of the Clones",
+      "episode": 2,
+      "release_year": 2002,
+      "director": "George Lucas",
+      "budget": 115000000,
+      "revenue": 649000000
+    },
+    {
+      "@id": "revenge_of_the_sith",
+      "@type": "Film",
+      "title": "Revenge of the Sith",
+      "episode": 3,
+      "release_year": 2005,
+      "director": "George Lucas",
+      "budget": 113000000,
+      "revenue": 868000000
+    },
+    {
+      "@id": "a_new_hope",
+      "@type": "Film",
+      "title": "A New Hope",
+      "episode": 4,
+      "release_year": 1977,
+      "director": "George Lucas",
+      "budget": 11000000,
+      "revenue": 775000000
+    },
+    {
+      "@id": "empire_strikes_back",
+      "@type": "Film",
+      "title": "The Empire Strikes Back",
+      "episode": 5,
+      "release_year": 1980,
+      "director": "Irvin Kershner",
+      "budget": 18000000,
+      "revenue": 547000000
+    },
+    {
+      "@id": "return_of_the_jedi",
+      "@type": "Film",
+      "title": "Return of the Jedi",
+      "episode": 6,
+      "release_year": 1983,
+      "director": "Richard Marquand",
+      "budget": 32500000,
+      "revenue": 475000000
+    },
+    {
+      "@id": "the_force_awakens",
+      "@type": "Film",
+      "title": "The Force Awakens",
+      "episode": 7,
+      "release_year": 2015,
+      "director": "J.J. Abrams",
+      "budget": 245000000,
+      "revenue": 2070000000
+    },
+    {
+      "@id": "tatooine",
+      "@type": "Planet",
+      "name": "Tatooine",
+      "climate": "arid",
+      "terrain": "desert"
+    },
+    {
+      "@id": "alderaan",
+      "@type": "Planet",
+      "name": "Alderaan",
+      "climate": "temperate",
+      "terrain": "grasslands, mountains"
+    },
+    {
+      "@id": "hoth",
+      "@type": "Planet",
+      "name": "Hoth",
+      "climate": "frozen",
+      "terrain": "tundra, ice caves"
+    },
+    {
+      "@id": "dagobah",
+      "@type": "Planet",
+      "name": "Dagobah",
+      "climate": "murky",
+      "terrain": "swamp, jungles"
+    },
+    {
+      "@id": "bespin",
+      "@type": "Planet",
+      "name": "Bespin",
+      "climate": "temperate",
+      "terrain": "gas giant"
+    },
+    {
+      "@id": "endor",
+      "@type": "Planet",
+      "name": "Endor",
+      "climate": "temperate",
+      "terrain": "forests, mountains, lakes"
+    },
+    {
+      "@id": "naboo",
+      "@type": "Planet",
+      "name": "Naboo",
+      "climate": "temperate",
+      "terrain": "grassy hills, swamps, forests"
+    },
+    {
+      "@id": "coruscant",
+      "@type": "Planet",
+      "name": "Coruscant",
+      "climate": "temperate",
+      "terrain": "cityscape, mountains"
+    },
+    {
+      "@id": "kamino",
+      "@type": "Planet",
+      "name": "Kamino",
+      "climate": "temperate",
+      "terrain": "ocean"
+    },
+    {
+      "@id": "geonosis",
+      "@type": "Planet",
+      "name": "Geonosis",
+      "climate": "temperate, arid",
+      "terrain": "rock desert, mountains"
+    },
+    {
+      "@id": "mustafar",
+      "@type": "Planet",
+      "name": "Mustafar",
+      "climate": "hot",
+      "terrain": "volcanoes, lava rivers"
+    },
+    {
+      "@id": "kashyyyk",
+      "@type": "Planet",
+      "name": "Kashyyyk",
+      "climate": "tropical",
+      "terrain": "jungle, forests, rivers"
+    },
+    {
+      "@id": "jakku",
+      "@type": "Planet",
+      "name": "Jakku",
+      "climate": "arid",
+      "terrain": "desert"
+    },
+    {
+      "@id": "starkiller_base",
+      "@type": "Planet",
+      "name": "Starkiller Base",
+      "climate": "frozen",
+      "terrain": "forest, mountains"
+    },
+    {
+      "@id": "human",
+      "@type": "Species",
+      "name": "Human",
+      "classification": "mammal",
+      "homeworld": "coruscant"
+    },
+    {
+      "@id": "wookiee",
+      "@type": "Species",
+      "name": "Wookiee",
+      "classification": "mammal",
+      "homeworld": "kashyyyk"
+    },
+    {
+      "@id": "yodas_species",
+      "@type": "Species",
+      "name": "Yoda's Species",
+      "classification": "unknown",
+      "homeworld": null
+    },
+    {
+      "@id": "hutt",
+      "@type": "Species",
+      "name": "Hutt",
+      "classification": "gastropod",
+      "homeworld": null
+    },
+    {
+      "@id": "gungans",
+      "@type": "Species",
+      "name": "Gungan",
+      "classification": "amphibian",
+      "homeworld": "naboo"
+    },
+    {
+      "@id": "trandoshan",
+      "@type": "Species",
+      "name": "Trandoshan",
+      "classification": "reptile",
+      "homeworld": null
+    },
+    {
+      "@id": "zabrak",
+      "@type": "Species",
+      "name": "Zabrak",
+      "classification": "mammal",
+      "homeworld": null
+    },
+    {
+      "@id": "millennium_falcon",
+      "@type": "Starship",
+      "name": "Millennium Falcon",
+      "model": "YT-1300 light freighter",
+      "class": "Light freighter"
+    },
+    {
+      "@id": "x_wing",
+      "@type": "Starship",
+      "name": "X-wing Starfighter",
+      "model": "T-65 X-wing",
+      "class": "Starfighter"
+    },
+    {
+      "@id": "tie_fighter",
+      "@type": "Starship",
+      "name": "TIE Fighter",
+      "model": "Twin Ion Engine",
+      "class": "Starfighter"
+    },
+    {
+      "@id": "star_destroyer",
+      "@type": "Starship",
+      "name": "Imperial Star Destroyer",
+      "model": "Imperial I-class",
+      "class": "Star Destroyer"
+    },
+    {
+      "@id": "death_star",
+      "@type": "Starship",
+      "name": "Death Star",
+      "model": "DS-1 Orbital Battle Station",
+      "class": "Deep Space Mobile Battlestation"
+    },
+    {
+      "@id": "slave_i",
+      "@type": "Starship",
+      "name": "Slave I",
+      "model": "Firespray-31",
+      "class": "Patrol craft"
+    },
+    {
+      "@id": "naboo_starfighter",
+      "@type": "Starship",
+      "name": "Naboo Starfighter",
+      "model": "N-1",
+      "class": "Starfighter"
+    }
+  ],
+  "edges": [
+    {
+      "@type": "APPEARS_IN",
+      "@src": "qui_gon_jinn",
+      "@dst": "the_phantom_menace"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "obi_wan_kenobi",
+      "@dst": "the_phantom_menace"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "padme_amidala",
+      "@dst": "the_phantom_menace"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "anakin_skywalker",
+      "@dst": "the_phantom_menace"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "darth_maul",
+      "@dst": "the_phantom_menace"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "yoda",
+      "@dst": "the_phantom_menace"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "mace_windu",
+      "@dst": "the_phantom_menace"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "r2d2",
+      "@dst": "the_phantom_menace"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "c3po",
+      "@dst": "the_phantom_menace"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "jar_jar_binks",
+      "@dst": "the_phantom_menace"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "palpatine",
+      "@dst": "the_phantom_menace"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "obi_wan_kenobi",
+      "@dst": "attack_of_the_clones"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "anakin_skywalker",
+      "@dst": "attack_of_the_clones"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "padme_amidala",
+      "@dst": "attack_of_the_clones"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "yoda",
+      "@dst": "attack_of_the_clones"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "mace_windu",
+      "@dst": "attack_of_the_clones"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "count_dooku",
+      "@dst": "attack_of_the_clones"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "r2d2",
+      "@dst": "attack_of_the_clones"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "c3po",
+      "@dst": "attack_of_the_clones"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "boba_fett",
+      "@dst": "attack_of_the_clones"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "palpatine",
+      "@dst": "attack_of_the_clones"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "obi_wan_kenobi",
+      "@dst": "revenge_of_the_sith"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "anakin_skywalker",
+      "@dst": "revenge_of_the_sith"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "padme_amidala",
+      "@dst": "revenge_of_the_sith"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "yoda",
+      "@dst": "revenge_of_the_sith"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "mace_windu",
+      "@dst": "revenge_of_the_sith"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "count_dooku",
+      "@dst": "revenge_of_the_sith"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "r2d2",
+      "@dst": "revenge_of_the_sith"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "c3po",
+      "@dst": "revenge_of_the_sith"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "darth_vader",
+      "@dst": "revenge_of_the_sith"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "palpatine",
+      "@dst": "revenge_of_the_sith"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "chewbacca",
+      "@dst": "revenge_of_the_sith"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "grand_moff_tarkin",
+      "@dst": "revenge_of_the_sith"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "luke_skywalker",
+      "@dst": "a_new_hope"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "leia_organa",
+      "@dst": "a_new_hope"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "han_solo",
+      "@dst": "a_new_hope"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "chewbacca",
+      "@dst": "a_new_hope"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "darth_vader",
+      "@dst": "a_new_hope"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "obi_wan_kenobi",
+      "@dst": "a_new_hope"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "r2d2",
+      "@dst": "a_new_hope"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "c3po",
+      "@dst": "a_new_hope"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "grand_moff_tarkin",
+      "@dst": "a_new_hope"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "wedge_antilles",
+      "@dst": "a_new_hope"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "luke_skywalker",
+      "@dst": "empire_strikes_back"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "leia_organa",
+      "@dst": "empire_strikes_back"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "han_solo",
+      "@dst": "empire_strikes_back"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "chewbacca",
+      "@dst": "empire_strikes_back"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "darth_vader",
+      "@dst": "empire_strikes_back"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "yoda",
+      "@dst": "empire_strikes_back"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "r2d2",
+      "@dst": "empire_strikes_back"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "c3po",
+      "@dst": "empire_strikes_back"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "lando_calrissian",
+      "@dst": "empire_strikes_back"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "boba_fett",
+      "@dst": "empire_strikes_back"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "palpatine",
+      "@dst": "empire_strikes_back"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "wedge_antilles",
+      "@dst": "empire_strikes_back"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "luke_skywalker",
+      "@dst": "return_of_the_jedi"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "leia_organa",
+      "@dst": "return_of_the_jedi"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "han_solo",
+      "@dst": "return_of_the_jedi"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "chewbacca",
+      "@dst": "return_of_the_jedi"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "darth_vader",
+      "@dst": "return_of_the_jedi"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "yoda",
+      "@dst": "return_of_the_jedi"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "r2d2",
+      "@dst": "return_of_the_jedi"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "c3po",
+      "@dst": "return_of_the_jedi"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "lando_calrissian",
+      "@dst": "return_of_the_jedi"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "boba_fett",
+      "@dst": "return_of_the_jedi"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "palpatine",
+      "@dst": "return_of_the_jedi"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "wedge_antilles",
+      "@dst": "return_of_the_jedi"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "admiral_ackbar",
+      "@dst": "return_of_the_jedi"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "jabba_the_hutt",
+      "@dst": "return_of_the_jedi"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "rey",
+      "@dst": "the_force_awakens"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "finn",
+      "@dst": "the_force_awakens"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "kylo_ren",
+      "@dst": "the_force_awakens"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "poe_dameron",
+      "@dst": "the_force_awakens"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "bb8",
+      "@dst": "the_force_awakens"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "han_solo",
+      "@dst": "the_force_awakens"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "leia_organa",
+      "@dst": "the_force_awakens"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "chewbacca",
+      "@dst": "the_force_awakens"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "general_hux",
+      "@dst": "the_force_awakens"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "snoke",
+      "@dst": "the_force_awakens"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "luke_skywalker",
+      "@dst": "the_force_awakens"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "r2d2",
+      "@dst": "the_force_awakens"
+    },
+    {
+      "@type": "APPEARS_IN",
+      "@src": "c3po",
+      "@dst": "the_force_awakens"
+    },
+    {
+      "@type": "HOME_PLANET",
+      "@src": "luke_skywalker",
+      "@dst": "tatooine"
+    },
+    {
+      "@type": "HOME_PLANET",
+      "@src": "leia_organa",
+      "@dst": "alderaan"
+    },
+    {
+      "@type": "HOME_PLANET",
+      "@src": "han_solo",
+      "@dst": "coruscant"
+    },
+    {
+      "@type": "HOME_PLANET",
+      "@src": "darth_vader",
+      "@dst": "tatooine"
+    },
+    {
+      "@type": "HOME_PLANET",
+      "@src": "anakin_skywalker",
+      "@dst": "tatooine"
+    },
+    {
+      "@type": "HOME_PLANET",
+      "@src": "padme_amidala",
+      "@dst": "naboo"
+    },
+    {
+      "@type": "HOME_PLANET",
+      "@src": "jar_jar_binks",
+      "@dst": "naboo"
+    },
+    {
+      "@type": "HOME_PLANET",
+      "@src": "palpatine",
+      "@dst": "naboo"
+    },
+    {
+      "@type": "HOME_PLANET",
+      "@src": "rey",
+      "@dst": "jakku"
+    },
+    {
+      "@type": "HOME_PLANET",
+      "@src": "chewbacca",
+      "@dst": "kashyyyk"
+    },
+    {
+      "@type": "HOME_PLANET",
+      "@src": "lando_calrissian",
+      "@dst": "bespin"
+    },
+    {
+      "@type": "HOME_PLANET",
+      "@src": "boba_fett",
+      "@dst": "kamino"
+    },
+    {
+      "@type": "BELONGS_TO",
+      "@src": "luke_skywalker",
+      "@dst": "human"
+    },
+    {
+      "@type": "BELONGS_TO",
+      "@src": "leia_organa",
+      "@dst": "human"
+    },
+    {
+      "@type": "BELONGS_TO",
+      "@src": "han_solo",
+      "@dst": "human"
+    },
+    {
+      "@type": "BELONGS_TO",
+      "@src": "darth_vader",
+      "@dst": "human"
+    },
+    {
+      "@type": "BELONGS_TO",
+      "@src": "anakin_skywalker",
+      "@dst": "human"
+    },
+    {
+      "@type": "BELONGS_TO",
+      "@src": "obi_wan_kenobi",
+      "@dst": "human"
+    },
+    {
+      "@type": "BELONGS_TO",
+      "@src": "padme_amidala",
+      "@dst": "human"
+    },
+    {
+      "@type": "BELONGS_TO",
+      "@src": "qui_gon_jinn",
+      "@dst": "human"
+    },
+    {
+      "@type": "BELONGS_TO",
+      "@src": "mace_windu",
+      "@dst": "human"
+    },
+    {
+      "@type": "BELONGS_TO",
+      "@src": "palpatine",
+      "@dst": "human"
+    },
+    {
+      "@type": "BELONGS_TO",
+      "@src": "chewbacca",
+      "@dst": "wookiee"
+    },
+    {
+      "@type": "BELONGS_TO",
+      "@src": "yoda",
+      "@dst": "yodas_species"
+    },
+    {
+      "@type": "BELONGS_TO",
+      "@src": "jabba_the_hutt",
+      "@dst": "hutt"
+    },
+    {
+      "@type": "BELONGS_TO",
+      "@src": "jar_jar_binks",
+      "@dst": "gungans"
+    },
+    {
+      "@type": "BELONGS_TO",
+      "@src": "darth_maul",
+      "@dst": "zabrak"
+    },
+    {
+      "@type": "BELONGS_TO",
+      "@src": "boba_fett",
+      "@dst": "human"
+    },
+    {
+      "@type": "PILOTED",
+      "@src": "han_solo",
+      "@dst": "millennium_falcon"
+    },
+    {
+      "@type": "PILOTED",
+      "@src": "chewbacca",
+      "@dst": "millennium_falcon"
+    },
+    {
+      "@type": "PILOTED",
+      "@src": "luke_skywalker",
+      "@dst": "x_wing"
+    },
+    {
+      "@type": "PILOTED",
+      "@src": "wedge_antilles",
+      "@dst": "x_wing"
+    },
+    {
+      "@type": "PILOTED",
+      "@src": "boba_fett",
+      "@dst": "slave_i"
+    },
+    {
+      "@type": "PILOTED",
+      "@src": "anakin_skywalker",
+      "@dst": "naboo_starfighter"
+    },
+    {
+      "@type": "PILOTED",
+      "@src": "rey",
+      "@dst": "millennium_falcon"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "the_phantom_menace",
+      "@dst": "naboo"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "the_phantom_menace",
+      "@dst": "tatooine"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "the_phantom_menace",
+      "@dst": "coruscant"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "attack_of_the_clones",
+      "@dst": "coruscant"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "attack_of_the_clones",
+      "@dst": "kamino"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "attack_of_the_clones",
+      "@dst": "geonosis"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "attack_of_the_clones",
+      "@dst": "tatooine"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "attack_of_the_clones",
+      "@dst": "naboo"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "revenge_of_the_sith",
+      "@dst": "coruscant"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "revenge_of_the_sith",
+      "@dst": "mustafar"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "revenge_of_the_sith",
+      "@dst": "kashyyyk"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "revenge_of_the_sith",
+      "@dst": "tatooine"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "revenge_of_the_sith",
+      "@dst": "alderaan"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "a_new_hope",
+      "@dst": "tatooine"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "a_new_hope",
+      "@dst": "alderaan"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "empire_strikes_back",
+      "@dst": "hoth"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "empire_strikes_back",
+      "@dst": "dagobah"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "empire_strikes_back",
+      "@dst": "bespin"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "return_of_the_jedi",
+      "@dst": "tatooine"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "return_of_the_jedi",
+      "@dst": "dagobah"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "return_of_the_jedi",
+      "@dst": "endor"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "the_force_awakens",
+      "@dst": "jakku"
+    },
+    {
+      "@type": "FEATURED_PLANET",
+      "@src": "the_force_awakens",
+      "@dst": "starkiller_base"
+    }
+  ]
+}

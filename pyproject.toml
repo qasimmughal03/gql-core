@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cricket-kg"
-version = "0.1.0"
-description = "Property Graph + formal query (GQL-Core subset) over cricsheet.org cricket data"
+name = "gql-core"
+version = "0.2.0"
+description = "Generic property-graph query engine with formal GQL grammar and benchmark framework"
 requires-python = ">=3.11"
 readme = "README.md"
 dependencies = [
@@ -20,8 +20,21 @@ dev = [
     "pytest-cov==5.0.0",
 ]
 
+[project.scripts]
+gql-core = "gql_core.cli:main"
+
 [tool.setuptools]
-packages = ["ingestion", "graph", "query", "benchmark"]
+packages = [
+    "gql_core",
+    "gql_core.query",
+    "ingestion",
+    "graph",
+    "query",
+    "benchmark",
+]
+
+[tool.setuptools.package-data]
+gql_core = ["query/grammar.lark"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

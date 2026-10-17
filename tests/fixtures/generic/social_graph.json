@@ -1,0 +1,20 @@
+{
+  "nodes": [
+    {"@id": "alice", "@type": "Person", "name": "Alice", "age": 30, "city": "NYC"},
+    {"@id": "bob", "@type": "Person", "name": "Bob", "age": 25, "city": "LA"},
+    {"@id": "charlie", "@type": "Person", "name": "Charlie", "age": 35, "city": "NYC"},
+    {"@id": "diana", "@type": "Person", "name": "Diana", "age": 28, "city": "LA"},
+    {"@id": "nyc", "@type": "City", "name": "New York", "country": "US"},
+    {"@id": "la", "@type": "City", "name": "Los Angeles", "country": "US"}
+  ],
+  "edges": [
+    {"@type": "KNOWS", "@src": "alice", "@dst": "bob", "since": 2019},
+    {"@type": "KNOWS", "@src": "alice", "@dst": "charlie", "since": 2020},
+    {"@type": "KNOWS", "@src": "bob", "@dst": "diana", "since": 2021},
+    {"@type": "KNOWS", "@src": "charlie", "@dst": "diana", "since": 2022},
+    {"@type": "LIVES_IN", "@src": "alice", "@dst": "nyc"},
+    {"@type": "LIVES_IN", "@src": "charlie", "@dst": "nyc"},
+    {"@type": "LIVES_IN", "@src": "bob", "@dst": "la"},
+    {"@type": "LIVES_IN", "@src": "diana", "@dst": "la"}
+  ]
+}

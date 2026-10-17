@@ -1,0 +1,39 @@
+{
+  "meta": {"data_version": "1.1.0", "created": "2024-04-01", "revision": 1},
+  "info": {
+    "balls_per_over": 6,
+    "dates": ["2024-04-01"],
+    "gender": "male",
+    "match_type": "T20",
+    "season": "2024",
+    "team_type": "international",
+    "teams": ["Pakistan", "Sri Lanka"],
+    "outcome": {"winner": "Pakistan", "by": {"runs": 5}},
+    "toss": {"winner": "Pakistan", "decision": "bat"},
+    "players": {
+      "Pakistan": ["Babar Azam", "Mohammad Rizwan"],
+      "Sri Lanka": ["Wanindu Hasaranga", "Pathum Nissanka"]
+    },
+    "registry": {
+      "people": {
+        "Babar Azam": "11111111",
+        "Mohammad Rizwan": "22222222",
+        "Wanindu Hasaranga": "01010101",
+        "Pathum Nissanka": "02020202"
+      }
+    }
+  },
+  "innings": [
+    {
+      "team": "Pakistan",
+      "overs": [
+        {"over": 0, "deliveries": [
+          {"batter": "Babar Azam", "bowler": "Wanindu Hasaranga", "non_striker": "Mohammad Rizwan",
+           "runs": {"batter": 6, "extras": 0, "total": 6}},
+          {"batter": "Babar Azam", "bowler": "Wanindu Hasaranga", "non_striker": "Mohammad Rizwan",
+           "runs": {"batter": 4, "extras": 0, "total": 4}}
+        ]}
+      ]
+    }
+  ]
+}

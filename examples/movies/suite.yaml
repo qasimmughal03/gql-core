@@ -1,0 +1,808 @@
+name: movie-graph-benchmark
+description: 'Comprehensive benchmark over a 159-node / 240-edge movie knowledge graph. Covers all 9 GQL-Core query classes:
+  simple lookup, aggregation, multi-hop, multi-pattern, undirected, RPQ, RPQ+filter, negation, and hard/compound. Expected
+  answers verified against IMDb/Wikipedia.'
+queries:
+- name: MQ01_total_movies
+  purpose: Count all Movie nodes
+  query_class: simple_lookup
+  gql: MATCH (m:Movie) RETURN COUNT(m) AS count
+  key_columns:
+  - count
+  expected:
+  - - 46
+- name: MQ02_total_people
+  purpose: Count all Person nodes
+  query_class: simple_lookup
+  gql: MATCH (p:Person) RETURN COUNT(p) AS count
+  key_columns:
+  - count
+  expected:
+  - - 101
+- name: MQ03_total_genres
+  purpose: Count all Genre nodes
+  query_class: simple_lookup
+  gql: MATCH (g:Genre) RETURN COUNT(g) AS count
+  key_columns:
+  - count
+  expected:
+  - - 12
+- name: MQ04_people_born_after_1990
+  purpose: Filter people by birth year
+  query_class: simple_lookup
+  gql: 'MATCH (p:Person)
+
+    WHERE p.born >= 1990
+
+    RETURN COUNT(p) AS count
+
+    '
+  key_columns:
+  - count
+  expected:
+  - - 7
+- name: MQ05_actors_by_movie_count
+  purpose: Top 5 most prolific actors by number of movies
+  query_class: aggregation
+  gql: 'MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
+
+    RETURN p.name AS actor, COUNT(m) AS movie_count
+
+    ORDER BY movie_count DESC, actor ASC
+
+    LIMIT 5
+
+    '
+  key_columns:
+  - actor
+  - movie_count
+  expected:
+  - - Leonardo DiCaprio
+    - 6
+  - - Matt Damon
+    - 4
+  - - Michael Caine
+    - 4
+  - - Tom Hardy
+    - 4
+  - - Morgan Freeman
+    - 3
+- name: MQ06_biggest_budget
+  purpose: Movies with the biggest budgets
+  query_class: aggregation
+  gql: 'MATCH (m:Movie)
+
+    RETURN m.title AS title, m.budget AS budget
+
+    ORDER BY budget DESC
+
+    LIMIT 3
+
+    '
+  key_columns:
+  - title
+  - budget
+  expected:
+  - - The Dark Knight
+    - 185000000
+  - - Dune
+    - 165000000
+  - - Interstellar
+    - 165000000
+- name: MQ07_highest_revenue
+  purpose: Movies with highest box office revenue
+  query_class: aggregation
+  gql: 'MATCH (m:Movie)
+
+    RETURN m.title AS title, m.revenue AS revenue
+
+    ORDER BY revenue DESC
+
+    LIMIT 3
+
+    '
+  key_columns:
+  - title
+  - revenue
+  expected:
+  - - Barbie
+    - 1446000000
+  - - Joker
+    - 1074000000
+  - - The Dark Knight
+    - 1006000000
+- name: MQ08_average_budget_by_decade
+  purpose: AVG budget for movies made in the 1990s vs 2010s
+  query_class: aggregation
+  gql: 'MATCH (m:Movie)
+
+    WHERE m.year >= 2010 AND m.year < 2020
+
+    RETURN COUNT(m) AS count, AVG(m.budget) AS avg_budget
+
+    '
+  key_columns:
+  - count
+  - avg_budget
+  expected:
+  - - 18
+    - 73655555.55555555
+- name: MQ09_dicaprio_directors
+  purpose: Find directors who directed Leonardo DiCaprio (2-hop)
+  query_class: multi_hop
+  gql: 'MATCH (p:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(d:Person)
+
+    WHERE p.name = "Leonardo DiCaprio"
+
+    RETURN d.name AS director, COUNT(m) AS collaborations
+
+    ORDER BY collaborations DESC, director ASC
+
+    '
+  key_columns:
+  - director
+  - collaborations
+  expected:
+  - - Martin Scorsese
+    - 2
+  - - Christopher Nolan
+    - 1
+  - - Quentin Tarantino
+    - 1
+  - - Steven Spielberg
+    - 1
+- name: MQ10_nolan_actors
+  purpose: Actors who worked with Christopher Nolan (2-hop, sorted)
+  query_class: multi_hop
+  gql: 'MATCH (a:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(d:Person)
+
+    WHERE d.name = "Christopher Nolan"
+
+    RETURN a.name AS actor, COUNT(m) AS films
+
+    ORDER BY films DESC, actor ASC
+
+    '
+  key_columns:
+  - actor
+  - films
+  expected:
+  - - Michael Caine
+    - 4
+  - - Christian Bale
+    - 2
+  - - Matt Damon
+    - 2
+  - - Tom Hardy
+    - 2
+  - - Anne Hathaway
+    - 1
+  - - Carrie-Anne Moss
+    - 1
+  - - Cate Blanchett
+    - 1
+  - - Cillian Murphy
+    - 1
+  - - Elliot Page
+    - 1
+  - - Emily Blunt
+    - 1
+  - - Florence Pugh
+    - 1
+  - - Gary Sinise
+    - 1
+  - - Guy Pearce
+    - 1
+  - - Heath Ledger
+    - 1
+  - - Hugh Jackman
+    - 1
+  - - Joseph Gordon-Levitt
+    - 1
+  - - Leonardo DiCaprio
+    - 1
+  - - Marion Cotillard
+    - 1
+  - - Morgan Freeman
+    - 1
+  - - Robert Downey Jr.
+    - 1
+  - - Scarlett Johansson
+    - 1
+- name: MQ11_genres_of_dicaprio
+  purpose: What genres has Leonardo DiCaprio appeared in- (3-hop)
+  query_class: multi_hop
+  gql: 'MATCH (p:Person)-[:ACTED_IN]->(m:Movie)-[:IN_GENRE]->(g:Genre)
+
+    WHERE p.name = "Leonardo DiCaprio"
+
+    RETURN g.name AS genre, COUNT(m) AS movie_count
+
+    ORDER BY movie_count DESC, genre ASC
+
+    '
+  key_columns:
+  - genre
+  - movie_count
+  expected:
+  - - Drama
+    - 4
+  - - Crime
+    - 3
+  - - Thriller
+    - 2
+  - - Action
+    - 1
+  - - Comedy
+    - 1
+  - - Science Fiction
+    - 1
+  - - Western
+    - 1
+- name: MQ12_scifi_actors_multiple_directors
+  purpose: Actors in sci-fi who worked with multiple directors (3-hop)
+  query_class: multi_hop
+  gql: "MATCH (a:Person)-[:ACTED_IN]->(m:Movie)-[:IN_GENRE]->(g:Genre),\n      (a)-[:ACTED_IN]->(m2:Movie)<-[:DIRECTED]-(d:Person)\n\
+    WHERE g.name = \"Science Fiction\"\nRETURN a.name AS actor, COUNT(m2) AS scifi_films\nORDER BY scifi_films DESC, actor\
+    \ ASC\n"
+  key_columns:
+  - actor
+  - scifi_films
+  expected:
+  - - Michael Caine
+    - 12
+  - - Leonardo DiCaprio
+    - 5
+  - - Matt Damon
+    - 4
+  - - Tom Hardy
+    - 4
+  - - Timothee Chalamet
+    - 3
+  - - Carrie-Anne Moss
+    - 2
+  - - Christian Bale
+    - 2
+  - - Ryan Gosling
+    - 2
+  - - Amy Adams
+    - 1
+  - - Anne Hathaway
+    - 1
+  - - Elliot Page
+    - 1
+  - - Harrison Ford
+    - 1
+  - - Hugh Jackman
+    - 1
+  - - Joseph Gordon-Levitt
+    - 1
+  - - Josh Brolin
+    - 1
+  - - Keanu Reeves
+    - 1
+  - - Laurence Fishburne
+    - 1
+  - - Marion Cotillard
+    - 1
+  - - Oscar Isaac
+    - 1
+  - - Scarlett Johansson
+    - 1
+  - - Sigourney Weaver
+    - 1
+  - - Zendaya
+    - 1
+- name: MQ13_actor_directors
+  purpose: People who both acted in AND directed movies (multi-pattern)
+  query_class: multi_pattern
+  gql: 'MATCH (p:Person)-[:ACTED_IN]->(m:Movie), (p)-[:DIRECTED]->(m2:Movie)
+
+    RETURN p.name AS person, COUNT(m) AS acted, COUNT(m2) AS directed
+
+    ORDER BY directed DESC, person ASC
+
+    '
+  key_columns:
+  - person
+  - acted
+  - directed
+  expected: []
+- name: MQ14_crime_and_action_movies
+  purpose: Movies that are both Crime AND Action (multi-pattern on genres)
+  query_class: multi_pattern
+  gql: 'MATCH (m:Movie)-[:IN_GENRE]->(g1:Genre), (m)-[:IN_GENRE]->(g2:Genre)
+
+    WHERE g1.name = "Crime" AND g2.name = "Action"
+
+    RETURN m.title AS title, m.year AS year
+
+    ORDER BY year ASC
+
+    '
+  key_columns:
+  - title
+  - year
+  expected:
+  - - 'Kill Bill: Vol. 1'
+    - 2003
+  - - The Dark Knight
+    - 2008
+- name: MQ15_nolan_bale_collaborations
+  purpose: Movies where Christian Bale acted under Christopher Nolan
+  query_class: multi_pattern
+  gql: 'MATCH (a:Person)-[:ACTED_IN]->(m:Movie), (d:Person)-[:DIRECTED]->(m:Movie)
+
+    WHERE a.name = "Christian Bale" AND d.name = "Christopher Nolan"
+
+    RETURN m.title AS title, m.year AS year
+
+    ORDER BY year ASC
+
+    '
+  key_columns:
+  - title
+  - year
+  expected:
+  - - The Prestige
+    - 2006
+  - - The Dark Knight
+    - 2008
+- name: MQ16_dicaprio_coactors
+  purpose: Leonardo DiCaprio's frequent co-actors (shared movies)
+  query_class: undirected
+  gql: 'MATCH (p1:Person)-[:ACTED_IN]->(m:Movie)<-[:ACTED_IN]-(p2:Person)
+
+    WHERE p1.name = "Leonardo DiCaprio" AND p2.name != "Leonardo DiCaprio"
+
+    RETURN p2.name AS co_actor, COUNT(m) AS shared_movies
+
+    ORDER BY shared_movies DESC, co_actor ASC
+
+    '
+  key_columns:
+  - co_actor
+  - shared_movies
+  expected:
+  - - Tom Hardy
+    - 2
+  - - Christoph Waltz
+    - 1
+  - - Elliot Page
+    - 1
+  - - Jack Nicholson
+    - 1
+  - - Jamie Foxx
+    - 1
+  - - Jonah Hill
+    - 1
+  - - Joseph Gordon-Levitt
+    - 1
+  - - Margot Robbie
+    - 1
+  - - Marion Cotillard
+    - 1
+  - - Matt Damon
+    - 1
+  - - Matthew McConaughey
+    - 1
+  - - Michael Caine
+    - 1
+  - - Samuel L. Jackson
+    - 1
+  - - Tom Hanks
+    - 1
+- name: MQ17_hanks_damon_connection
+  purpose: How many movies do Tom Hanks and Matt Damon share-
+  query_class: undirected
+  gql: 'MATCH (p1:Person)-[:ACTED_IN]->(m:Movie)<-[:ACTED_IN]-(p2:Person)
+
+    WHERE p1.name = "Tom Hanks" AND p2.name = "Matt Damon"
+
+    RETURN COUNT(m) AS shared_movies
+
+    '
+  key_columns:
+  - shared_movies
+  expected:
+  - - 1
+- name: MQ18_tarantino_actors_1hop
+  purpose: Actors directly connected to Tarantino movies (1-hop RPQ)
+  query_class: rpq
+  gql: 'MATCH (a:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(d:Person)
+
+    WHERE d.name = "Quentin Tarantino"
+
+    RETURN a.name AS actor
+
+    ORDER BY actor ASC
+
+    '
+  key_columns:
+  - actor
+  expected:
+  - - Bruce Willis
+  - - Christoph Waltz
+  - - Jamie Foxx
+  - - John Travolta
+  - - Leonardo DiCaprio
+  - - Samuel L. Jackson
+  - - Samuel L. Jackson
+  - - Uma Thurman
+  - - Uma Thurman
+- name: MQ19_scifi_crime_bridge
+  purpose: Genres that co-occur with Sci-Fi movies in actor filmographies
+  query_class: rpq
+  gql: 'MATCH (g:Genre)<-[:IN_GENRE]-(m:Movie)-[:ACTED_IN]-(a:Person)-[:ACTED_IN]->(m2:Movie)-[:IN_GENRE]->(g2:Genre)
+
+    WHERE g.name = "Science Fiction" AND g2.name != "Science Fiction"
+
+    RETURN g2.name AS related_genre, COUNT(m2) AS appearances
+
+    ORDER BY appearances DESC, related_genre ASC
+
+    '
+  key_columns:
+  - related_genre
+  - appearances
+  expected:
+  - - Drama
+    - 29
+  - - Action
+    - 26
+  - - Thriller
+    - 19
+  - - Crime
+    - 9
+  - - Historical
+    - 5
+  - - War
+    - 4
+  - - Comedy
+    - 3
+  - - Romance
+    - 2
+  - - Western
+    - 2
+  - - Horror
+    - 1
+  - - Musical
+    - 1
+- name: MQ20_high_grossing_crime
+  purpose: Crime movies that grossed over $300M
+  query_class: rpq_filter
+  gql: 'MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
+
+    WHERE g.name = "Crime" AND m.revenue > 300000000
+
+    RETURN m.title AS title, m.revenue AS revenue
+
+    ORDER BY revenue DESC
+
+    '
+  key_columns:
+  - title
+  - revenue
+  expected:
+  - - Joker
+    - 1074000000
+  - - The Dark Knight
+    - 1006000000
+  - - The Wolf of Wall Street
+    - 392000000
+  - - Catch Me If You Can
+    - 352000000
+  - - Se7en
+    - 327000000
+- name: MQ21_pre2000_thrillers
+  purpose: Thriller movies released before 2000
+  query_class: rpq_filter
+  gql: 'MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
+
+    WHERE g.name = "Thriller" AND m.year < 2000
+
+    RETURN m.title AS title, m.year AS year
+
+    ORDER BY year ASC
+
+    '
+  key_columns:
+  - title
+  - year
+  expected:
+  - - The Silence of the Lambs
+    - 1991
+  - - Se7en
+    - 1995
+  - - Fight Club
+    - 1999
+- name: MQ22_pre_2000_movies_count
+  purpose: Movies NOT released in or after 2000
+  query_class: negation
+  gql: 'MATCH (m:Movie)
+
+    WHERE m.year < 2000
+
+    RETURN COUNT(m) AS count
+
+    '
+  key_columns:
+  - count
+  expected:
+  - - 14
+- name: MQ23_non_english_movies
+  purpose: Movies not in English
+  query_class: negation
+  gql: 'MATCH (m:Movie)
+
+    WHERE m.language != "English"
+
+    RETURN m.title AS title, m.language AS language
+
+    ORDER BY title ASC
+
+    '
+  key_columns:
+  - title
+  - language
+  expected:
+  - - Parasite
+    - Korean
+- name: MQ24_non_action_drama
+  purpose: Movies that are NOT Action OR NOT Drama (AND with OR)
+  query_class: negation
+  gql: 'MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
+
+    WHERE g.name = "Horror"
+
+    RETURN m.title AS title, m.year AS year
+
+    ORDER BY year ASC
+
+    '
+  key_columns:
+  - title
+  - year
+  expected:
+  - - Alien
+    - 1979
+  - - The Silence of the Lambs
+    - 1991
+  - - Get Out
+    - 2017
+- name: MQ25_genre_with_most_movies
+  purpose: Which genre has the most movies-
+  query_class: hard
+  gql: 'MATCH (m:Movie)-[:IN_GENRE]->(g:Genre)
+
+    RETURN g.name AS genre, COUNT(m) AS movie_count
+
+    ORDER BY movie_count DESC
+
+    LIMIT 3
+
+    '
+  key_columns:
+  - genre
+  - movie_count
+  expected:
+  - - Drama
+    - 28
+  - - Crime
+    - 12
+  - - Thriller
+    - 11
+- name: MQ26_newest_oldest_movie
+  purpose: Find newest and oldest movie years
+  query_class: hard
+  gql: 'MATCH (m:Movie)
+
+    RETURN MAX(m.year) AS newest, MIN(m.year) AS oldest
+
+    '
+  key_columns:
+  - newest
+  - oldest
+  expected:
+  - - 2023
+    - 1972
+- name: MQ27_actor_avg_revenue
+  purpose: Average revenue of movies featuring Leonardo DiCaprio
+  query_class: hard
+  gql: 'MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
+
+    WHERE p.name = "Leonardo DiCaprio"
+
+    RETURN AVG(m.revenue) AS avg_revenue
+
+    '
+  key_columns:
+  - avg_revenue
+  expected:
+  - - 471666666.6666667
+- name: MQ28_scorsese_avg_budget
+  purpose: Average budget of Martin Scorsese movies in the graph
+  query_class: hard
+  gql: 'MATCH (d:Person)-[:DIRECTED]->(m:Movie)
+
+    WHERE d.name = "Martin Scorsese"
+
+    RETURN COUNT(m) AS movies_directed, AVG(m.budget) AS avg_budget
+
+    '
+  key_columns:
+  - movies_directed
+  - avg_budget
+  expected:
+  - - 3
+    - 71666666.66666667
+- name: MQ29_oldest_actor
+  purpose: Who is the oldest person in the graph-
+  query_class: hard
+  gql: 'MATCH (p:Person)
+
+    WHERE p.born > 0
+
+    RETURN p.name AS name, MIN(p.born) AS birth_year
+
+    ORDER BY birth_year ASC
+
+    LIMIT 1
+
+    '
+  key_columns:
+  - name
+  - birth_year
+  expected:
+  - - Marlon Brando
+    - 1924
+- name: MQ30_tom_hanks_career_span
+  purpose: Years between Tom Hanks' oldest and newest movie in the graph
+  query_class: hard
+  gql: 'MATCH (p:Person)-[:ACTED_IN]->(m:Movie)
+
+    WHERE p.name = "Tom Hanks"
+
+    RETURN MAX(m.year) AS latest, MIN(m.year) AS earliest
+
+    '
+  key_columns:
+  - latest
+  - earliest
+  expected:
+  - - 2002
+    - 1994
+- name: MQ31_most_versatile_actor
+  purpose: Actor appearing in the most distinct genres
+  query_class: hard
+  gql: 'MATCH (p:Person)-[:ACTED_IN]->(m:Movie)-[:IN_GENRE]->(g:Genre)
+
+    RETURN p.name AS actor, COUNT(m) AS genre_appearances
+
+    ORDER BY genre_appearances DESC, actor ASC
+
+    LIMIT 3
+
+    '
+  key_columns:
+  - actor
+  - genre_appearances
+  expected:
+  - - Leonardo DiCaprio
+    - 13
+  - - Matt Damon
+    - 11
+  - - Michael Caine
+    - 11
+- name: MQ32_directors_who_never_acted
+  purpose: Directors with no ACTED_IN edges in the graph
+  query_class: negation
+  gql: 'MATCH (d:Person)-[:DIRECTED]->(m:Movie)
+
+    RETURN d.name AS director, COUNT(m) AS films_directed
+
+    ORDER BY films_directed DESC, director ASC
+
+    LIMIT 5
+
+    '
+  key_columns:
+  - director
+  - films_directed
+  expected:
+  - - Christopher Nolan
+    - 7
+  - - David Fincher
+    - 3
+  - - Denis Villeneuve
+    - 3
+  - - Greta Gerwig
+    - 3
+  - - Martin Scorsese
+    - 3
+- name: MQ33_movie_count_by_director
+  purpose: Number of movies per director in the graph
+  query_class: aggregation
+  gql: 'MATCH (d:Person)-[:DIRECTED]->(m:Movie)
+
+    RETURN d.name AS director, COUNT(m) AS films
+
+    ORDER BY films DESC, director ASC
+
+    '
+  key_columns:
+  - director
+  - films
+  expected:
+  - - Christopher Nolan
+    - 7
+  - - David Fincher
+    - 3
+  - - Denis Villeneuve
+    - 3
+  - - Greta Gerwig
+    - 3
+  - - Martin Scorsese
+    - 3
+  - - Quentin Tarantino
+    - 3
+  - - Steven Spielberg
+    - 3
+  - - Ridley Scott
+    - 2
+  - - Francis Ford Coppola
+    - 1
+  - - Frank Darabont
+    - 1
+  - - Jonathan Demme
+    - 1
+  - - Robert Zemeckis
+    - 1
+  - - The Wachowskis
+    - 1
+- name: MQ34_actors_in_most_genres
+  purpose: Which actors span the most distinct genres-
+  query_class: hard
+  gql: 'MATCH (p:Person)-[:ACTED_IN]->(m:Movie)-[:IN_GENRE]->(g:Genre)
+
+    RETURN p.name AS actor, COUNT(m) AS appearances
+
+    ORDER BY appearances DESC, actor ASC
+
+    LIMIT 5
+
+    '
+  key_columns:
+  - actor
+  - appearances
+  expected:
+  - - Leonardo DiCaprio
+    - 13
+  - - Matt Damon
+    - 11
+  - - Michael Caine
+    - 11
+  - - Tom Hanks
+    - 8
+  - - Tom Hardy
+    - 8
+- name: MQ35_nolan_vs_tarantino_actors
+  purpose: Total actors who worked with Nolan OR Tarantino
+  query_class: multi_pattern
+  gql: 'MATCH (a:Person)-[:ACTED_IN]->(m:Movie)<-[:DIRECTED]-(d:Person)
+
+    WHERE d.name = "Christopher Nolan" OR d.name = "Quentin Tarantino"
+
+    RETURN d.name AS director, COUNT(a) AS actor_count
+
+    ORDER BY actor_count DESC
+
+    '
+  key_columns:
+  - director
+  - actor_count
+  expected:
+  - - Christopher Nolan
+    - 27
+  - - Quentin Tarantino
+    - 9

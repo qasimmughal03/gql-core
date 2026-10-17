@@ -1,0 +1,2547 @@
+{
+  "nodes": [
+    {
+      "@id": "tom_hanks",
+      "@type": "Person",
+      "name": "Tom Hanks",
+      "born": 1956,
+      "gender": "male"
+    },
+    {
+      "@id": "leonardo_dicaprio",
+      "@type": "Person",
+      "name": "Leonardo DiCaprio",
+      "born": 1974,
+      "gender": "male"
+    },
+    {
+      "@id": "meryl_streep",
+      "@type": "Person",
+      "name": "Meryl Streep",
+      "born": 1949,
+      "gender": "female"
+    },
+    {
+      "@id": "morgan_freeman",
+      "@type": "Person",
+      "name": "Morgan Freeman",
+      "born": 1937,
+      "gender": "male"
+    },
+    {
+      "@id": "scarlett_johansson",
+      "@type": "Person",
+      "name": "Scarlett Johansson",
+      "born": 1984,
+      "gender": "female"
+    },
+    {
+      "@id": "brad_pitt",
+      "@type": "Person",
+      "name": "Brad Pitt",
+      "born": 1963,
+      "gender": "male"
+    },
+    {
+      "@id": "cate_blanchett",
+      "@type": "Person",
+      "name": "Cate Blanchett",
+      "born": 1969,
+      "gender": "female"
+    },
+    {
+      "@id": "robert_downey_jr",
+      "@type": "Person",
+      "name": "Robert Downey Jr.",
+      "born": 1965,
+      "gender": "male"
+    },
+    {
+      "@id": "natalie_portman",
+      "@type": "Person",
+      "name": "Natalie Portman",
+      "born": 1981,
+      "gender": "female"
+    },
+    {
+      "@id": "matt_damon",
+      "@type": "Person",
+      "name": "Matt Damon",
+      "born": 1970,
+      "gender": "male"
+    },
+    {
+      "@id": "jennifer_lawrence",
+      "@type": "Person",
+      "name": "Jennifer Lawrence",
+      "born": 1990,
+      "gender": "female"
+    },
+    {
+      "@id": "christian_bale",
+      "@type": "Person",
+      "name": "Christian Bale",
+      "born": 1974,
+      "gender": "male"
+    },
+    {
+      "@id": "anne_hathaway",
+      "@type": "Person",
+      "name": "Anne Hathaway",
+      "born": 1982,
+      "gender": "female"
+    },
+    {
+      "@id": "tom_cruise",
+      "@type": "Person",
+      "name": "Tom Cruise",
+      "born": 1962,
+      "gender": "male"
+    },
+    {
+      "@id": "emma_stone",
+      "@type": "Person",
+      "name": "Emma Stone",
+      "born": 1988,
+      "gender": "female"
+    },
+    {
+      "@id": "ryan_gosling",
+      "@type": "Person",
+      "name": "Ryan Gosling",
+      "born": 1980,
+      "gender": "male"
+    },
+    {
+      "@id": "viola_davis",
+      "@type": "Person",
+      "name": "Viola Davis",
+      "born": 1965,
+      "gender": "female"
+    },
+    {
+      "@id": "joaquin_phoenix",
+      "@type": "Person",
+      "name": "Joaquin Phoenix",
+      "born": 1974,
+      "gender": "male"
+    },
+    {
+      "@id": "saoirse_ronan",
+      "@type": "Person",
+      "name": "Saoirse Ronan",
+      "born": 1994,
+      "gender": "female"
+    },
+    {
+      "@id": "timothee_chalamet",
+      "@type": "Person",
+      "name": "Timothee Chalamet",
+      "born": 1995,
+      "gender": "male"
+    },
+    {
+      "@id": "florence_pugh",
+      "@type": "Person",
+      "name": "Florence Pugh",
+      "born": 1996,
+      "gender": "female"
+    },
+    {
+      "@id": "samuel_l_jackson",
+      "@type": "Person",
+      "name": "Samuel L. Jackson",
+      "born": 1948,
+      "gender": "male"
+    },
+    {
+      "@id": "zendaya",
+      "@type": "Person",
+      "name": "Zendaya",
+      "born": 1996,
+      "gender": "female"
+    },
+    {
+      "@id": "willem_dafoe",
+      "@type": "Person",
+      "name": "Willem Dafoe",
+      "born": 1955,
+      "gender": "male"
+    },
+    {
+      "@id": "amy_adams",
+      "@type": "Person",
+      "name": "Amy Adams",
+      "born": 1974,
+      "gender": "female"
+    },
+    {
+      "@id": "jake_gyllenhaal",
+      "@type": "Person",
+      "name": "Jake Gyllenhaal",
+      "born": 1980,
+      "gender": "male"
+    },
+    {
+      "@id": "margot_robbie",
+      "@type": "Person",
+      "name": "Margot Robbie",
+      "born": 1990,
+      "gender": "female"
+    },
+    {
+      "@id": "tom_hardy",
+      "@type": "Person",
+      "name": "Tom Hardy",
+      "born": 1977,
+      "gender": "male"
+    },
+    {
+      "@id": "lupita_nyongo",
+      "@type": "Person",
+      "name": "Lupita Nyongo",
+      "born": 1983,
+      "gender": "female"
+    },
+    {
+      "@id": "oscar_isaac",
+      "@type": "Person",
+      "name": "Oscar Isaac",
+      "born": 1979,
+      "gender": "male"
+    },
+    {
+      "@id": "bruce_willis",
+      "@type": "Person",
+      "name": "Bruce Willis",
+      "born": 1955,
+      "gender": "male"
+    },
+    {
+      "@id": "adrien_brody",
+      "@type": "Person",
+      "name": "Adrien Brody",
+      "born": 1973,
+      "gender": "male"
+    },
+    {
+      "@id": "liam_neeson",
+      "@type": "Person",
+      "name": "Liam Neeson",
+      "born": 1952,
+      "gender": "male"
+    },
+    {
+      "@id": "ralph_fiennes",
+      "@type": "Person",
+      "name": "Ralph Fiennes",
+      "born": 1962,
+      "gender": "male"
+    },
+    {
+      "@id": "russell_crowe",
+      "@type": "Person",
+      "name": "Russell Crowe",
+      "born": 1964,
+      "gender": "male"
+    },
+    {
+      "@id": "harrison_ford",
+      "@type": "Person",
+      "name": "Harrison Ford",
+      "born": 1942,
+      "gender": "male"
+    },
+    {
+      "@id": "jodie_foster",
+      "@type": "Person",
+      "name": "Jodie Foster",
+      "born": 1962,
+      "gender": "female"
+    },
+    {
+      "@id": "anthony_hopkins",
+      "@type": "Person",
+      "name": "Anthony Hopkins",
+      "born": 1937,
+      "gender": "male"
+    },
+    {
+      "@id": "josh_brolin",
+      "@type": "Person",
+      "name": "Josh Brolin",
+      "born": 1968,
+      "gender": "male"
+    },
+    {
+      "@id": "jared_leto",
+      "@type": "Person",
+      "name": "Jared Leto",
+      "born": 1971,
+      "gender": "male"
+    },
+    {
+      "@id": "jesse_eisenberg",
+      "@type": "Person",
+      "name": "Jesse Eisenberg",
+      "born": 1983,
+      "gender": "male"
+    },
+    {
+      "@id": "andrew_garfield",
+      "@type": "Person",
+      "name": "Andrew Garfield",
+      "born": 1983,
+      "gender": "male"
+    },
+    {
+      "@id": "jim_carrey",
+      "@type": "Person",
+      "name": "Jim Carrey",
+      "born": 1962,
+      "gender": "male"
+    },
+    {
+      "@id": "miles_teller",
+      "@type": "Person",
+      "name": "Miles Teller",
+      "born": 1987,
+      "gender": "male"
+    },
+    {
+      "@id": "jk_simmons",
+      "@type": "Person",
+      "name": "J.K. Simmons",
+      "born": 1955,
+      "gender": "male"
+    },
+    {
+      "@id": "charlize_theron",
+      "@type": "Person",
+      "name": "Charlize Theron",
+      "born": 1975,
+      "gender": "female"
+    },
+    {
+      "@id": "jonah_hill",
+      "@type": "Person",
+      "name": "Jonah Hill",
+      "born": 1983,
+      "gender": "male"
+    },
+    {
+      "@id": "matthew_mcconaughey",
+      "@type": "Person",
+      "name": "Matthew McConaughey",
+      "born": 1969,
+      "gender": "male"
+    },
+    {
+      "@id": "cillian_murphy",
+      "@type": "Person",
+      "name": "Cillian Murphy",
+      "born": 1976,
+      "gender": "male"
+    },
+    {
+      "@id": "emily_blunt",
+      "@type": "Person",
+      "name": "Emily Blunt",
+      "born": 1983,
+      "gender": "female"
+    },
+    {
+      "@id": "america_ferrera",
+      "@type": "Person",
+      "name": "America Ferrera",
+      "born": 1984,
+      "gender": "female"
+    },
+    {
+      "@id": "jamie_foxx",
+      "@type": "Person",
+      "name": "Jamie Foxx",
+      "born": 1967,
+      "gender": "male"
+    },
+    {
+      "@id": "christoph_waltz",
+      "@type": "Person",
+      "name": "Christoph Waltz",
+      "born": 1956,
+      "gender": "male"
+    },
+    {
+      "@id": "kevin_spacey",
+      "@type": "Person",
+      "name": "Kevin Spacey",
+      "born": 1959,
+      "gender": "male"
+    },
+    {
+      "@id": "sigourney_weaver",
+      "@type": "Person",
+      "name": "Sigourney Weaver",
+      "born": 1949,
+      "gender": "female"
+    },
+    {
+      "@id": "arnold_schwarzenegger",
+      "@type": "Person",
+      "name": "Arnold Schwarzenegger",
+      "born": 1947,
+      "gender": "male"
+    },
+    {
+      "@id": "song_kang_ho",
+      "@type": "Person",
+      "name": "Song Kang-ho",
+      "born": 1967,
+      "gender": "male"
+    },
+    {
+      "@id": "daniel_kaluuya",
+      "@type": "Person",
+      "name": "Daniel Kaluuya",
+      "born": 1989,
+      "gender": "male"
+    },
+    {
+      "@id": "daniel_day_lewis",
+      "@type": "Person",
+      "name": "Daniel Day-Lewis",
+      "born": 1957,
+      "gender": "male"
+    },
+    {
+      "@id": "javier_bardem",
+      "@type": "Person",
+      "name": "Javier Bardem",
+      "born": 1969,
+      "gender": "male"
+    },
+    {
+      "@id": "emma_watson",
+      "@type": "Person",
+      "name": "Emma Watson",
+      "born": 1990,
+      "gender": "female"
+    },
+    {
+      "@id": "guy_pearce",
+      "@type": "Person",
+      "name": "Guy Pearce",
+      "born": 1967,
+      "gender": "male"
+    },
+    {
+      "@id": "hugh_jackman",
+      "@type": "Person",
+      "name": "Hugh Jackman",
+      "born": 1968,
+      "gender": "male"
+    },
+    {
+      "@id": "keanu_reeves",
+      "@type": "Person",
+      "name": "Keanu Reeves",
+      "born": 1964,
+      "gender": "male"
+    },
+    {
+      "@id": "carrie_anne_moss",
+      "@type": "Person",
+      "name": "Carrie-Anne Moss",
+      "born": 1967,
+      "gender": "female"
+    },
+    {
+      "@id": "laurence_fishburne",
+      "@type": "Person",
+      "name": "Laurence Fishburne",
+      "born": 1961,
+      "gender": "male"
+    },
+    {
+      "@id": "joe_pesci",
+      "@type": "Person",
+      "name": "Joe Pesci",
+      "born": 1943,
+      "gender": "male"
+    },
+    {
+      "@id": "robert_de_niro",
+      "@type": "Person",
+      "name": "Robert De Niro",
+      "born": 1943,
+      "gender": "male"
+    },
+    {
+      "@id": "al_pacino",
+      "@type": "Person",
+      "name": "Al Pacino",
+      "born": 1940,
+      "gender": "male"
+    },
+    {
+      "@id": "marlon_brando",
+      "@type": "Person",
+      "name": "Marlon Brando",
+      "born": 1924,
+      "gender": "male"
+    },
+    {
+      "@id": "heath_ledger",
+      "@type": "Person",
+      "name": "Heath Ledger",
+      "born": 1979,
+      "gender": "male"
+    },
+    {
+      "@id": "jack_nicholson",
+      "@type": "Person",
+      "name": "Jack Nicholson",
+      "born": 1937,
+      "gender": "male"
+    },
+    {
+      "@id": "uma_thurman",
+      "@type": "Person",
+      "name": "Uma Thurman",
+      "born": 1970,
+      "gender": "female"
+    },
+    {
+      "@id": "john_travolta",
+      "@type": "Person",
+      "name": "John Travolta",
+      "born": 1954,
+      "gender": "male"
+    },
+    {
+      "@id": "robin_wright",
+      "@type": "Person",
+      "name": "Robin Wright",
+      "born": 1966,
+      "gender": "female"
+    },
+    {
+      "@id": "gary_sinise",
+      "@type": "Person",
+      "name": "Gary Sinise",
+      "born": 1955,
+      "gender": "male"
+    },
+    {
+      "@id": "edward_norton",
+      "@type": "Person",
+      "name": "Edward Norton",
+      "born": 1969,
+      "gender": "male"
+    },
+    {
+      "@id": "helena_bonham_carter",
+      "@type": "Person",
+      "name": "Helena Bonham Carter",
+      "born": 1966,
+      "gender": "female"
+    },
+    {
+      "@id": "marion_cotillard",
+      "@type": "Person",
+      "name": "Marion Cotillard",
+      "born": 1975,
+      "gender": "female"
+    },
+    {
+      "@id": "ellen_page",
+      "@type": "Person",
+      "name": "Elliot Page",
+      "born": 1987,
+      "gender": "male"
+    },
+    {
+      "@id": "joseph_gordon_levitt",
+      "@type": "Person",
+      "name": "Joseph Gordon-Levitt",
+      "born": 1981,
+      "gender": "male"
+    },
+    {
+      "@id": "michael_caine",
+      "@type": "Person",
+      "name": "Michael Caine",
+      "born": 1933,
+      "gender": "male"
+    },
+    {
+      "@id": "kate_winslet",
+      "@type": "Person",
+      "name": "Kate Winslet",
+      "born": 1975,
+      "gender": "female"
+    },
+    {
+      "@id": "christopher_nolan",
+      "@type": "Person",
+      "name": "Christopher Nolan",
+      "born": 1970,
+      "gender": "male"
+    },
+    {
+      "@id": "quentin_tarantino",
+      "@type": "Person",
+      "name": "Quentin Tarantino",
+      "born": 1963,
+      "gender": "male"
+    },
+    {
+      "@id": "martin_scorsese",
+      "@type": "Person",
+      "name": "Martin Scorsese",
+      "born": 1942,
+      "gender": "male"
+    },
+    {
+      "@id": "steven_spielberg",
+      "@type": "Person",
+      "name": "Steven Spielberg",
+      "born": 1946,
+      "gender": "male"
+    },
+    {
+      "@id": "denis_villeneuve",
+      "@type": "Person",
+      "name": "Denis Villeneuve",
+      "born": 1967,
+      "gender": "male"
+    },
+    {
+      "@id": "greta_gerwig",
+      "@type": "Person",
+      "name": "Greta Gerwig",
+      "born": 1983,
+      "gender": "female"
+    },
+    {
+      "@id": "ridley_scott",
+      "@type": "Person",
+      "name": "Ridley Scott",
+      "born": 1937,
+      "gender": "male"
+    },
+    {
+      "@id": "david_fincher",
+      "@type": "Person",
+      "name": "David Fincher",
+      "born": 1962,
+      "gender": "male"
+    },
+    {
+      "@id": "wachowskis",
+      "@type": "Person",
+      "name": "The Wachowskis",
+      "born": 1965,
+      "gender": "unknown"
+    },
+    {
+      "@id": "frank_darabont",
+      "@type": "Person",
+      "name": "Frank Darabont",
+      "born": 1959,
+      "gender": "male"
+    },
+    {
+      "@id": "robert_zemeckis",
+      "@type": "Person",
+      "name": "Robert Zemeckis",
+      "born": 1951,
+      "gender": "male"
+    },
+    {
+      "@id": "francis_ford_coppola",
+      "@type": "Person",
+      "name": "Francis Ford Coppola",
+      "born": 1939,
+      "gender": "male"
+    },
+    {
+      "@id": "jonathan_demme",
+      "@type": "Person",
+      "name": "Jonathan Demme",
+      "born": 1944,
+      "gender": "male"
+    },
+    {
+      "@id": "emma_thomas",
+      "@type": "Person",
+      "name": "Emma Thomas",
+      "born": 1971,
+      "gender": "female"
+    },
+    {
+      "@id": "jerry_bruckheimer",
+      "@type": "Person",
+      "name": "Jerry Bruckheimer",
+      "born": 1943,
+      "gender": "male"
+    },
+    {
+      "@id": "kathleen_kennedy",
+      "@type": "Person",
+      "name": "Kathleen Kennedy",
+      "born": 1953,
+      "gender": "female"
+    },
+    {
+      "@id": "aaron_sorkin",
+      "@type": "Person",
+      "name": "Aaron Sorkin",
+      "born": 1961,
+      "gender": "male"
+    },
+    {
+      "@id": "charlie_kaufman",
+      "@type": "Person",
+      "name": "Charlie Kaufman",
+      "born": 1958,
+      "gender": "male"
+    },
+    {
+      "@id": "inception",
+      "@type": "Movie",
+      "title": "Inception",
+      "year": 2010,
+      "runtime": 148,
+      "budget": 160000000,
+      "revenue": 836000000,
+      "language": "English"
+    },
+    {
+      "@id": "interstellar",
+      "@type": "Movie",
+      "title": "Interstellar",
+      "year": 2014,
+      "runtime": 169,
+      "budget": 165000000,
+      "revenue": 731000000,
+      "language": "English"
+    },
+    {
+      "@id": "dark_knight",
+      "@type": "Movie",
+      "title": "The Dark Knight",
+      "year": 2008,
+      "runtime": 152,
+      "budget": 185000000,
+      "revenue": 1006000000,
+      "language": "English"
+    },
+    {
+      "@id": "dunkirk",
+      "@type": "Movie",
+      "title": "Dunkirk",
+      "year": 2017,
+      "runtime": 106,
+      "budget": 100000000,
+      "revenue": 530000000,
+      "language": "English"
+    },
+    {
+      "@id": "pulp_fiction",
+      "@type": "Movie",
+      "title": "Pulp Fiction",
+      "year": 1994,
+      "runtime": 154,
+      "budget": 8000000,
+      "revenue": 214000000,
+      "language": "English"
+    },
+    {
+      "@id": "forrest_gump",
+      "@type": "Movie",
+      "title": "Forrest Gump",
+      "year": 1994,
+      "runtime": 142,
+      "budget": 55000000,
+      "revenue": 678000000,
+      "language": "English"
+    },
+    {
+      "@id": "shawshank",
+      "@type": "Movie",
+      "title": "The Shawshank Redemption",
+      "year": 1994,
+      "runtime": 142,
+      "budget": 25000000,
+      "revenue": 73300000,
+      "language": "English"
+    },
+    {
+      "@id": "godfather",
+      "@type": "Movie",
+      "title": "The Godfather",
+      "year": 1972,
+      "runtime": 175,
+      "budget": 6000000,
+      "revenue": 250000000,
+      "language": "English"
+    },
+    {
+      "@id": "pianist",
+      "@type": "Movie",
+      "title": "The Pianist",
+      "year": 2002,
+      "runtime": 150,
+      "budget": 35000000,
+      "revenue": 120000000,
+      "language": "English"
+    },
+    {
+      "@id": "schindlers_list",
+      "@type": "Movie",
+      "title": "Schindler's List",
+      "year": 1993,
+      "runtime": 195,
+      "budget": 22000000,
+      "revenue": 322000000,
+      "language": "English"
+    },
+    {
+      "@id": "gladiator",
+      "@type": "Movie",
+      "title": "Gladiator",
+      "year": 2000,
+      "runtime": 155,
+      "budget": 103000000,
+      "revenue": 460000000,
+      "language": "English"
+    },
+    {
+      "@id": "matrix",
+      "@type": "Movie",
+      "title": "The Matrix",
+      "year": 1999,
+      "runtime": 136,
+      "budget": 63000000,
+      "revenue": 467000000,
+      "language": "English"
+    },
+    {
+      "@id": "silence_of_lambs",
+      "@type": "Movie",
+      "title": "The Silence of the Lambs",
+      "year": 1991,
+      "runtime": 118,
+      "budget": 19000000,
+      "revenue": 273000000,
+      "language": "English"
+    },
+    {
+      "@id": "dune",
+      "@type": "Movie",
+      "title": "Dune",
+      "year": 2021,
+      "runtime": 155,
+      "budget": 165000000,
+      "revenue": 407000000,
+      "language": "English"
+    },
+    {
+      "@id": "blade_runner_2049",
+      "@type": "Movie",
+      "title": "Blade Runner 2049",
+      "year": 2017,
+      "runtime": 164,
+      "budget": 150000000,
+      "revenue": 267000000,
+      "language": "English"
+    },
+    {
+      "@id": "arrival",
+      "@type": "Movie",
+      "title": "Arrival",
+      "year": 2016,
+      "runtime": 116,
+      "budget": 47000000,
+      "revenue": 203000000,
+      "language": "English"
+    },
+    {
+      "@id": "fight_club",
+      "@type": "Movie",
+      "title": "Fight Club",
+      "year": 1999,
+      "runtime": 139,
+      "budget": 63000000,
+      "revenue": 101000000,
+      "language": "English"
+    },
+    {
+      "@id": "seven",
+      "@type": "Movie",
+      "title": "Se7en",
+      "year": 1995,
+      "runtime": 127,
+      "budget": 33000000,
+      "revenue": 327000000,
+      "language": "English"
+    },
+    {
+      "@id": "social_network",
+      "@type": "Movie",
+      "title": "The Social Network",
+      "year": 2010,
+      "runtime": 120,
+      "budget": 40000000,
+      "revenue": 225000000,
+      "language": "English"
+    },
+    {
+      "@id": "eternal_sunshine",
+      "@type": "Movie",
+      "title": "Eternal Sunshine of the Spotless Mind",
+      "year": 2004,
+      "runtime": 108,
+      "budget": 20000000,
+      "revenue": 74000000,
+      "language": "English"
+    },
+    {
+      "@id": "la_la_land",
+      "@type": "Movie",
+      "title": "La La Land",
+      "year": 2016,
+      "runtime": 128,
+      "budget": 30000000,
+      "revenue": 448000000,
+      "language": "English"
+    },
+    {
+      "@id": "whiplash",
+      "@type": "Movie",
+      "title": "Whiplash",
+      "year": 2014,
+      "runtime": 106,
+      "budget": 3300000,
+      "revenue": 49000000,
+      "language": "English"
+    },
+    {
+      "@id": "fury_road",
+      "@type": "Movie",
+      "title": "Mad Max: Fury Road",
+      "year": 2015,
+      "runtime": 120,
+      "budget": 150000000,
+      "revenue": 380000000,
+      "language": "English"
+    },
+    {
+      "@id": "wolf_of_wall_street",
+      "@type": "Movie",
+      "title": "The Wolf of Wall Street",
+      "year": 2013,
+      "runtime": 180,
+      "budget": 100000000,
+      "revenue": 392000000,
+      "language": "English"
+    },
+    {
+      "@id": "departed",
+      "@type": "Movie",
+      "title": "The Departed",
+      "year": 2006,
+      "runtime": 151,
+      "budget": 90000000,
+      "revenue": 291000000,
+      "language": "English"
+    },
+    {
+      "@id": "revenant",
+      "@type": "Movie",
+      "title": "The Revenant",
+      "year": 2015,
+      "runtime": 156,
+      "budget": 135000000,
+      "revenue": 533000000,
+      "language": "English"
+    },
+    {
+      "@id": "joker",
+      "@type": "Movie",
+      "title": "Joker",
+      "year": 2019,
+      "runtime": 122,
+      "budget": 55000000,
+      "revenue": 1074000000,
+      "language": "English"
+    },
+    {
+      "@id": "oppenheimer",
+      "@type": "Movie",
+      "title": "Oppenheimer",
+      "year": 2023,
+      "runtime": 180,
+      "budget": 100000000,
+      "revenue": 960000000,
+      "language": "English"
+    },
+    {
+      "@id": "barbie",
+      "@type": "Movie",
+      "title": "Barbie",
+      "year": 2023,
+      "runtime": 114,
+      "budget": 145000000,
+      "revenue": 1446000000,
+      "language": "English"
+    },
+    {
+      "@id": "kill_bill",
+      "@type": "Movie",
+      "title": "Kill Bill: Vol. 1",
+      "year": 2003,
+      "runtime": 111,
+      "budget": 30000000,
+      "revenue": 181000000,
+      "language": "English"
+    },
+    {
+      "@id": "django",
+      "@type": "Movie",
+      "title": "Django Unchained",
+      "year": 2012,
+      "runtime": 165,
+      "budget": 100000000,
+      "revenue": 426000000,
+      "language": "English"
+    },
+    {
+      "@id": "catch_me_if_you_can",
+      "@type": "Movie",
+      "title": "Catch Me If You Can",
+      "year": 2002,
+      "runtime": 141,
+      "budget": 52000000,
+      "revenue": 352000000,
+      "language": "English"
+    },
+    {
+      "@id": "saving_private_ryan",
+      "@type": "Movie",
+      "title": "Saving Private Ryan",
+      "year": 1998,
+      "runtime": 169,
+      "budget": 70000000,
+      "revenue": 482000000,
+      "language": "English"
+    },
+    {
+      "@id": "american_beauty",
+      "@type": "Movie",
+      "title": "American Beauty",
+      "year": 1999,
+      "runtime": 122,
+      "budget": 15000000,
+      "revenue": 356000000,
+      "language": "English"
+    },
+    {
+      "@id": "goodfellas",
+      "@type": "Movie",
+      "title": "Goodfellas",
+      "year": 1990,
+      "runtime": 146,
+      "budget": 25000000,
+      "revenue": 47000000,
+      "language": "English"
+    },
+    {
+      "@id": "alien",
+      "@type": "Movie",
+      "title": "Alien",
+      "year": 1979,
+      "runtime": 117,
+      "budget": 11000000,
+      "revenue": 106000000,
+      "language": "English"
+    },
+    {
+      "@id": "terminator_2",
+      "@type": "Movie",
+      "title": "Terminator 2: Judgment Day",
+      "year": 1991,
+      "runtime": 137,
+      "budget": 100000000,
+      "revenue": 520000000,
+      "language": "English"
+    },
+    {
+      "@id": "parasite",
+      "@type": "Movie",
+      "title": "Parasite",
+      "year": 2019,
+      "runtime": 132,
+      "budget": 11000000,
+      "revenue": 263000000,
+      "language": "Korean"
+    },
+    {
+      "@id": "get_out",
+      "@type": "Movie",
+      "title": "Get Out",
+      "year": 2017,
+      "runtime": 104,
+      "budget": 4500000,
+      "revenue": 255000000,
+      "language": "English"
+    },
+    {
+      "@id": "there_will_be_blood",
+      "@type": "Movie",
+      "title": "There Will Be Blood",
+      "year": 2007,
+      "runtime": 158,
+      "budget": 25000000,
+      "revenue": 76200000,
+      "language": "English"
+    },
+    {
+      "@id": "no_country",
+      "@type": "Movie",
+      "title": "No Country for Old Men",
+      "year": 2007,
+      "runtime": 122,
+      "budget": 25000000,
+      "revenue": 172000000,
+      "language": "English"
+    },
+    {
+      "@id": "grand_budapest",
+      "@type": "Movie",
+      "title": "The Grand Budapest Hotel",
+      "year": 2014,
+      "runtime": 99,
+      "budget": 25000000,
+      "revenue": 173000000,
+      "language": "English"
+    },
+    {
+      "@id": "lady_bird",
+      "@type": "Movie",
+      "title": "Lady Bird",
+      "year": 2017,
+      "runtime": 94,
+      "budget": 10000000,
+      "revenue": 79000000,
+      "language": "English"
+    },
+    {
+      "@id": "little_women",
+      "@type": "Movie",
+      "title": "Little Women",
+      "year": 2019,
+      "runtime": 135,
+      "budget": 40000000,
+      "revenue": 219000000,
+      "language": "English"
+    },
+    {
+      "@id": "memento",
+      "@type": "Movie",
+      "title": "Memento",
+      "year": 2000,
+      "runtime": 113,
+      "budget": 9000000,
+      "revenue": 40000000,
+      "language": "English"
+    },
+    {
+      "@id": "prestige",
+      "@type": "Movie",
+      "title": "The Prestige",
+      "year": 2006,
+      "runtime": 130,
+      "budget": 40000000,
+      "revenue": 110000000,
+      "language": "English"
+    },
+    {
+      "@id": "action",
+      "@type": "Genre",
+      "name": "Action"
+    },
+    {
+      "@id": "drama",
+      "@type": "Genre",
+      "name": "Drama"
+    },
+    {
+      "@id": "sci_fi",
+      "@type": "Genre",
+      "name": "Science Fiction"
+    },
+    {
+      "@id": "thriller",
+      "@type": "Genre",
+      "name": "Thriller"
+    },
+    {
+      "@id": "crime",
+      "@type": "Genre",
+      "name": "Crime"
+    },
+    {
+      "@id": "comedy",
+      "@type": "Genre",
+      "name": "Comedy"
+    },
+    {
+      "@id": "horror",
+      "@type": "Genre",
+      "name": "Horror"
+    },
+    {
+      "@id": "war",
+      "@type": "Genre",
+      "name": "War"
+    },
+    {
+      "@id": "romance",
+      "@type": "Genre",
+      "name": "Romance"
+    },
+    {
+      "@id": "musical",
+      "@type": "Genre",
+      "name": "Musical"
+    },
+    {
+      "@id": "western",
+      "@type": "Genre",
+      "name": "Western"
+    },
+    {
+      "@id": "historical",
+      "@type": "Genre",
+      "name": "Historical"
+    }
+  ],
+  "edges": [
+    {
+      "@type": "ACTED_IN",
+      "@src": "leonardo_dicaprio",
+      "@dst": "inception",
+      "character": "Dom Cobb"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "joseph_gordon_levitt",
+      "@dst": "inception",
+      "character": "Arthur"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "tom_hardy",
+      "@dst": "inception",
+      "character": "Eames"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "ellen_page",
+      "@dst": "inception",
+      "character": "Ariadne"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "marion_cotillard",
+      "@dst": "inception",
+      "character": "Mal"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "michael_caine",
+      "@dst": "inception",
+      "character": "Miles"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "matt_damon",
+      "@dst": "interstellar",
+      "character": "Dr. Mann"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "anne_hathaway",
+      "@dst": "interstellar",
+      "character": "Brand"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "michael_caine",
+      "@dst": "interstellar",
+      "character": "Professor Brand"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "christian_bale",
+      "@dst": "dark_knight",
+      "character": "Bruce Wayne / Batman"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "heath_ledger",
+      "@dst": "dark_knight",
+      "character": "The Joker"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "morgan_freeman",
+      "@dst": "dark_knight",
+      "character": "Lucius Fox"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "michael_caine",
+      "@dst": "dark_knight",
+      "character": "Alfred"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "gary_sinise",
+      "@dst": "dark_knight",
+      "character": "Commissioner Gordon"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "tom_hardy",
+      "@dst": "dunkirk",
+      "character": "Farrier"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "cate_blanchett",
+      "@dst": "dunkirk",
+      "character": "Civilian Boater"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "john_travolta",
+      "@dst": "pulp_fiction",
+      "character": "Vincent Vega"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "samuel_l_jackson",
+      "@dst": "pulp_fiction",
+      "character": "Jules Winnfield"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "uma_thurman",
+      "@dst": "pulp_fiction",
+      "character": "Mia Wallace"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "bruce_willis",
+      "@dst": "pulp_fiction",
+      "character": "Butch Coolidge"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "tom_hanks",
+      "@dst": "forrest_gump",
+      "character": "Forrest Gump"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "robin_wright",
+      "@dst": "forrest_gump",
+      "character": "Jenny Curran"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "gary_sinise",
+      "@dst": "forrest_gump",
+      "character": "Lt. Dan Taylor"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "morgan_freeman",
+      "@dst": "shawshank",
+      "character": "Ellis Boyd 'Red' Redding"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "marlon_brando",
+      "@dst": "godfather",
+      "character": "Vito Corleone"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "al_pacino",
+      "@dst": "godfather",
+      "character": "Michael Corleone"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "robert_de_niro",
+      "@dst": "godfather",
+      "character": "Young Vito Corleone"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "adrien_brody",
+      "@dst": "pianist",
+      "character": "Wladek Szpilman"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "liam_neeson",
+      "@dst": "schindlers_list",
+      "character": "Oskar Schindler"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "ralph_fiennes",
+      "@dst": "schindlers_list",
+      "character": "Amon Goth"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "russell_crowe",
+      "@dst": "gladiator",
+      "character": "Maximus"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "joaquin_phoenix",
+      "@dst": "gladiator",
+      "character": "Commodus"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "keanu_reeves",
+      "@dst": "matrix",
+      "character": "Neo"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "carrie_anne_moss",
+      "@dst": "matrix",
+      "character": "Trinity"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "laurence_fishburne",
+      "@dst": "matrix",
+      "character": "Morpheus"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "jodie_foster",
+      "@dst": "silence_of_lambs",
+      "character": "Clarice Starling"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "anthony_hopkins",
+      "@dst": "silence_of_lambs",
+      "character": "Hannibal Lecter"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "timothee_chalamet",
+      "@dst": "dune",
+      "character": "Paul Atreides"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "zendaya",
+      "@dst": "dune",
+      "character": "Chani"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "oscar_isaac",
+      "@dst": "dune",
+      "character": "Duke Leto Atreides"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "josh_brolin",
+      "@dst": "dune",
+      "character": "Gurney Halleck"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "ryan_gosling",
+      "@dst": "blade_runner_2049",
+      "character": "Officer K"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "harrison_ford",
+      "@dst": "blade_runner_2049",
+      "character": "Rick Deckard"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "amy_adams",
+      "@dst": "arrival",
+      "character": "Louise Banks"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "brad_pitt",
+      "@dst": "fight_club",
+      "character": "Tyler Durden"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "edward_norton",
+      "@dst": "fight_club",
+      "character": "The Narrator"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "helena_bonham_carter",
+      "@dst": "fight_club",
+      "character": "Marla Singer"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "jared_leto",
+      "@dst": "fight_club",
+      "character": "Angel Face"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "brad_pitt",
+      "@dst": "seven",
+      "character": "David Mills"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "morgan_freeman",
+      "@dst": "seven",
+      "character": "William Somerset"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "jesse_eisenberg",
+      "@dst": "social_network",
+      "character": "Mark Zuckerberg"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "andrew_garfield",
+      "@dst": "social_network",
+      "character": "Eduardo Saverin"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "jim_carrey",
+      "@dst": "eternal_sunshine",
+      "character": "Joel Barish"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "kate_winslet",
+      "@dst": "eternal_sunshine",
+      "character": "Clementine"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "ryan_gosling",
+      "@dst": "la_la_land",
+      "character": "Sebastian"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "emma_stone",
+      "@dst": "la_la_land",
+      "character": "Mia"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "miles_teller",
+      "@dst": "whiplash",
+      "character": "Andrew Neiman"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "jk_simmons",
+      "@dst": "whiplash",
+      "character": "Terence Fletcher"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "tom_hardy",
+      "@dst": "fury_road",
+      "character": "Max Rockatansky"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "charlize_theron",
+      "@dst": "fury_road",
+      "character": "Imperator Furiosa"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "leonardo_dicaprio",
+      "@dst": "wolf_of_wall_street",
+      "character": "Jordan Belfort"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "margot_robbie",
+      "@dst": "wolf_of_wall_street",
+      "character": "Naomi Lapaglia"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "jonah_hill",
+      "@dst": "wolf_of_wall_street",
+      "character": "Donnie Azoff"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "matthew_mcconaughey",
+      "@dst": "wolf_of_wall_street",
+      "character": "Mark Hanna"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "leonardo_dicaprio",
+      "@dst": "departed",
+      "character": "Billy Costigan"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "matt_damon",
+      "@dst": "departed",
+      "character": "Colin Sullivan"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "jack_nicholson",
+      "@dst": "departed",
+      "character": "Frank Costello"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "leonardo_dicaprio",
+      "@dst": "revenant",
+      "character": "Hugh Glass"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "tom_hardy",
+      "@dst": "revenant",
+      "character": "John Fitzgerald"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "joaquin_phoenix",
+      "@dst": "joker",
+      "character": "Arthur Fleck / Joker"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "robert_de_niro",
+      "@dst": "joker",
+      "character": "Murray Franklin"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "cillian_murphy",
+      "@dst": "oppenheimer",
+      "character": "J. Robert Oppenheimer"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "robert_downey_jr",
+      "@dst": "oppenheimer",
+      "character": "Lewis Strauss"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "matt_damon",
+      "@dst": "oppenheimer",
+      "character": "Leslie Groves"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "emily_blunt",
+      "@dst": "oppenheimer",
+      "character": "Kitty Oppenheimer"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "florence_pugh",
+      "@dst": "oppenheimer",
+      "character": "Jean Tatlock"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "margot_robbie",
+      "@dst": "barbie",
+      "character": "Barbie"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "ryan_gosling",
+      "@dst": "barbie",
+      "character": "Ken"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "america_ferrera",
+      "@dst": "barbie",
+      "character": "Gloria"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "uma_thurman",
+      "@dst": "kill_bill",
+      "character": "The Bride"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "jamie_foxx",
+      "@dst": "django",
+      "character": "Django"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "leonardo_dicaprio",
+      "@dst": "django",
+      "character": "Calvin Candie"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "christoph_waltz",
+      "@dst": "django",
+      "character": "Dr. King Schultz"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "samuel_l_jackson",
+      "@dst": "django",
+      "character": "Stephen"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "leonardo_dicaprio",
+      "@dst": "catch_me_if_you_can",
+      "character": "Frank Abagnale Jr."
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "tom_hanks",
+      "@dst": "catch_me_if_you_can",
+      "character": "Carl Hanratty"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "tom_hanks",
+      "@dst": "saving_private_ryan",
+      "character": "Captain Miller"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "matt_damon",
+      "@dst": "saving_private_ryan",
+      "character": "Private Ryan"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "kevin_spacey",
+      "@dst": "american_beauty",
+      "character": "Lester Burnham"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "robert_de_niro",
+      "@dst": "goodfellas",
+      "character": "Jimmy Conway"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "joe_pesci",
+      "@dst": "goodfellas",
+      "character": "Tommy DeVito"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "sigourney_weaver",
+      "@dst": "alien",
+      "character": "Ripley"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "arnold_schwarzenegger",
+      "@dst": "terminator_2",
+      "character": "The Terminator"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "song_kang_ho",
+      "@dst": "parasite",
+      "character": "Kim Ki-taek"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "daniel_kaluuya",
+      "@dst": "get_out",
+      "character": "Chris Washington"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "daniel_day_lewis",
+      "@dst": "there_will_be_blood",
+      "character": "Daniel Plainview"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "javier_bardem",
+      "@dst": "no_country",
+      "character": "Anton Chigurh"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "josh_brolin",
+      "@dst": "no_country",
+      "character": "Llewelyn Moss"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "ralph_fiennes",
+      "@dst": "grand_budapest",
+      "character": "M. Gustave"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "willem_dafoe",
+      "@dst": "grand_budapest",
+      "character": "J.G. Jopling"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "saoirse_ronan",
+      "@dst": "grand_budapest",
+      "character": "Agatha"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "saoirse_ronan",
+      "@dst": "lady_bird",
+      "character": "Christine 'Lady Bird' McPherson"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "timothee_chalamet",
+      "@dst": "lady_bird",
+      "character": "Kyle Scheible"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "saoirse_ronan",
+      "@dst": "little_women",
+      "character": "Jo March"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "emma_watson",
+      "@dst": "little_women",
+      "character": "Meg March"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "florence_pugh",
+      "@dst": "little_women",
+      "character": "Amy March"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "timothee_chalamet",
+      "@dst": "little_women",
+      "character": "Theodore 'Laurie' Laurence"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "meryl_streep",
+      "@dst": "little_women",
+      "character": "Aunt March"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "guy_pearce",
+      "@dst": "memento",
+      "character": "Leonard Shelby"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "carrie_anne_moss",
+      "@dst": "memento",
+      "character": "Natalie"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "christian_bale",
+      "@dst": "prestige",
+      "character": "Alfred Borden"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "hugh_jackman",
+      "@dst": "prestige",
+      "character": "Robert Angier"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "scarlett_johansson",
+      "@dst": "prestige",
+      "character": "Olivia Wenscombe"
+    },
+    {
+      "@type": "ACTED_IN",
+      "@src": "michael_caine",
+      "@dst": "prestige",
+      "character": "Cutter"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "christopher_nolan",
+      "@dst": "inception"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "christopher_nolan",
+      "@dst": "interstellar"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "christopher_nolan",
+      "@dst": "dark_knight"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "christopher_nolan",
+      "@dst": "dunkirk"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "christopher_nolan",
+      "@dst": "oppenheimer"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "christopher_nolan",
+      "@dst": "prestige"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "christopher_nolan",
+      "@dst": "memento"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "quentin_tarantino",
+      "@dst": "pulp_fiction"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "quentin_tarantino",
+      "@dst": "kill_bill"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "quentin_tarantino",
+      "@dst": "django"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "robert_zemeckis",
+      "@dst": "forrest_gump"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "frank_darabont",
+      "@dst": "shawshank"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "francis_ford_coppola",
+      "@dst": "godfather"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "steven_spielberg",
+      "@dst": "schindlers_list"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "steven_spielberg",
+      "@dst": "saving_private_ryan"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "steven_spielberg",
+      "@dst": "catch_me_if_you_can"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "ridley_scott",
+      "@dst": "gladiator"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "ridley_scott",
+      "@dst": "alien"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "wachowskis",
+      "@dst": "matrix"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "jonathan_demme",
+      "@dst": "silence_of_lambs"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "denis_villeneuve",
+      "@dst": "dune"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "denis_villeneuve",
+      "@dst": "blade_runner_2049"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "denis_villeneuve",
+      "@dst": "arrival"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "david_fincher",
+      "@dst": "fight_club"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "david_fincher",
+      "@dst": "seven"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "david_fincher",
+      "@dst": "social_network"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "martin_scorsese",
+      "@dst": "departed"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "martin_scorsese",
+      "@dst": "wolf_of_wall_street"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "martin_scorsese",
+      "@dst": "goodfellas"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "greta_gerwig",
+      "@dst": "barbie"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "greta_gerwig",
+      "@dst": "lady_bird"
+    },
+    {
+      "@type": "DIRECTED",
+      "@src": "greta_gerwig",
+      "@dst": "little_women"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "inception",
+      "@dst": "action"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "inception",
+      "@dst": "sci_fi"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "inception",
+      "@dst": "thriller"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "interstellar",
+      "@dst": "sci_fi"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "interstellar",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "dark_knight",
+      "@dst": "action"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "dark_knight",
+      "@dst": "crime"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "dark_knight",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "dunkirk",
+      "@dst": "war"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "dunkirk",
+      "@dst": "action"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "dunkirk",
+      "@dst": "historical"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "pulp_fiction",
+      "@dst": "crime"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "pulp_fiction",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "forrest_gump",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "forrest_gump",
+      "@dst": "comedy"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "forrest_gump",
+      "@dst": "romance"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "shawshank",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "godfather",
+      "@dst": "crime"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "godfather",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "schindlers_list",
+      "@dst": "war"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "schindlers_list",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "schindlers_list",
+      "@dst": "historical"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "gladiator",
+      "@dst": "action"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "gladiator",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "matrix",
+      "@dst": "sci_fi"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "matrix",
+      "@dst": "action"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "silence_of_lambs",
+      "@dst": "thriller"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "silence_of_lambs",
+      "@dst": "horror"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "silence_of_lambs",
+      "@dst": "crime"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "dune",
+      "@dst": "sci_fi"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "dune",
+      "@dst": "action"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "blade_runner_2049",
+      "@dst": "sci_fi"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "blade_runner_2049",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "arrival",
+      "@dst": "sci_fi"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "arrival",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "fight_club",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "fight_club",
+      "@dst": "thriller"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "seven",
+      "@dst": "crime"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "seven",
+      "@dst": "thriller"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "social_network",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "la_la_land",
+      "@dst": "musical"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "la_la_land",
+      "@dst": "romance"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "la_la_land",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "fury_road",
+      "@dst": "action"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "fury_road",
+      "@dst": "sci_fi"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "wolf_of_wall_street",
+      "@dst": "comedy"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "wolf_of_wall_street",
+      "@dst": "crime"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "wolf_of_wall_street",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "departed",
+      "@dst": "crime"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "departed",
+      "@dst": "thriller"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "departed",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "joker",
+      "@dst": "crime"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "joker",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "joker",
+      "@dst": "thriller"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "oppenheimer",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "oppenheimer",
+      "@dst": "historical"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "oppenheimer",
+      "@dst": "war"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "barbie",
+      "@dst": "comedy"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "barbie",
+      "@dst": "romance"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "kill_bill",
+      "@dst": "action"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "kill_bill",
+      "@dst": "crime"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "django",
+      "@dst": "western"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "django",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "catch_me_if_you_can",
+      "@dst": "crime"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "catch_me_if_you_can",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "saving_private_ryan",
+      "@dst": "war"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "saving_private_ryan",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "saving_private_ryan",
+      "@dst": "historical"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "goodfellas",
+      "@dst": "crime"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "goodfellas",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "alien",
+      "@dst": "sci_fi"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "alien",
+      "@dst": "horror"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "terminator_2",
+      "@dst": "action"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "terminator_2",
+      "@dst": "sci_fi"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "parasite",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "parasite",
+      "@dst": "thriller"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "get_out",
+      "@dst": "horror"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "get_out",
+      "@dst": "thriller"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "there_will_be_blood",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "there_will_be_blood",
+      "@dst": "historical"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "no_country",
+      "@dst": "crime"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "no_country",
+      "@dst": "thriller"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "no_country",
+      "@dst": "western"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "grand_budapest",
+      "@dst": "comedy"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "grand_budapest",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "lady_bird",
+      "@dst": "comedy"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "lady_bird",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "little_women",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "little_women",
+      "@dst": "historical"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "memento",
+      "@dst": "thriller"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "memento",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "prestige",
+      "@dst": "thriller"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "prestige",
+      "@dst": "drama"
+    },
+    {
+      "@type": "IN_GENRE",
+      "@src": "prestige",
+      "@dst": "sci_fi"
+    }
+  ]
+}

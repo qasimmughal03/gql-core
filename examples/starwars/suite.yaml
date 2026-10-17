@@ -1,0 +1,258 @@
+name: star-wars-benchmark
+description: 15 queries over the Star Wars knowledge graph. All answers verifiable against canon.
+queries:
+- name: SW01_total_characters
+  purpose: Count all Character nodes
+  query_class: simple_lookup
+  gql: MATCH (c:Character) RETURN COUNT(c) AS count
+  key_columns:
+  - count
+  expected:
+  - - 30
+- name: SW02_total_films
+  purpose: Count all Film nodes
+  query_class: simple_lookup
+  gql: MATCH (f:Film) RETURN COUNT(f) AS count
+  key_columns:
+  - count
+  expected:
+  - - 7
+- name: SW03_total_planets
+  purpose: Count all Planet nodes
+  query_class: simple_lookup
+  gql: MATCH (p:Planet) RETURN COUNT(p) AS count
+  key_columns:
+  - count
+  expected:
+  - - 14
+- name: SW04_most_appearances
+  purpose: Top 5 characters by film appearances
+  query_class: aggregation
+  gql: MATCH (c:Character)-[:APPEARS_IN]->(f:Film) RETURN c.name AS character, COUNT(f) AS films ORDER BY films DESC, character
+    ASC LIMIT 5
+  key_columns:
+  - character
+  - films
+  expected:
+  - - C-3PO
+    - 7
+  - - R2-D2
+    - 7
+  - - Chewbacca
+    - 5
+  - - Emperor Palpatine
+    - 5
+  - - Yoda
+    - 5
+- name: SW05_highest_grossing
+  purpose: Top 3 films by revenue
+  query_class: aggregation
+  gql: MATCH (f:Film) RETURN f.title AS film, f.revenue AS revenue ORDER BY revenue DESC LIMIT 3
+  key_columns:
+  - film
+  - revenue
+  expected:
+  - - The Force Awakens
+    - 2070000000
+  - - The Phantom Menace
+    - 1027000000
+  - - Revenge of the Sith
+    - 868000000
+- name: SW06_tatooine_characters
+  purpose: Characters from Tatooine
+  query_class: multi_hop
+  gql: MATCH (c:Character)-[:HOME_PLANET]->(p:Planet) WHERE p.name = "Tatooine" RETURN c.name AS character ORDER BY character
+    ASC
+  key_columns:
+  - character
+  expected:
+  - - Anakin Skywalker
+  - - Darth Vader
+  - - Luke Skywalker
+- name: SW07_human_count
+  purpose: Count humans in the galaxy
+  query_class: multi_hop
+  gql: MATCH (c:Character)-[:BELONGS_TO]->(s:Species) WHERE s.name = "Human" RETURN COUNT(c) AS humans
+  key_columns:
+  - humans
+  expected:
+  - - 11
+- name: SW08_new_hope_cast
+  purpose: Characters appearing in A New Hope
+  query_class: multi_hop
+  gql: MATCH (c:Character)-[:APPEARS_IN]->(f:Film) WHERE f.title = "A New Hope" RETURN c.name AS character ORDER BY character
+    ASC
+  key_columns:
+  - character
+  expected:
+  - - C-3PO
+  - - Chewbacca
+  - - Darth Vader
+  - - Grand Moff Tarkin
+  - - Han Solo
+  - - Leia Organa
+  - - Luke Skywalker
+  - - Obi-Wan Kenobi
+  - - R2-D2
+  - - Wedge Antilles
+- name: SW09_planet_residents
+  purpose: Planets with most resident characters
+  query_class: aggregation
+  gql: MATCH (c:Character)-[:HOME_PLANET]->(p:Planet) RETURN p.name AS planet, COUNT(c) AS residents ORDER BY residents DESC,
+    planet ASC LIMIT 3
+  key_columns:
+  - planet
+  - residents
+  expected:
+  - - Naboo
+    - 3
+  - - Tatooine
+    - 3
+  - - Alderaan
+    - 1
+- name: SW10_luke_planet_films
+  purpose: Films featuring Luke Skywalkers home planet
+  query_class: multi_hop
+  gql: MATCH (c:Character)-[:HOME_PLANET]->(p:Planet)<-[:FEATURED_PLANET]-(f:Film) WHERE c.name = "Luke Skywalker" RETURN
+    f.title AS film ORDER BY f.episode ASC
+  key_columns:
+  - film
+  expected:
+  - - The Phantom Menace
+  - - Attack of the Clones
+  - - Revenge of the Sith
+  - - A New Hope
+  - - Return of the Jedi
+- name: SW11_pilot_actors
+  purpose: Characters who appear in films AND pilot starships
+  query_class: multi_pattern
+  gql: MATCH (c:Character)-[:APPEARS_IN]->(f:Film), (c)-[:PILOTED]->(s:Starship) RETURN c.name AS pilot, COUNT(f) AS films,
+    COUNT(s) AS ships ORDER BY films DESC, pilot ASC LIMIT 5
+  key_columns:
+  - pilot
+  - films
+  - ships
+  expected:
+  - - Chewbacca
+    - 5
+    - 5
+  - - Han Solo
+    - 4
+    - 4
+  - - Luke Skywalker
+    - 4
+    - 4
+  - - Anakin Skywalker
+    - 3
+    - 3
+  - - Boba Fett
+    - 3
+    - 3
+- name: SW12_luke_co_characters
+  purpose: Characters sharing films with Luke Skywalker
+  query_class: undirected
+  gql: MATCH (c:Character)-[:APPEARS_IN]->(f:Film)<-[:APPEARS_IN]-(co:Character) WHERE c.name = "Luke Skywalker" AND co.name
+    != "Luke Skywalker" RETURN co.name AS co_character, COUNT(f) AS shared_films ORDER BY shared_films DESC, co_character
+    ASC
+  key_columns:
+  - co_character
+  - shared_films
+  expected:
+  - - C-3PO
+    - 4
+  - - Chewbacca
+    - 4
+  - - Han Solo
+    - 4
+  - - Leia Organa
+    - 4
+  - - R2-D2
+    - 4
+  - - Darth Vader
+    - 3
+  - - Wedge Antilles
+    - 3
+  - - Boba Fett
+    - 2
+  - - Emperor Palpatine
+    - 2
+  - - Lando Calrissian
+    - 2
+  - - Yoda
+    - 2
+  - - Admiral Ackbar
+    - 1
+  - - BB-8
+    - 1
+  - - Finn
+    - 1
+  - - General Hux
+    - 1
+  - - Grand Moff Tarkin
+    - 1
+  - - Jabba the Hutt
+    - 1
+  - - Kylo Ren
+    - 1
+  - - Obi-Wan Kenobi
+    - 1
+  - - Poe Dameron
+    - 1
+  - - Rey
+    - 1
+  - - Supreme Leader Snoke
+    - 1
+- name: SW13_tatooine_films
+  purpose: Films that feature Tatooine
+  query_class: multi_hop
+  gql: MATCH (f:Film)-[:FEATURED_PLANET]->(p:Planet) WHERE p.name = "Tatooine" RETURN f.title AS film, f.episode AS episode
+    ORDER BY episode ASC
+  key_columns:
+  - film
+  - episode
+  expected:
+  - - The Phantom Menace
+    - 1
+  - - Attack of the Clones
+    - 2
+  - - Revenge of the Sith
+    - 3
+  - - A New Hope
+    - 4
+  - - Return of the Jedi
+    - 6
+- name: SW14_droids
+  purpose: All droid characters
+  query_class: negation
+  gql: MATCH (c:Character) WHERE c.gender = "droid" RETURN c.name AS droid ORDER BY droid ASC
+  key_columns:
+  - droid
+  expected:
+  - - BB-8
+  - - C-3PO
+  - - R2-D2
+- name: SW15_career_span
+  purpose: Character career spans
+  query_class: hard
+  gql: MATCH (c:Character)-[:APPEARS_IN]->(f:Film) RETURN c.name AS character, MAX(f.release_year) AS latest_film, MIN(f.release_year)
+    AS earliest_film ORDER BY latest_film DESC, character ASC LIMIT 5
+  key_columns:
+  - character
+  - latest_film
+  - earliest_film
+  expected:
+  - - BB-8
+    - 2015
+    - 2015
+  - - C-3PO
+    - 2015
+    - 1977
+  - - Chewbacca
+    - 2015
+    - 1977
+  - - Finn
+    - 2015
+    - 2015
+  - - General Hux
+    - 2015
+    - 2015

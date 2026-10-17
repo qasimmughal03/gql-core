@@ -1,0 +1,79 @@
+# Movie Knowledge Graph Ontology
+# Based on the WikiMovies / MetaQA schema (18 relations).
+nodes:
+  Person:
+    table: people
+    required: [id, name]
+    optional: [born, gender]
+    types:
+      id: str
+      name: str
+      born: int
+      gender: str
+
+  Movie:
+    table: movies
+    required: [id, title, year]
+    optional: [runtime, budget, revenue, language]
+    types:
+      id: str
+      title: str
+      year: int
+      runtime: int
+      budget: int
+      revenue: int
+      language: str
+
+  Genre:
+    table: genres
+    required: [id, name]
+    types:
+      id: str
+      name: str
+
+edges:
+  ACTED_IN:
+    table: acted_in
+    src_col: person_id
+    dst_col: movie_id
+    src: Person
+    dst: Movie
+    properties:
+      character: str
+    filter_indexes: [[movie_id, person_id]]
+
+  DIRECTED:
+    table: directed
+    src_col: person_id
+    dst_col: movie_id
+    src: Person
+    dst: Movie
+    properties: {}
+    filter_indexes: [[movie_id, person_id]]
+
+  PRODUCED:
+    table: produced
+    src_col: person_id
+    dst_col: movie_id
+    src: Person
+    dst: Movie
+    properties: {}
+    filter_indexes: [[movie_id, person_id]]
+
+  WROTE:
+    table: wrote
+    src_col: person_id
+    dst_col: movie_id
+    src: Person
+    dst: Movie
+    properties: {}
+    filter_indexes: [[movie_id, person_id]]
+
+  IN_GENRE:
+    table: in_genre
+    src_col: movie_id
+    dst_col: genre_id
+    src: Movie
+    dst: Genre
+    properties: {}
+    filter_indexes: [[genre_id, movie_id]]

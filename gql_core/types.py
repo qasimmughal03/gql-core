@@ -128,6 +128,8 @@ def cast_to_float(val: Any) -> float:
 def cast_to_string(val: Any) -> str:
     if val is None:
         return "null"
+    if isinstance(val, bool):
+        return "true" if val else "false"
     return str(val)
 
 

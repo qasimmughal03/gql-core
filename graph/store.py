@@ -83,6 +83,51 @@ class PropertyGraph:
             )
         existing.props.update(edge.props)
 
+    def delete_edge(self, edge_id: Any) -> bool:
+        """Delete an edge from the graph. Returns True if deleted, False if not found."""
+        edge = self._edges.pop(edge_id, None)
+        if edge is None:
+            return False
+        if edge.src in self._out:
+            try:
+                self._out[edge.src].remove(edge_id)
+            except ValueError:
+                pass
+        if edge.dst in self._in:
+            try:
+                self._in[edge.dst].remove(edge_id)
+            except ValueError:
+                pass
+        if edge.label in self._edge_by_label:
+            self._edge_by_label[edge.label].discard(edge_id)
+        return True
+
+    def delete_node(self, node_id: Any, *, detach: bool = False) -> bool:
+        """Delete a node from the graph.
+        
+        If detach is False and the node has incident edges, raises RuntimeError.
+        If detach is True, deletes all incident edges first.
+        Returns True if deleted, False if not found.
+        """
+        node = self._nodes.get(node_id)
+        if node is None:
+            return False
+        out_edges = list(self._out.get(node_id, ()))
+        in_edges = list(self._in.get(node_id, ()))
+        if (out_edges or in_edges) and not detach:
+            raise RuntimeError(
+                f"Cannot delete node {node_id!r} because it still has relationships. "
+                "To delete this node, you must first delete its relationships or use DETACH DELETE."
+            )
+        for eid in out_edges + in_edges:
+            self.delete_edge(eid)
+        self._nodes.pop(node_id, None)
+        self._out.pop(node_id, None)
+        self._in.pop(node_id, None)
+        if node.label in self._by_label:
+            self._by_label[node.label].discard(node_id)
+        return True
+
     # ── Reads ─────────────────────────────────────────────────────
 
     def get_node(self, node_id: Any) -> Node | None:

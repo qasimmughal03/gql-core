@@ -55,7 +55,16 @@ def load_cypher_create_fixture(create_clause: str, graph: PropertyGraph | None =
     if graph is None:
         graph = PropertyGraph()
 
-    text = create_clause.strip()
+    text = create_clause.strip().rstrip(";").strip()
+    if not text:
+        return graph
+
+    try:
+        from gql_core import run as run_query
+        run_query(text, graph)
+        return graph
+    except Exception:
+        pass
 
     # Handle UNWIND range(lo, hi) AS var CREATE (...)
     m_unwind = re.match(
@@ -69,6 +78,13 @@ def load_cypher_create_fixture(create_clause: str, graph: PropertyGraph | None =
         inner_create = m_unwind.group(3).strip()
         for _ in range(lo, hi + 1):
             load_cypher_create_fixture("CREATE " + inner_create, graph)
+        return graph
+
+    # Split multiple CREATE statements if present
+    if ";" in text or len(re.findall(r"\bCREATE\b", text, flags=re.I)) > 1:
+        clauses = [c.strip() for c in re.split(r";|\bCREATE\b", text, flags=re.I) if c.strip()]
+        for cl in clauses:
+            load_cypher_create_fixture("CREATE " + cl, graph)
         return graph
 
     if text.upper().startswith("CREATE"):
@@ -104,7 +120,7 @@ def load_cypher_create_fixture(create_clause: str, graph: PropertyGraph | None =
     rel_pat = r"<-\[[^\]]*\]->?|<-\[[^\]]*\]-?|-\[[^\]]*\]->?|-\[[^\]]*\]-?|-->|<--|--"
     tok_regex = re.compile(rf"(\([^)]*\)|{rel_pat})")
 
-    var_to_id: dict[str, str] = {}
+    var_to_id: dict[str, str] = {nid: nid for nid in graph._nodes}
     auto_id = len(graph._nodes) + len(graph._edges)
 
     for elem in elements:
@@ -120,25 +136,21 @@ def load_cypher_create_fixture(create_clause: str, graph: PropertyGraph | None =
                 primary_label = labels_str.split(":")[0] if labels_str else "Node"
                 props = _parse_props(m_node.group("props"))
 
-                if n_var and n_var in var_to_id:
-                    n_id = var_to_id[n_var]
+                if n_var and (n_var in var_to_id or n_var in graph._nodes):
+                    n_id = var_to_id.get(n_var, n_var)
                     existing = graph._nodes.get(n_id)
                     if existing:
                         existing.props.update(props)
                 else:
                     auto_id += 1
-                    if "id" in props:
-                        n_id = str(props["id"])
-                    elif n_var:
+                    if n_var:
                         n_id = str(n_var)
+                        var_to_id[n_var] = n_id
                     else:
                         n_id = f"node_{auto_id}"
-                    if n_var:
-                        var_to_id[n_var] = n_id
 
-                    if "id" not in props:
-                        props["id"] = n_id
-                    node = Node(id=n_id, label=primary_label, props=props)
+                    all_labels = tuple(lbl for lbl in labels_str.split(":") if lbl) if labels_str else ()
+                    node = Node(id=n_id, label=primary_label, props=props, labels=all_labels)
                     graph.add_node(node)
 
                 if pending_rel and prev_node_id:

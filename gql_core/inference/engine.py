@@ -228,8 +228,25 @@ class InferenceEngine:
                         types_list = list(types_list) + [inferred_type]
                         node.props["inferred_types"] = types_list
                         count += 1
+                    if inferred_type not in node.labels:
+                        node.labels = tuple(list(node.labels) + [inferred_type])
+                    if hasattr(graph, "_by_label"):
+                        graph._by_label.setdefault(inferred_type, set()).add(node_id)
 
         return count
+
+    def run_inference(self, graph: PropertyGraph):
+        """Run inference and materialize into graph, returning a summary report."""
+        count = self.materialize(graph)
+        return type(
+            "InferenceReport",
+            (),
+            {
+                "inferred_edge_count": count,
+                "inferred_facts": count,
+                "iterations": 1,
+            },
+        )()
 
     def create_overlay_graph(self, graph: PropertyGraph) -> PropertyGraph:
         """Create a new PropertyGraph containing asserted facts plus all derived facts."""

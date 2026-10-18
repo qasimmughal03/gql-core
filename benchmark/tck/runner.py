@@ -60,111 +60,141 @@ def run_tck_suite(
     print(f"------------------------------------------------------------")
 
     results = []
-    status_counts = Counter()
+    strict_classifications = Counter()
+    diag_classifications = Counter()
     unsupported_reasons = Counter()
-    failure_details = []
-    by_category = defaultdict(lambda: Counter())
-
-    # Also track diagnostic results (relaxed column matching for unaliased expressions)
-    diag_status_counts = Counter()
+    strict_failures = []
     diag_failures = []
+    by_category = defaultdict(lambda: Counter())
 
     start_time = time.perf_counter()
 
     for idx, sc in enumerate(all_scenarios):
         # 1. Strict mode execution (exact openCypher column names required)
-        res = run_scenario(sc, relaxed_columns=False)
-        results.append(res)
-        st = res["status"]
-        status_counts[st] += 1
+        res_strict = run_scenario(sc, relaxed_columns=False)
+        strict_cls = res_strict["primary_classification"]
+        strict_classifications[strict_cls] += 1
 
         rel_cat = Path(sc.file_path).parent.relative_to(tck_dir).as_posix().split("/")[0]
-        by_category[rel_cat][st] += 1
+        by_category[rel_cat][strict_cls] += 1
 
-        if st == "unsupported":
-            unsupported_reasons[res.get("reason", "UNKNOWN")] += 1
-            diag_status_counts["unsupported"] += 1
-        elif st == "failed":
-            failure_details.append({
-                "scenario_id": sc.scenario_id,
-                "name": sc.name,
-                "file": str(Path(sc.file_path).name),
-                "query": sc.query,
-                "reason": res.get("reason"),
-            })
-            # Check if this failure passes in diagnostic mode (unaliased column naming differences)
-            diag_res = run_scenario(sc, relaxed_columns=True)
-            diag_st = diag_res["status"]
-            diag_status_counts[diag_st] += 1
-            if diag_st == "failed":
-                diag_failures.append({
+        if strict_cls == "UNSUPPORTED":
+            unsupported_reasons[res_strict.get("reason", "UNKNOWN")] += 1
+            diag_classifications["UNSUPPORTED"] += 1
+            results.append(res_strict)
+        else:
+            if strict_cls in ("FAIL_WRONG_RESULT", "FAIL_COMPILE", "FAIL_RUNTIME"):
+                strict_failures.append({
                     "scenario_id": sc.scenario_id,
                     "name": sc.name,
                     "file": str(Path(sc.file_path).name),
                     "query": sc.query,
-                    "reason": diag_res.get("reason"),
+                    "primary_classification": strict_cls,
+                    "reason": res_strict.get("reason"),
+                    "expected_rows": res_strict.get("expected_rows"),
+                    "actual_rows": res_strict.get("actual_rows"),
                 })
-        else:
-            diag_status_counts[st] += 1
+                # Check if this failure passes in diagnostic mode (unaliased column naming differences)
+                diag_res = run_scenario(sc, relaxed_columns=True)
+                diag_cls = diag_res["primary_classification"]
+                diag_classifications[diag_cls] += 1
+                if diag_cls in ("FAIL_WRONG_RESULT", "FAIL_COMPILE", "FAIL_RUNTIME"):
+                    diag_failures.append({
+                        "scenario_id": sc.scenario_id,
+                        "name": sc.name,
+                        "file": str(Path(sc.file_path).name),
+                        "query": sc.query,
+                        "primary_classification": diag_cls,
+                        "reason": diag_res.get("reason"),
+                        "expected_rows": diag_res.get("expected_rows"),
+                        "actual_rows": diag_res.get("actual_rows"),
+                    })
+            else:
+                diag_classifications[strict_cls] += 1
+
+            results.append(res_strict)
 
     total_time = time.perf_counter() - start_time
 
     total = len(all_scenarios)
-    unsupported_count = status_counts["unsupported"]
-    claimed_count = total - unsupported_count
-    passed_count = status_counts["passed"]
-    failed_count = status_counts["failed"]
-    blocked_count = status_counts["blocked"]
+    unsupp_count = strict_classifications["UNSUPPORTED"]
+    supported_count = total - unsupp_count
 
-    pass_rate_claimed = (passed_count / claimed_count * 100.0) if claimed_count > 0 else 0.0
-    overall_coverage = (passed_count / total * 100.0) if total > 0 else 0.0
+    # Strict counts
+    strict_pass_result = strict_classifications["PASS_RESULT"]
+    strict_pass_error = strict_classifications["PASS_EXPECTED_ERROR"]
+    strict_wrong_result = strict_classifications["FAIL_WRONG_RESULT"]
+    strict_compile_fail = strict_classifications["FAIL_COMPILE"]
+    strict_runtime_fail = strict_classifications["FAIL_RUNTIME"]
+    strict_blocked = strict_classifications["BLOCKED"]
+    strict_total_passed = strict_pass_result + strict_pass_error
 
-    diag_passed = diag_status_counts["passed"]
-    diag_failed = diag_status_counts["failed"]
-    diag_pass_rate = (diag_passed / claimed_count * 100.0) if claimed_count > 0 else 0.0
+    # Diagnostic counts
+    diag_pass_result = diag_classifications["PASS_RESULT"]
+    diag_pass_error = diag_classifications["PASS_EXPECTED_ERROR"]
+    diag_wrong_result = diag_classifications["FAIL_WRONG_RESULT"]
+    diag_compile_fail = diag_classifications["FAIL_COMPILE"]
+    diag_runtime_fail = diag_classifications["FAIL_RUNTIME"]
+    diag_blocked = diag_classifications["BLOCKED"]
+    diag_total_passed = diag_pass_result + diag_pass_error
+
+    # Total evaluated supported result-expecting and error-expecting counts
+    # Result-expecting scenarios in supported set
+    res_scenarios_count = sum(1 for r in results if r.get("primary_classification") != "UNSUPPORTED" and r.get("expected_kind") in ("result", "empty"))
+    err_scenarios_count = supported_count - res_scenarios_count
+
+    strict_res_accuracy = (strict_pass_result / res_scenarios_count * 100.0) if res_scenarios_count > 0 else 0.0
+    strict_err_accuracy = (strict_pass_error / err_scenarios_count * 100.0) if err_scenarios_count > 0 else 0.0
+    lang_coverage = (supported_count / total * 100.0) if total > 0 else 0.0
+    strict_compat = (strict_total_passed / total * 100.0) if total > 0 else 0.0
+
+    diag_res_accuracy = (diag_pass_result / res_scenarios_count * 100.0) if res_scenarios_count > 0 else 0.0
+    diag_err_accuracy = (diag_pass_error / err_scenarios_count * 100.0) if err_scenarios_count > 0 else 0.0
+    diag_compat = (diag_total_passed / total * 100.0) if total > 0 else 0.0
 
     print(f"  Execution complete in {total_time:.2f}s")
     print(f"")
+    print(f"  ============================================================")
+    print(f"  TCK RELEASE AUDIT METRICS (7-Classification Primary Gate)")
+    print(f"  ============================================================")
+    print(f"  Total Upstream Scenarios:            {total}")
+    print(f"  Supported Scenarios:                 {supported_count} (Coverage: {lang_coverage:.1f}%)")
+    print(f"  Unsupported Scenarios:               {unsupp_count}")
+    print(f"  Blocked Scenarios:                   {strict_blocked}")
+    print(f"------------------------------------------------------------")
     print(f"  STRICT MODE (Exact openCypher Column Names):")
-    print(f"  Total Scenarios Inventoried:       {total}")
-    print(f"  Classified as Unsupported:          {unsupported_count} ({unsupported_count/total*100:.1f}%)")
-    print(f"  In Claimed Language Subset:         {claimed_count}")
-    print(f"  Passed within Claimed Subset:       {passed_count} / {claimed_count} ({pass_rate_claimed:.1f}%)")
-    print(f"  Failed within Claimed Subset:       {failed_count} / {claimed_count}")
-    print(f"  Blocked Scenarios:                  {blocked_count}")
-    print(f"  Overall openCypher Suite Coverage:  {overall_coverage:.1f}% ({passed_count}/{total})")
+    print(f"    PASS_RESULT:                       {strict_pass_result}")
+    print(f"    PASS_EXPECTED_ERROR:               {strict_pass_error}")
+    print(f"    FAIL_WRONG_RESULT:                 {strict_wrong_result}")
+    print(f"    FAIL_COMPILE:                      {strict_compile_fail}")
+    print(f"    FAIL_RUNTIME:                      {strict_runtime_fail}")
+    print(f"    BLOCKED:                           {strict_blocked}")
+    print(f"    Total Strict Passes:               {strict_total_passed} / {supported_count} ({strict_total_passed/supported_count*100:.1f}%)")
+    print(f"    Result Accuracy:                   {strict_res_accuracy:.2f}% ({strict_pass_result}/{res_scenarios_count})")
+    print(f"    Expected-Error Accuracy:           {strict_err_accuracy:.2f}% ({strict_pass_error}/{err_scenarios_count})")
+    print(f"    Strict Compatibility:              {strict_compat:.2f}% ({strict_total_passed}/{total})")
     print(f"------------------------------------------------------------")
     print(f"  DIAGNOSTIC MODE (Relaxed Column Aliasing for Expressions):")
-    print(f"  Passed within Claimed Subset:       {diag_passed} / {claimed_count} ({diag_pass_rate:.1f}%)")
-    print(f"  Failed within Claimed Subset:       {diag_failed} / {claimed_count}")
-    print(f"  Naming-drift Scenarios:             {diag_passed - passed_count} (pass in diagnostic mode)")
+    print(f"    PASS_RESULT:                       {diag_pass_result}")
+    print(f"    PASS_EXPECTED_ERROR:               {diag_pass_error}")
+    print(f"    FAIL_WRONG_RESULT:                 {diag_wrong_result}")
+    print(f"    FAIL_COMPILE:                      {diag_compile_fail}")
+    print(f"    FAIL_RUNTIME:                      {diag_runtime_fail}")
+    print(f"    BLOCKED:                           {diag_blocked}")
+    print(f"    Total Diagnostic Passes:           {diag_total_passed} / {supported_count} ({diag_total_passed/supported_count*100:.1f}%)")
+    print(f"    Result Accuracy (Diagnostic):      {diag_res_accuracy:.2f}% ({diag_pass_result}/{res_scenarios_count})")
+    print(f"    Diagnostic Compatibility:          {diag_compat:.2f}% ({diag_total_passed}/{total})")
+    print(f"    Column-naming Drift Scenarios:     {diag_total_passed - strict_total_passed}")
     print(f"------------------------------------------------------------")
     print(f"  Breakdown by Category (Strict):")
     for cat, counts in sorted(by_category.items()):
         c_tot = sum(counts.values())
-        c_pass = counts["passed"]
-        c_unsupp = counts["unsupported"]
-        c_fail = counts["failed"]
-        print(f"    {cat:<25}: total={c_tot:<4} passed={c_pass:<4} unsupp={c_unsupp:<4} fail={c_fail:<4}")
+        print(f"    {cat:<25}: tot={c_tot:<4} PASS_RES={counts['PASS_RESULT']:<4} PASS_ERR={counts['PASS_EXPECTED_ERROR']:<4} WRONG={counts['FAIL_WRONG_RESULT']:<4} COMP={counts['FAIL_COMPILE']:<4} RUN={counts['FAIL_RUNTIME']:<4} UNSUPP={counts['UNSUPPORTED']:<4}")
 
     print(f"------------------------------------------------------------")
     print(f"  Top Unsupported Feature Drivers:")
     for reason, count in unsupported_reasons.most_common(8):
         print(f"    {reason:<35}: {count}")
-
-    if failure_details:
-        print(f"------------------------------------------------------------")
-        print(f"  Strict Failures ({len(failure_details)}):")
-        for f in failure_details[:10]:
-            print(f"    [{f['scenario_id']}] {f['name']}: {f['reason']}")
-        if len(failure_details) > 10:
-            print(f"    ... and {len(failure_details) - 10} more (see JSON report)")
-
-    if diag_failures:
-        print(f"------------------------------------------------------------")
-        print(f"  True Semantic/Engine Failures in Diagnostic Mode ({len(diag_failures)}):")
-        for f in diag_failures:
-            print(f"    [{f['scenario_id']}] {f['name']}: {f['reason']}")
 
     report_data = {
         "metadata": {
@@ -173,36 +203,46 @@ def run_tck_suite(
             "git_commit": "677cbafabb8c3c5eed458fd3b1ec0daec8d67d23",
             "release_tag": "2024.3",
             "total_scenarios": total,
-            "claimed_subset_scenarios": claimed_count,
+            "supported_scenarios": supported_count,
+            "unsupported_scenarios": unsupp_count,
+            "language_coverage_pct": round(lang_coverage, 2),
+            "result_expecting_scenarios": res_scenarios_count,
+            "error_expecting_scenarios": err_scenarios_count,
             "strict_mode": {
-                "passed": passed_count,
-                "failed": failed_count,
-                "unsupported": unsupported_count,
-                "blocked": blocked_count,
-                "claimed_pass_rate_pct": round(pass_rate_claimed, 2),
-                "overall_coverage_pct": round(overall_coverage, 2),
+                "PASS_RESULT": strict_pass_result,
+                "PASS_EXPECTED_ERROR": strict_pass_error,
+                "FAIL_WRONG_RESULT": strict_wrong_result,
+                "FAIL_COMPILE": strict_compile_fail,
+                "FAIL_RUNTIME": strict_runtime_fail,
+                "UNSUPPORTED": unsupp_count,
+                "BLOCKED": strict_blocked,
+                "total_passed": strict_total_passed,
+                "pass_rate_supported_pct": round(strict_total_passed / supported_count * 100.0, 2) if supported_count > 0 else 0.0,
+                "result_accuracy_pct": round(strict_res_accuracy, 2),
+                "expected_error_accuracy_pct": round(strict_err_accuracy, 2),
+                "strict_compatibility_pct": round(strict_compat, 2),
             },
             "diagnostic_mode": {
-                "passed": diag_passed,
-                "failed": diag_failed,
-                "unsupported": unsupported_count,
-                "blocked": blocked_count,
-                "claimed_pass_rate_pct": round(diag_pass_rate, 2),
-                "naming_drift_passed": diag_passed - passed_count,
+                "PASS_RESULT": diag_pass_result,
+                "PASS_EXPECTED_ERROR": diag_pass_error,
+                "FAIL_WRONG_RESULT": diag_wrong_result,
+                "FAIL_COMPILE": diag_compile_fail,
+                "FAIL_RUNTIME": diag_runtime_fail,
+                "UNSUPPORTED": unsupp_count,
+                "BLOCKED": diag_blocked,
+                "total_passed": diag_total_passed,
+                "pass_rate_supported_pct": round(diag_total_passed / supported_count * 100.0, 2) if supported_count > 0 else 0.0,
+                "result_accuracy_pct": round(diag_res_accuracy, 2),
+                "expected_error_accuracy_pct": round(diag_err_accuracy, 2),
+                "diagnostic_compatibility_pct": round(diag_compat, 2),
+                "naming_drift_passed": diag_total_passed - strict_total_passed,
             },
-            "passed": passed_count,
-            "failed": failed_count,
-            "unsupported": unsupported_count,
-            "blocked": blocked_count,
-            "claimed_pass_rate_pct": round(pass_rate_claimed, 2),
-            "overall_coverage_pct": round(overall_coverage, 2),
             "duration_seconds": round(total_time, 2),
         },
         "category_breakdown": {k: dict(v) for k, v in by_category.items()},
         "unsupported_breakdown": dict(unsupported_reasons.most_common()),
-        "strict_failures": failure_details,
+        "strict_failures": strict_failures,
         "diagnostic_failures": diag_failures,
-        "failures": failure_details,
         "scenarios": results,
     }
 
@@ -211,8 +251,27 @@ def run_tck_suite(
 
     print(f"")
     print(f"  Wrote raw TCK results to: {output_json}")
-    print(f"============================================================")
 
+    def _safe_str(s: Any) -> str:
+        return str(s).encode("ascii", "backslashreplace").decode("ascii")
+
+    if strict_failures:
+        print(f"------------------------------------------------------------")
+        print(f"  Strict Failures ({len(strict_failures)}):")
+        for f in strict_failures[:10]:
+            print(_safe_str(f"    [{f['scenario_id']}] {f['name']}: {f['reason']}"))
+        if len(strict_failures) > 10:
+            print(f"    ... and {len(strict_failures) - 10} more (see JSON report)")
+
+    if diag_failures:
+        print(f"------------------------------------------------------------")
+        print(f"  Diagnostic Failures ({len(diag_failures)}):")
+        for f in diag_failures[:20]:
+            print(_safe_str(f"    [{f['scenario_id']}] {f['name']}: {f['reason']}"))
+        if len(diag_failures) > 20:
+            print(f"    ... and {len(diag_failures) - 20} more (see JSON report)")
+
+    print(f"============================================================")
     return report_data
 
 

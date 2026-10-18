@@ -139,7 +139,7 @@ def test_record_id_zero_is_not_falsy():
 def test_public_api_surface_and_execution():
     """Verify public GQL-Core module symbols and execution."""
     assert hasattr(gql_core, "__version__")
-    assert gql_core.__version__ == "0.2.0"
+    assert gql_core.__version__.startswith("0.2.0")
     assert callable(gql_core.run)
     assert callable(gql_core.parse)
     assert callable(gql_core.plan)

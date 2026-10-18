@@ -75,31 +75,35 @@ class ProjectOp:
 
 
 @dataclass
+class UnionOp:
+    unions: list[tuple[str, Plan]]
+
+
+@dataclass
 class Plan:
     ops: list
 
 
 def plan(query: Query, graph: PropertyGraph | None = None) -> Plan:
-    if not query.patterns:
-        raise ValueError("Query has no patterns")
+    final_ops: list = []
+    if query.patterns:
+        pattern_to_ops: list[list] = []
+        pattern_vars: list[set[str]] = []
+        for pat in query.patterns:
+            ops, vars_ = _ops_for_pattern(pat)
+            pattern_to_ops.append(ops)
+            pattern_vars.append(vars_)
 
-    pattern_to_ops: list[list] = []
-    pattern_vars: list[set[str]] = []
-    for pat in query.patterns:
-        ops, vars_ = _ops_for_pattern(pat)
-        pattern_to_ops.append(ops)
-        pattern_vars.append(vars_)
-
-    final_ops: list = list(pattern_to_ops[0])
-    seen_vars: set[str] = set(pattern_vars[0])
-    for ops, vars_ in zip(pattern_to_ops[1:], pattern_vars[1:]):
-        shared = tuple(sorted(seen_vars & vars_))
-        final_ops.append(JoinOp(on_vars=shared, rhs_ops=ops))
-        seen_vars |= vars_
+        final_ops = list(pattern_to_ops[0])
+        seen_vars: set[str] = set(pattern_vars[0])
+        for ops, vars_ in zip(pattern_to_ops[1:], pattern_vars[1:]):
+            shared = tuple(sorted(seen_vars & vars_))
+            final_ops.append(JoinOp(on_vars=shared, rhs_ops=ops))
+            seen_vars |= vars_
 
     if query.where is not None:
         push_targets = _scan_targets(final_ops)
-        residual = _push_predicates(query.where, push_targets)
+        residual = _push_predicates(query.where, push_targets) if push_targets else query.where
         if residual is not None:
             final_ops.append(FilterOp(expr=residual))
 
@@ -111,6 +115,11 @@ def plan(query: Query, graph: PropertyGraph | None = None) -> Plan:
             distinct=getattr(query, "distinct", False),
         )
     )
+
+    if getattr(query, "unions", ()):
+        union_plans = [(u_type, plan(q, graph)) for u_type, q in query.unions]
+        final_ops.append(UnionOp(unions=union_plans))
+
     return Plan(ops=final_ops)
 
 

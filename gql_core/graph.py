@@ -17,6 +17,11 @@ class Node:
     id: Any
     label: str
     props: dict[str, Any] = field(default_factory=dict)
+    labels: tuple[str, ...] = ()
+
+    def __post_init__(self):
+        if not self.labels and self.label and self.label != "Node":
+            self.labels = (self.label,)
 
 
 @dataclass
@@ -28,6 +33,15 @@ class Edge:
     props: dict[str, Any] = field(default_factory=dict)
 
 
+@dataclass(frozen=True)
+class Path:
+    nodes: tuple[Node, ...]
+    relationships: tuple[Edge, ...]
+
+    def __len__(self) -> int:
+        return len(self.relationships)
+
+
 class PropertyGraph:
     def __init__(self) -> None:
         self._nodes: dict[Any, Node] = {}
@@ -36,6 +50,8 @@ class PropertyGraph:
         self._in: dict[Any, list[Any]] = {}
         self._by_label: dict[str, set[Any]] = {}
         self._edge_by_label: dict[str, set[Any]] = {}
+        self._parameters: dict[str, Any] = {}
+        self._procedures: dict[str, Any] = {}
         # Marker set used by ingestion to short-circuit derived-edge
         # materialization (e.g. TEAMMATES_WITH) on re-ingest of the same match.
         self.seen_match_ids: set[str] = set()
@@ -50,7 +66,9 @@ class PropertyGraph:
             self._nodes[node.id] = node
             self._out.setdefault(node.id, [])
             self._in.setdefault(node.id, [])
-            self._by_label.setdefault(node.label, set()).add(node.id)
+            all_labels = getattr(node, "labels", ()) or (node.label,)
+            for lbl in all_labels:
+                self._by_label.setdefault(lbl, set()).add(node.id)
             return
         if strict:
             raise ValueError(f"Duplicate node identifier collision: {node.id!r} already exists")
@@ -83,6 +101,53 @@ class PropertyGraph:
             )
         existing.props.update(edge.props)
 
+    def delete_edge(self, edge_id: Any) -> bool:
+        """Delete an edge from the graph. Returns True if deleted, False if not found."""
+        edge = self._edges.pop(edge_id, None)
+        if edge is None:
+            return False
+        if edge.src in self._out:
+            try:
+                self._out[edge.src].remove(edge_id)
+            except ValueError:
+                pass
+        if edge.dst in self._in:
+            try:
+                self._in[edge.dst].remove(edge_id)
+            except ValueError:
+                pass
+        if edge.label in self._edge_by_label:
+            self._edge_by_label[edge.label].discard(edge_id)
+        return True
+
+    def delete_node(self, node_id: Any, *, detach: bool = False) -> bool:
+        """Delete a node from the graph.
+        
+        If detach is False and the node has incident edges, raises RuntimeError.
+        If detach is True, deletes all incident edges first.
+        Returns True if deleted, False if not found.
+        """
+        node = self._nodes.get(node_id)
+        if node is None:
+            return False
+        out_edges = list(self._out.get(node_id, ()))
+        in_edges = list(self._in.get(node_id, ()))
+        if (out_edges or in_edges) and not detach:
+            raise RuntimeError(
+                f"Cannot delete node {node_id!r} because it still has relationships. "
+                "To delete this node, you must first delete its relationships or use DETACH DELETE."
+            )
+        for eid in out_edges + in_edges:
+            self.delete_edge(eid)
+        self._nodes.pop(node_id, None)
+        self._out.pop(node_id, None)
+        self._in.pop(node_id, None)
+        all_labels = getattr(node, "labels", ()) or (node.label,)
+        for lbl in all_labels:
+            if lbl in self._by_label:
+                self._by_label[lbl].discard(node_id)
+        return True
+
     # ── Reads ─────────────────────────────────────────────────────
 
     def get_node(self, node_id: Any) -> Node | None:
@@ -99,17 +164,19 @@ class PropertyGraph:
 
     def outgoing(self, node_id: Any, label: str | None = None) -> list[Edge]:
         edges = []
+        labels = set(label.split("|")) if label and "|" in label else ({label} if label is not None else None)
         for eid in self._out.get(node_id, ()):
             e = self._edges[eid]
-            if label is None or e.label == label:
+            if labels is None or e.label in labels:
                 edges.append(e)
         return edges
 
     def incoming(self, node_id: Any, label: str | None = None) -> list[Edge]:
         edges = []
+        labels = set(label.split("|")) if label and "|" in label else ({label} if label is not None else None)
         for eid in self._in.get(node_id, ()):
             e = self._edges[eid]
-            if label is None or e.label == label:
+            if labels is None or e.label in labels:
                 edges.append(e)
         return edges
 
@@ -127,16 +194,17 @@ class PropertyGraph:
         """
         if direction not in {"out", "in", "both"}:
             raise ValueError(f"direction must be 'out'|'in'|'both', got {direction!r}")
+        labels = set(label.split("|")) if label and "|" in label else ({label} if label is not None else None)
         if direction in {"out", "both"}:
             for eid in self._out.get(node_id, ()):
                 edge = self._edges[eid]
-                if label is not None and edge.label != label:
+                if labels is not None and edge.label not in labels:
                     continue
                 yield edge, self._nodes[edge.dst]
         if direction in {"in", "both"}:
             for eid in self._in.get(node_id, ()):
                 edge = self._edges[eid]
-                if label is not None and edge.label != label:
+                if labels is not None and edge.label not in labels:
                     continue
                 yield edge, self._nodes[edge.src]
 
@@ -152,6 +220,9 @@ class PropertyGraph:
 
     def __len__(self) -> int:
         return len(self._nodes)
+
+    def __bool__(self) -> bool:
+        return True
 
     def stats(self) -> dict[str, Any]:
         return {

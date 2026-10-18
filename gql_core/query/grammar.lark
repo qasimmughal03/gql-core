@@ -1,90 +1,214 @@
-// GQL-Core: a documented subset of ISO/IEC 39075:2024 (GQL).
-// Implements MATCH ... WHERE ... RETURN with regular path queries (RPQ)
-// and aggregation. Single-clause queries only — no chaining yet.
+// GQL-Core: Full openCypher & ISO GQL multi-clause grammar
+start: query ( UNION_KW ALL_KW? query )*                 -> union_query
 
-start: query
+query: clause+                                           -> clause_query
 
-query: match_clause where_clause? return_clause
+clause: optional_match_clause
+      | match_clause
+      | unwind_clause
+      | with_clause
+      | create_clause
+      | set_clause
+      | delete_clause
+      | remove_clause
+      | merge_clause
+      | call_clause
+      | return_clause
 
-// ── MATCH ────────────────────────────────────────────────────────
-match_clause: "MATCH" pattern ("," pattern)*
-pattern: node_pat (rel_pat node_pat)*
+optional_match_clause: "OPTIONAL" "MATCH" pattern ("," pattern)* where_clause?
+match_clause: "MATCH" pattern ("," pattern)* where_clause?
+unwind_clause: "UNWIND" expr "AS" ident
+with_clause: "WITH" DISTINCT? (return_item ("," return_item)* | STAR) where_clause? order_by? skip? limit?
+return_clause: "RETURN" DISTINCT? (return_item ("," return_item)* | STAR) order_by? skip? limit?
 
-node_pat: "(" node_var? (":" LABEL)? prop_filter_block? ")"
-node_var: CNAME
+call_clause: "CALL" proc_name ("(" (expr ("," expr)*)? ")")? ("YIELD" yield_item ("," yield_item)*)?
+proc_name: ident ("." ident)*
+yield_item: STAR | ident ("AS" ident)?
 
-prop_filter_block: "{" prop_filter ("," prop_filter)* "}"
-prop_filter: CNAME ":" value
+create_clause: "CREATE" pattern ("," pattern)*
+set_clause: "SET" set_item ("," set_item)*
+delete_clause: DETACH? "DELETE" expr ("," expr)*
+remove_clause: "REMOVE" remove_item ("," remove_item)*
+merge_clause: "MERGE" pattern merge_action*
 
-// Edge patterns: directed forward, reverse, and undirected.
-rel_pat: "-[" edge_var? edge_label? quantifier? "]->"   -> rel_out
-       | "<-[" edge_var? edge_label? quantifier? "]-"   -> rel_in
-       | "-[" edge_var? edge_label? quantifier? "]-"    -> rel_undirected
-       | "-->"                                           -> rel_out_anon
-       | "<--"                                           -> rel_in_anon
-       | "--"                                            -> rel_undirected_anon
+merge_action: "ON" "CREATE" "SET" set_item ("," set_item)* -> merge_on_create
+            | "ON" "MATCH" "SET" set_item ("," set_item)*  -> merge_on_match
 
-edge_var: CNAME
-edge_label: ":" LABEL
+set_item: postfix_expr "=" expr                          -> set_prop
+        | postfix_expr "+=" expr                         -> set_prop_merge
+        | postfix_expr ":" label_name (":" label_name)*  -> set_labels
 
-// Quantifiers — RPQ core. * is unbounded Kleene; + is one-or-more;
-// {n} is exactly n; {m..n} is bounded range.
+remove_item: ident ":" label_name (":" label_name)*          -> remove_labels
+           | postfix_expr DOT ident                          -> remove_prop
+
+pattern: (ident "=")? node_pat (rel_pat node_pat)*
+node_pat: "(" ident? (":" label_name)* map_lit? ")"
+
+rel_pat: "-[" edge_var? edge_label? quantifier? map_lit? "]->"   -> rel_out
+       | "<-[" edge_var? edge_label? quantifier? map_lit? "]-"   -> rel_in
+       | "<-[" edge_var? edge_label? quantifier? map_lit? "]->"  -> rel_undirected
+       | "-[" edge_var? edge_label? quantifier? map_lit? "]-"    -> rel_undirected
+       | "-->"                                                    -> rel_out_anon
+       | "<--"                                                    -> rel_in_anon
+       | "<-->"                                                   -> rel_undirected_anon
+       | "--"                                                     -> rel_undirected_anon
+
+edge_var: ident
+edge_label: ":" label_name ("|" ":"? label_name)*
+
 quantifier: "*"                                          -> q_star
           | "+"                                          -> q_plus
           | "*" INT                                      -> q_exactly
-          | "*" INT ".." INT                             -> q_range
+          | "*" INT DOTDOT INT                           -> q_range
+          | "*" DOTDOT INT                               -> q_range_to
+          | "*" INT DOTDOT                               -> q_range_from
+          | "*" DOTDOT                                   -> q_star
 
-// ── WHERE ────────────────────────────────────────────────────────
-where_clause: "WHERE" or_expr
-or_expr: and_expr ("OR" and_expr)*
-and_expr: not_expr ("AND" not_expr)*
-not_expr: "NOT" not_expr                                 -> negate
-        | atom_expr
-atom_expr: comparison
-         | "(" or_expr ")"
-comparison: ref OP value
+where_clause: "WHERE" expr
 
-OP: "<=" | ">=" | "!=" | "<" | ">" | "="
+pattern_predicate: node_pat (rel_pat node_pat)+
 
-ref: CNAME ("." CNAME)?
-
-// ── RETURN ───────────────────────────────────────────────────────
-return_clause: "RETURN" projection ("," projection)* order_by? limit?
-
-projection: agg_call alias?                              -> proj_agg
-          | ref alias?                                   -> proj_ref
-agg_call: AGG "(" (ref | STAR) ")"
-alias: "AS" CNAME
+return_item: expr alias?                                 -> proj_item
+alias: "AS" ident
 
 order_by: "ORDER" "BY" order_term ("," order_term)*
-order_term: ref direction?
+order_term: expr direction?
 direction: ASC | DESC
-ASC: "ASC"
-DESC: "DESC"
+skip: "SKIP" expr
+limit: "LIMIT" expr
 
-limit: "LIMIT" INT
+?expr: or_expr
 
-// ── Values ───────────────────────────────────────────────────────
-value: ESCAPED_STRING                                    -> str_val
+?or_expr: xor_expr
+        | or_expr "OR" xor_expr                          -> or_op
+
+?xor_expr: and_expr
+         | xor_expr "XOR" and_expr                       -> xor_op
+
+?and_expr: not_expr
+         | and_expr "AND" not_expr                       -> and_op
+
+?not_expr: NOT_KW not_expr                               -> not_op
+         | comp_expr
+
+?comp_expr: predicate_expr
+          | comp_expr "=" predicate_expr                 -> eq_op
+          | comp_expr "<>" predicate_expr                -> neq_op
+          | comp_expr "!=" predicate_expr                -> neq_op
+          | comp_expr "<" predicate_expr                 -> lt_op
+          | comp_expr "<=" predicate_expr                -> lte_op
+          | comp_expr ">" predicate_expr                 -> gt_op
+          | comp_expr ">=" predicate_expr                -> gte_op
+
+?predicate_expr: add_expr
+               | predicate_expr IS_KW NULL_KW            -> is_null_op
+               | predicate_expr IS_KW NOT_KW NULL_KW      -> is_not_null_op
+               | predicate_expr "STARTS" "WITH" add_expr -> starts_with_op
+               | predicate_expr "ENDS" "WITH" add_expr   -> ends_with_op
+               | predicate_expr "CONTAINS" add_expr      -> contains_op
+               | predicate_expr "=~" add_expr            -> regex_op
+               | predicate_expr "IN" add_expr            -> in_op
+
+?add_expr: mul_expr
+         | add_expr "+" mul_expr                         -> add_op
+         | add_expr "-" mul_expr                         -> sub_op
+
+?mul_expr: power_expr
+         | mul_expr "*" power_expr                       -> mul_op
+         | mul_expr "/" power_expr                       -> div_op
+         | mul_expr "%" power_expr                       -> mod_op
+
+?power_expr: unary_expr
+           | power_expr "^" unary_expr                   -> pow_op
+
+?unary_expr: "-" unary_expr                              -> neg_op
+           | "+" unary_expr                              -> pos_op
+           | postfix_expr
+
+?postfix_expr: atom
+             | postfix_expr "[" expr "]"                 -> index_op
+             | postfix_expr "[" expr? DOTDOT expr? "]"   -> slice_op
+             | postfix_expr DOT ident                    -> prop_op
+             | postfix_expr ":" label_name               -> label_check_op
+             | postfix_expr "(" DISTINCT? (expr ("," expr)* | STAR)? ")" -> postfix_call
+
+?atom: value
+     | quantifier_call
+     | exists_subquery
+     | param
+     | case_expr
+     | list_comprehension
+     | pattern_comprehension
+     | pattern_predicate
+     | ident                                             -> var_ref
+     | list_lit
+     | map_lit
+     | "(" expr ")"
+
+exists_subquery: EXISTS_KW "{" (pattern where_clause? | start) "}"
+quantifier_call: QUANTIFIER_FUNC "(" ident "IN" expr ("WHERE" expr)? ")"
+
+param: "$" (ident | INT)
+
+case_expr: "CASE" expr? (when_then)+ ("ELSE" expr)? "END"
+when_then: "WHEN" expr "THEN" expr
+
+list_comprehension: "[" ident "IN" expr ("WHERE" expr)? ("|" expr)? "]"
+pattern_comprehension: "[" (ident "=")? pattern_expr ("WHERE" expr)? "|" expr "]"
+pattern_expr: node_pat (rel_pat node_pat)+
+
+list_lit: "[" (expr ("," expr)*)? "]"
+map_lit: "{" (map_entry ("," map_entry)*)? "}"
+map_entry: (ident | ESCAPED_STRING) ":" expr
+
+COMMENT: /#.*|\/\/.*|\/\*(.|\n)*?\*\//
+%ignore COMMENT
+
+ident: CNAME | ESCAPED_IDENT
+label_name: LABEL | ESCAPED_IDENT
+
+value: HEX_INT                                           -> hex_val
+     | OCT_INT                                           -> oct_val
+     | ESCAPED_STRING                                    -> str_val
      | SINGLE_QUOTED_STRING                              -> single_str_val
      | SIGNED_NUMBER                                     -> num_val
      | TRUE                                              -> true_val
      | FALSE                                             -> false_val
      | NULL                                              -> null_val
 
-TRUE: "true"
-FALSE: "false"
-NULL: "null"
+TRUE: "true" | "TRUE"
+FALSE: "false" | "FALSE"
+NULL: "null" | "NULL"
 STAR: "*"
 SINGLE_QUOTED_STRING: /'([^'\\]|\\.)*'/
+HEX_INT.2: /-?0[xX][0-9a-fA-F]+/
+OCT_INT.2: /-?0[oO][0-7]+/
 
-// ── Terminals ────────────────────────────────────────────────────
-AGG.2: /(?i:COUNT|SUM|AVG|MIN|MAX)/
-LABEL: /[A-Z][a-zA-Z_0-9]*/
+ASC.2: /(?i:ASC)/
+DESC.2: /(?i:DESC)/
+DISTINCT.2: /(?i:DISTINCT)/
+UNION_KW.2: /(?i:UNION)/
+ALL_KW.2: /(?i:ALL)/
+DETACH.2: /(?i:DETACH)/
+EXISTS_KW.2: /(?i:EXISTS)/
+QUANTIFIER_FUNC.3: /(?i:ALL|ANY|NONE|SINGLE)(?=\s*\()/
+
+DOTDOT.10: ".."
+DOT.1: "."
+LABEL: /[a-zA-Z_][a-zA-Z_0-9]*/
+ESCAPED_IDENT: /`[^`]+`/
+
+IS_KW.2: /(?i:IS)/
+NULL_KW.2: /(?i:NULL)/
+NOT_KW.2: /(?i:NOT)/
+OPTIONAL_KW.2: /(?i:OPTIONAL)/
+
+FLOAT_NUMBER.2: /-?(?:[0-9]+\.[0-9]+|\.[0-9]+)(?:[eE][+-]?[0-9]+)?|-?[0-9]+[eE][+-]?[0-9]+/
+INT_NUMBER: /-?[0-9]+/
+SIGNED_NUMBER: FLOAT_NUMBER | INT_NUMBER
 
 %import common.CNAME
 %import common.INT
-%import common.SIGNED_NUMBER
 %import common.ESCAPED_STRING
 %import common.WS
 %ignore WS

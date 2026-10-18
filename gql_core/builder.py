@@ -407,6 +407,14 @@ class PlanBuilder:
                         proj_items.append(ProjectItem(expr=it[0], alias=it[1]))
                 else:
                     raise TypeError(f"Invalid projection item tuple: {it}")
+            elif isinstance(it, dict):
+                for k, v in it.items():
+                    if isinstance(v, ValueExpr):
+                        proj_items.append(ProjectItem(expr=v, alias=str(k)))
+                    elif isinstance(k, ValueExpr):
+                        proj_items.append(ProjectItem(expr=k, alias=str(v)))
+                    else:
+                        raise TypeError(f"Invalid dict projection item: {k}: {v}")
             else:
                 raise TypeError(f"Invalid projection item: {it}")
         return PlanBuilder(Project(input=self._current, projections=tuple(proj_items), distinct=distinct))

@@ -110,4 +110,4 @@ def test_parse_tree_pretty_print():
 
 def test_parse_invalid_raises():
     with pytest.raises(Exception):
-        parse("RETURN 42")
+        parse("NOT A VALID QUERY @#$")

@@ -300,6 +300,12 @@ def _eval_comparison(cmp: Comparison, row: dict) -> bool:
 
 
 def _apply_op(op: str, lhs: Any, rhs: Any) -> bool:
+    if rhs is None:
+        if op == "=":
+            return lhs is None
+        if op == "!=":
+            return lhs is not None
+        return False
     if lhs is None:
         return False
     if op == "=":
@@ -318,6 +324,8 @@ def _apply_op(op: str, lhs: Any, rhs: Any) -> bool:
 
 
 def _read_ref(ref: Ref, row: dict) -> Any:
+    if ref.var == "*":
+        return row
     binding = row.get(ref.var)
     if binding is None:
         return None
@@ -382,15 +390,37 @@ def _matches_pushed(
 # ── Project / aggregate / order / limit ─────────────────────────────
 
 
+def _hashable_val(v: Any) -> Any:
+    if isinstance(v, dict):
+        return tuple(sorted((k, _hashable_val(val)) for k, val in v.items()))
+    if isinstance(v, (list, tuple)):
+        return tuple(_hashable_val(x) for x in v)
+    if hasattr(v, "id"):
+        return ("__entity__", getattr(v, "id"))
+    return v
+
+
 def _project(op: ProjectOp, rows: Iterable[dict]) -> list[dict]:
     materialized = list(rows)
     has_agg = any(p.agg is not None for p in op.projections)
+    alias_map = {p.alias: p.expr for p in op.projections if p.alias}
     if has_agg:
         out = _aggregate(op.projections, materialized)
+        if op.order_by is not None:
+            out = _sort_rows(out, op.order_by, alias_map)
     else:
+        if op.order_by is not None:
+            materialized = _sort_rows(materialized, op.order_by, alias_map)
         out = [_project_row(op.projections, row) for row in materialized]
-    if op.order_by is not None:
-        out = _sort_rows(out, op.order_by)
+    if getattr(op, "distinct", False):
+        seen: set = set()
+        deduped: list[dict] = []
+        for r in out:
+            key = tuple(sorted((k, _hashable_val(v)) for k, v in r.items()))
+            if key not in seen:
+                seen.add(key)
+                deduped.append(r)
+        out = deduped
     if op.limit is not None:
         out = out[: op.limit]
     return out
@@ -406,6 +436,8 @@ def _project_row(projections: tuple[Projection, ...], row: dict) -> dict:
 
 def _default_key(proj: Projection) -> str:
     if proj.agg is not None:
+        if proj.expr.var == "*":
+            return proj.agg.lower()
         return f"{proj.agg.lower()}_{proj.expr.var}" + (
             f"_{proj.expr.prop}" if proj.expr.prop else ""
         )
@@ -417,16 +449,22 @@ def _aggregate(projections: tuple[Projection, ...], rows: list[dict]) -> list[di
     agg_specs = [p for p in projections if p.agg is not None]
 
     groups: dict[tuple, list[dict]] = {}
+    group_values: dict[tuple, tuple] = {}
     for row in rows:
-        key = tuple(_read_ref(p.expr, row) for p in group_keys)
-        groups.setdefault(key, []).append(row)
+        raw_vals = tuple(_read_ref(p.expr, row) for p in group_keys)
+        hash_key = tuple(_hashable_val(v) for v in raw_vals)
+        if hash_key not in group_values:
+            group_values[hash_key] = raw_vals
+        groups.setdefault(hash_key, []).append(row)
     if not group_keys and not groups:
         groups[()] = []
+        group_values[()] = ()
 
     result: list[dict] = []
-    for key, members in groups.items():
+    for hash_key, members in groups.items():
         out: dict = {}
-        for p, k in zip(group_keys, key):
+        actual_vals = group_values[hash_key]
+        for p, k in zip(group_keys, actual_vals):
             out[p.alias or _default_key(p)] = k
         for spec in agg_specs:
             out[spec.alias or _default_key(spec)] = _apply_agg(spec, members)
@@ -435,6 +473,8 @@ def _aggregate(projections: tuple[Projection, ...], rows: list[dict]) -> list[di
 
 
 def _apply_agg(spec: Projection, rows: list[dict]) -> Any:
+    if spec.agg == "COUNT" and spec.expr.var == "*":
+        return len(rows)
     values: list[Any] = []
     for row in rows:
         v = _read_ref(spec.expr, row)
@@ -465,7 +505,9 @@ def _to_number(v: Any) -> int | float | None:
     return None
 
 
-def _sort_rows(rows: list[dict], order_by: OrderBy) -> list[dict]:
+def _sort_rows(
+    rows: list[dict], order_by: OrderBy, alias_map: dict[str, Any] | None = None
+) -> list[dict]:
     # Multi-column ORDER BY: apply terms in reverse so Python's stable sort
     # gives the leftmost term the highest priority.
     out = list(rows)
@@ -474,15 +516,17 @@ def _sort_rows(rows: list[dict], order_by: OrderBy) -> list[dict]:
         var = term.ref.var
         prop = term.ref.prop
 
-        def key(row: dict, var=var, prop=prop) -> Any:
-            if var in row and not isinstance(row[var], (Node, Edge)):
-                return _none_safe(row[var])
-            if prop is None:
-                return _none_safe(row.get(var))
-            b = row.get(var)
-            if hasattr(b, "props"):
-                return _none_safe(b.props.get(prop))
-            return _none_safe(row.get(prop))
+        target_ref = term.ref
+        if alias_map and var in alias_map and prop is None:
+            target_ref = alias_map[var]
+
+        def key(row: dict, ref=target_ref, var=var, prop=prop) -> Any:
+            v = _read_ref(ref, row)
+            if v is None and prop is None and var in row:
+                v = row[var]
+            if v is None and prop is not None and prop in row:
+                v = row[prop]
+            return _none_safe(v)
 
         out.sort(key=key, reverse=reverse)
     return out

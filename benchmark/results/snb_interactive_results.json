@@ -1,0 +1,509 @@
+{
+  "metadata": {
+    "timestamp": "2026-10-18T02:15:35Z",
+    "benchmark_suite": "LDBC SNB Interactive v1 Read-Only",
+    "scale_factor": "SF0.1 / initial snapshot (34,735 nodes, 71,667 edges)",
+    "all_verified_correct": true,
+    "system": {
+      "platform": "Windows-11-10.0.26300-SP0",
+      "system": "Windows",
+      "release": "11",
+      "processor": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
+      "cpu_count_logical": 12,
+      "total_ram_gb": 15.64,
+      "available_ram_gb": 1.0,
+      "python_version": "3.14.7",
+      "python_implementation": "CPython",
+      "package_name": "gql-core",
+      "package_version": "0.2.0",
+      "package_location": "C:\\Users\\HP\\Documents\\Portfolio\\knowledge-graoh-with-formal-query\\gql_core",
+      "git_commit": "2039b809bed8c13a67f020c8c904948fa74882ae",
+      "workload_disclaimer": "Unaudited read-only performance study using LDBC SNB Interactive v1 queries"
+    },
+    "dataset_loading": {
+      "nodes": 34735,
+      "edges": 70842,
+      "nodes_by_label": {
+        "Country": 111,
+        "City": 1343,
+        "Continent": 6,
+        "Company": 1575,
+        "University": 6380,
+        "Tag": 16080,
+        "TagClass": 71,
+        "Person": 222,
+        "Forum": 805,
+        "Post": 5924,
+        "Comment": 2218
+      },
+      "edges_by_label": {
+        "KNOWS": 825,
+        "IS_LOCATED_IN": 16319,
+        "HAS_CREATOR": 8142,
+        "REPLY_OF": 2218,
+        "CONTAINER_OF": 5924,
+        "HAS_MODERATOR": 805,
+        "HAS_MEMBER": 3584,
+        "HAS_INTEREST": 4777,
+        "HAS_TAG": 8596,
+        "LIKES": 1383,
+        "STUDY_AT": 180,
+        "WORK_AT": 485,
+        "IS_PART_OF": 1454,
+        "HAS_TYPE": 16080,
+        "IS_SUBCLASS_OF": 70
+      },
+      "load_time_seconds": 3.544,
+      "peak_memory_rss_mb": 61.46
+    },
+    "inventory_summary": {
+      "total_queries": 21,
+      "executable_count": 5,
+      "unsupported_count": 16,
+      "executable_ids": [
+        "IS1",
+        "IS3",
+        "IS5",
+        "IC2",
+        "IC8"
+      ],
+      "unsupported_ids": [
+        "IS2",
+        "IS4",
+        "IS6",
+        "IS7",
+        "IC1",
+        "IC3",
+        "IC4",
+        "IC5",
+        "IC6",
+        "IC7",
+        "IC9",
+        "IC10",
+        "IC11",
+        "IC12",
+        "IC13",
+        "IC14"
+      ],
+      "family_breakdown": {
+        "1-hop lookup": {
+          "total": 2,
+          "executable": 2,
+          "unsupported": 0
+        },
+        "Multi-clause chaining / RPQ": {
+          "total": 1,
+          "executable": 0,
+          "unsupported": 1
+        },
+        "1-hop undirected join": {
+          "total": 1,
+          "executable": 1,
+          "unsupported": 0
+        },
+        "Single-node lookup": {
+          "total": 1,
+          "executable": 0,
+          "unsupported": 1
+        },
+        "Multi-hop path / RPQ": {
+          "total": 1,
+          "executable": 0,
+          "unsupported": 1
+        },
+        "Optional join / conditional": {
+          "total": 1,
+          "executable": 0,
+          "unsupported": 1
+        },
+        "Variable-path / shortest-path": {
+          "total": 1,
+          "executable": 0,
+          "unsupported": 1
+        },
+        "2-hop join with filter": {
+          "total": 1,
+          "executable": 1,
+          "unsupported": 0
+        },
+        "Recursive path / grouping": {
+          "total": 1,
+          "executable": 0,
+          "unsupported": 1
+        },
+        "Aggregation / Grouping": {
+          "total": 2,
+          "executable": 0,
+          "unsupported": 2
+        },
+        "Multi-hop path / Grouping": {
+          "total": 1,
+          "executable": 0,
+          "unsupported": 1
+        },
+        "Multi-hop join / Aggregation": {
+          "total": 1,
+          "executable": 0,
+          "unsupported": 1
+        },
+        "3-hop join with ordering": {
+          "total": 1,
+          "executable": 1,
+          "unsupported": 0
+        },
+        "Recursive path (1..2)": {
+          "total": 1,
+          "executable": 0,
+          "unsupported": 1
+        },
+        "Recursive path / Scoring": {
+          "total": 1,
+          "executable": 0,
+          "unsupported": 1
+        },
+        "Recursive path / Temporal": {
+          "total": 1,
+          "executable": 0,
+          "unsupported": 1
+        },
+        "Recursive path / Subqueries": {
+          "total": 1,
+          "executable": 0,
+          "unsupported": 1
+        },
+        "Shortest path": {
+          "total": 1,
+          "executable": 0,
+          "unsupported": 1
+        },
+        "Weighted shortest path": {
+          "total": 1,
+          "executable": 0,
+          "unsupported": 1
+        }
+      },
+      "unsupported_reasons": {
+        "WITH_CLAUSE_CHAINING": 1,
+        "UNSUPPORTED_FUNCTION_COALESCE": 1,
+        "ZERO_LENGTH_RPQ_COMPOSITION": 1,
+        "OPTIONAL_MATCH_AND_CASE": 1,
+        "SHORTEST_PATH_AND_WITH": 1,
+        "WITH_AND_COLLECT": 2,
+        "WITH_AND_CASE": 1,
+        "WITH_AND_OPTIONAL_MATCH": 2,
+        "WITH_AND_UNWIND": 2,
+        "WITH_AND_HEAD": 1,
+        "WITH_CLAUSE": 1,
+        "SHORTEST_PATH_FUNCTION": 1,
+        "ALL_SHORTEST_PATHS_AND_UNWIND": 1
+      }
+    }
+  },
+  "query_results": [
+    {
+      "query_id": "IS1",
+      "parameter_id": "IS1_p1",
+      "parameters": {
+        "personId": 4398046511192
+      },
+      "query_string": "MATCH (n:Person {id: 4398046511192})-[:IS_LOCATED_IN]->(p:City) RETURN n.firstName AS firstName, n.lastName AS lastName, n.birthday AS birthday, n.locationIP AS locationIP, n.browserUsed AS browserUsed, p.id AS cityId, n.gender AS gender, n.creationDate AS creationDate",
+      "correctness_status": "VERIFIED_EXACT_MATCH",
+      "result_row_count": 1,
+      "expected_row_count": 1,
+      "sample_count": 10,
+      "warmup_count": 3,
+      "latency_ms": {
+        "median": 0.9004,
+        "mean": 0.9385,
+        "stddev": 0.0748,
+        "min": 0.864,
+        "max": 1.0728,
+        "p95": 1.0465,
+        "samples": [
+          0.8704,
+          0.9053,
+          1.0728,
+          1.0143,
+          0.9805,
+          1.0138,
+          0.8956,
+          0.8896,
+          0.864,
+          0.8788
+        ]
+      },
+      "phase_timings_ms": {
+        "parse_mean": 0.6499,
+        "plan_mean": 0.0177,
+        "execution_mean": 0.1664
+      }
+    },
+    {
+      "query_id": "IS1",
+      "parameter_id": "IS1_p2",
+      "parameters": {
+        "personId": 8796093022220
+      },
+      "query_string": "MATCH (n:Person {id: 8796093022220})-[:IS_LOCATED_IN]->(p:City) RETURN n.firstName AS firstName, n.lastName AS lastName, n.birthday AS birthday, n.locationIP AS locationIP, n.browserUsed AS browserUsed, p.id AS cityId, n.gender AS gender, n.creationDate AS creationDate",
+      "correctness_status": "VERIFIED_EXACT_MATCH",
+      "result_row_count": 1,
+      "expected_row_count": 1,
+      "sample_count": 10,
+      "warmup_count": 3,
+      "latency_ms": {
+        "median": 1.1968,
+        "mean": 1.1545,
+        "stddev": 0.1054,
+        "min": 0.8921,
+        "max": 1.2418,
+        "p95": 1.2332,
+        "samples": [
+          1.2216,
+          1.2227,
+          1.1783,
+          1.2418,
+          1.2153,
+          1.222,
+          1.1453,
+          1.1143,
+          1.0921,
+          0.8921
+        ]
+      },
+      "phase_timings_ms": {
+        "parse_mean": 0.7022,
+        "plan_mean": 0.0223,
+        "execution_mean": 0.222
+      }
+    },
+    {
+      "query_id": "IS3",
+      "parameter_id": "IS3_p1",
+      "parameters": {
+        "personId": 4398046511192
+      },
+      "query_string": "MATCH (n:Person {id: 4398046511192})-[r:KNOWS]-(friend:Person) RETURN friend.id AS personId, friend.firstName AS firstName, friend.lastName AS lastName, r.creationDate AS friendshipCreationDate ORDER BY friendshipCreationDate DESC, personId ASC",
+      "correctness_status": "VERIFIED_EXACT_MATCH",
+      "result_row_count": 6,
+      "expected_row_count": 6,
+      "sample_count": 10,
+      "warmup_count": 3,
+      "latency_ms": {
+        "median": 1.0195,
+        "mean": 1.0325,
+        "stddev": 0.1063,
+        "min": 0.8833,
+        "max": 1.1889,
+        "p95": 1.1743,
+        "samples": [
+          1.1564,
+          1.1889,
+          1.1084,
+          1.1233,
+          1.0142,
+          0.9621,
+          0.9345,
+          0.8833,
+          0.9292,
+          1.0249
+        ]
+      },
+      "phase_timings_ms": {
+        "parse_mean": 0.6201,
+        "plan_mean": 0.0229,
+        "execution_mean": 0.2963
+      }
+    },
+    {
+      "query_id": "IS3",
+      "parameter_id": "IS3_p2",
+      "parameters": {
+        "personId": 8796093022220
+      },
+      "query_string": "MATCH (n:Person {id: 8796093022220})-[r:KNOWS]-(friend:Person) RETURN friend.id AS personId, friend.firstName AS firstName, friend.lastName AS lastName, r.creationDate AS friendshipCreationDate ORDER BY friendshipCreationDate DESC, personId ASC",
+      "correctness_status": "VERIFIED_EXACT_MATCH",
+      "result_row_count": 4,
+      "expected_row_count": 4,
+      "sample_count": 10,
+      "warmup_count": 3,
+      "latency_ms": {
+        "median": 0.9474,
+        "mean": 0.9652,
+        "stddev": 0.0788,
+        "min": 0.9067,
+        "max": 1.1838,
+        "p95": 1.083,
+        "samples": [
+          0.9465,
+          0.931,
+          0.9067,
+          0.9483,
+          0.9598,
+          0.9436,
+          0.9544,
+          0.9188,
+          0.9588,
+          1.1838
+        ]
+      },
+      "phase_timings_ms": {
+        "parse_mean": 0.6269,
+        "plan_mean": 0.0218,
+        "execution_mean": 0.2842
+      }
+    },
+    {
+      "query_id": "IS5",
+      "parameter_id": "IS5_p1",
+      "parameters": {
+        "messageId": 206158431836
+      },
+      "query_string": "MATCH (m:Post {id: 206158431836})-[:HAS_CREATOR]->(p:Person) RETURN p.id AS personId, p.firstName AS firstName, p.lastName AS lastName",
+      "correctness_status": "VERIFIED_EXACT_MATCH",
+      "result_row_count": 1,
+      "expected_row_count": 1,
+      "sample_count": 10,
+      "warmup_count": 3,
+      "latency_ms": {
+        "median": 9.1175,
+        "mean": 9.1581,
+        "stddev": 0.2085,
+        "min": 8.918,
+        "max": 9.602,
+        "p95": 9.4891,
+        "samples": [
+          9.1343,
+          9.1047,
+          8.918,
+          9.3019,
+          8.9829,
+          9.1302,
+          8.9583,
+          9.602,
+          9.0978,
+          9.3512
+        ]
+      },
+      "phase_timings_ms": {
+        "parse_mean": 0.6881,
+        "plan_mean": 0.0333,
+        "execution_mean": 8.5619
+      }
+    },
+    {
+      "query_id": "IS5",
+      "parameter_id": "IS5_p2",
+      "parameters": {
+        "messageId": 206158431840
+      },
+      "query_string": "MATCH (m:Post {id: 206158431840})-[:HAS_CREATOR]->(p:Person) RETURN p.id AS personId, p.firstName AS firstName, p.lastName AS lastName",
+      "correctness_status": "VERIFIED_EXACT_MATCH",
+      "result_row_count": 0,
+      "expected_row_count": 0,
+      "sample_count": 10,
+      "warmup_count": 3,
+      "latency_ms": {
+        "median": 9.6414,
+        "mean": 10.5872,
+        "stddev": 2.2312,
+        "min": 9.0032,
+        "max": 16.0634,
+        "p95": 14.6098,
+        "samples": [
+          9.4279,
+          9.482,
+          9.0032,
+          9.6723,
+          16.0634,
+          12.8332,
+          9.1876,
+          10.9196,
+          9.634,
+          9.6488
+        ]
+      },
+      "phase_timings_ms": {
+        "parse_mean": 0.8571,
+        "plan_mean": 0.0395,
+        "execution_mean": 10.795
+      }
+    },
+    {
+      "query_id": "IC2",
+      "parameter_id": "IC2_p1",
+      "parameters": {
+        "personId": 10995116278009,
+        "maxDate": 1287187200000
+      },
+      "query_string": "MATCH (:Person {id: 10995116278009})-[:KNOWS]-(friend:Person)<-[:HAS_CREATOR]-(message:Post) WHERE message.creationDate <= 1287187200000 RETURN friend.id AS personId, friend.firstName AS personFirstName, friend.lastName AS personLastName, message.id AS postOrCommentId, message.content AS postOrCommentContent, message.creationDate AS postOrCommentCreationDate ORDER BY postOrCommentCreationDate DESC, postOrCommentId ASC LIMIT 20",
+      "correctness_status": "VERIFIED_EXACT_MATCH",
+      "result_row_count": 20,
+      "expected_row_count": 20,
+      "sample_count": 10,
+      "warmup_count": 3,
+      "latency_ms": {
+        "median": 5.2195,
+        "mean": 5.7587,
+        "stddev": 1.7462,
+        "min": 4.2908,
+        "max": 10.1592,
+        "p95": 8.6911,
+        "samples": [
+          4.5931,
+          4.4152,
+          5.5676,
+          4.9816,
+          4.2908,
+          6.8967,
+          5.1577,
+          5.2812,
+          10.1592,
+          6.2439
+        ]
+      },
+      "phase_timings_ms": {
+        "parse_mean": 1.5875,
+        "plan_mean": 0.0571,
+        "execution_mean": 3.196
+      }
+    },
+    {
+      "query_id": "IC8",
+      "parameter_id": "IC8_p1",
+      "parameters": {
+        "personId": 143
+      },
+      "query_string": "MATCH (start:Person {id: 143})<-[:HAS_CREATOR]-(post:Post)<-[:REPLY_OF]-(comment:Comment)-[:HAS_CREATOR]->(person:Person) RETURN person.id AS personId, person.firstName AS personFirstName, person.lastName AS personLastName, comment.creationDate AS commentCreationDate, comment.id AS commentId, comment.content AS commentContent ORDER BY commentCreationDate DESC, commentId ASC LIMIT 20",
+      "correctness_status": "VERIFIED_EXACT_MATCH",
+      "result_row_count": 20,
+      "expected_row_count": 20,
+      "sample_count": 10,
+      "warmup_count": 3,
+      "latency_ms": {
+        "median": 3.5457,
+        "mean": 3.5497,
+        "stddev": 0.1224,
+        "min": 3.3875,
+        "max": 3.7571,
+        "p95": 3.7194,
+        "samples": [
+          3.5876,
+          3.3946,
+          3.6733,
+          3.7571,
+          3.6515,
+          3.4439,
+          3.3875,
+          3.5737,
+          3.5178,
+          3.5105
+        ]
+      },
+      "phase_timings_ms": {
+        "parse_mean": 1.5382,
+        "plan_mean": 0.0456,
+        "execution_mean": 2.087
+      }
+    }
+  ]
+}

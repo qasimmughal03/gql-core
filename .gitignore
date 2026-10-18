@@ -6,10 +6,14 @@ data/*
 data/pakistan/*
 !data/pakistan/.gitkeep
 
-# Benchmark output — keep canonical results.json + .gitkeep, ignore the rest.
+# Benchmark output — keep canonical results.json, tck/snb results + .gitkeep, ignore the rest.
 benchmark/results/*
 !benchmark/results/.gitkeep
 !benchmark/results/results.json
+!benchmark/results/tck_compatibility_results.json
+!benchmark/results/snb_interactive_results.json
+benchmark/cache/
+
 
 # SQLite mirror
 *.db

@@ -10,7 +10,8 @@ query: match_clause where_clause? return_clause
 match_clause: "MATCH" pattern ("," pattern)*
 pattern: node_pat (rel_pat node_pat)*
 
-node_pat: "(" CNAME (":" LABEL)? prop_filter_block? ")"
+node_pat: "(" node_var? (":" LABEL)? prop_filter_block? ")"
+node_var: CNAME
 
 prop_filter_block: "{" prop_filter ("," prop_filter)* "}"
 prop_filter: CNAME ":" value
@@ -19,6 +20,10 @@ prop_filter: CNAME ":" value
 rel_pat: "-[" edge_var? edge_label? quantifier? "]->"   -> rel_out
        | "<-[" edge_var? edge_label? quantifier? "]-"   -> rel_in
        | "-[" edge_var? edge_label? quantifier? "]-"    -> rel_undirected
+       | "-->"                                           -> rel_out_anon
+       | "<--"                                           -> rel_in_anon
+       | "--"                                            -> rel_undirected_anon
+
 edge_var: CNAME
 edge_label: ":" LABEL
 
@@ -45,9 +50,10 @@ ref: CNAME ("." CNAME)?
 
 // ── RETURN ───────────────────────────────────────────────────────
 return_clause: "RETURN" projection ("," projection)* order_by? limit?
+
 projection: agg_call alias?                              -> proj_agg
           | ref alias?                                   -> proj_ref
-agg_call: AGG "(" ref ")"
+agg_call: AGG "(" (ref | STAR) ")"
 alias: "AS" CNAME
 
 order_by: "ORDER" "BY" order_term ("," order_term)*
@@ -60,6 +66,7 @@ limit: "LIMIT" INT
 
 // ── Values ───────────────────────────────────────────────────────
 value: ESCAPED_STRING                                    -> str_val
+     | SINGLE_QUOTED_STRING                              -> single_str_val
      | SIGNED_NUMBER                                     -> num_val
      | TRUE                                              -> true_val
      | FALSE                                             -> false_val
@@ -68,9 +75,11 @@ value: ESCAPED_STRING                                    -> str_val
 TRUE: "true"
 FALSE: "false"
 NULL: "null"
+STAR: "*"
+SINGLE_QUOTED_STRING: /'([^'\\]|\\.)*'/
 
 // ── Terminals ────────────────────────────────────────────────────
-AGG.2: "COUNT" | "SUM" | "AVG" | "MIN" | "MAX"
+AGG.2: /(?i:COUNT|SUM|AVG|MIN|MAX)/
 LABEL: /[A-Z][a-zA-Z_0-9]*/
 
 %import common.CNAME

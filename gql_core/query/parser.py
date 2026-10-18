@@ -31,10 +31,18 @@ _GRAMMAR = Path(__file__).resolve().parent / "grammar.lark"
 
 
 class _ToAST(Transformer):
+    def __init__(self) -> None:
+        super().__init__()
+        self._anon_counter = 0
+
     # ── Values ────────────────────────────────────────────────────
     def str_val(self, items):
         # ESCAPED_STRING contains surrounding quotes — strip them.
         return items[0][1:-1]
+
+    def single_str_val(self, items):
+        raw = items[0][1:-1]
+        return raw.replace("\\'", "'").replace("\\\\", "\\")
 
     def num_val(self, items):
         text = items[0]
@@ -70,15 +78,23 @@ class _ToAST(Transformer):
     def prop_filter_block(self, items):
         return tuple(items)
 
+    def node_var(self, items):
+        return ("var", str(items[0]))
+
     def node_pat(self, items):
-        var = str(items[0])
+        var: str | None = None
         label: str | None = None
         filters: tuple = ()
-        for child in items[1:]:
-            if isinstance(child, Token) and child.type == "LABEL":
+        for child in items:
+            if isinstance(child, tuple) and child and child[0] == "var":
+                var = child[1]
+            elif isinstance(child, Token) and child.type == "LABEL":
                 label = str(child)
             elif isinstance(child, tuple):
                 filters = child
+        if var is None:
+            self._anon_counter += 1
+            var = f"__anon_{self._anon_counter}"
         return NodePat(var=var, label=label, filters=filters)
 
     def edge_var(self, items):
@@ -122,6 +138,15 @@ class _ToAST(Transformer):
     def rel_undirected(self, items):
         return self._build_rel(items, "undirected")
 
+    def rel_out_anon(self, _items):
+        return RelPat(var=None, label=None, direction="out", quantifier=("one",))
+
+    def rel_in_anon(self, _items):
+        return RelPat(var=None, label=None, direction="in", quantifier=("one",))
+
+    def rel_undirected_anon(self, _items):
+        return RelPat(var=None, label=None, direction="undirected", quantifier=("one",))
+
     def pattern(self, items):
         nodes: list[NodePat] = []
         rels: list[RelPat] = []
@@ -164,8 +189,13 @@ class _ToAST(Transformer):
 
     # ── RETURN ────────────────────────────────────────────────────
     def agg_call(self, items):
-        # AGG token followed by ref.
-        return (str(items[0]), items[1])
+        agg_name = str(items[0]).upper()
+        arg = items[1]
+        if isinstance(arg, Token) and arg.type == "STAR":
+            ref = Ref(var="*", prop=None)
+        else:
+            ref = arg
+        return (agg_name, ref)
 
     def proj_ref(self, items):
         ref = items[0]

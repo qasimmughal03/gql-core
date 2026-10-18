@@ -149,8 +149,35 @@ The full cricket knowledge graph is preserved at `examples/cricket/` — 7 node 
 | Q5 | Bounded RPQ `NEXT_DELIVERY*1..3` | 382.8 | 0.01 | 53 / 13 (4.1×) |
 | LR2 | 2-hop teammates (undirected RPQ) | **2.3** | **1.9** | 108 / 15 (**7.2×**) |
 
+## External Benchmarks & Compatibility Testing
+
+GQL-Core integrates external industry-standard test suites to establish empirical correctness and execution metrics:
+
+1. **openCypher TCK Compatibility Suite**: Evaluates compatibility against the official [openCypher TCK](https://github.com/opencypher/openCypher) pinned to release `2024.3`.
+2. **LDBC SNB Interactive v1 Read-Only Benchmark**: Evaluates execution and answer correctness against official [LDBC SNB reference implementations](https://github.com/ldbc/ldbc_snb_interactive_v1_impls) using the official static initial dataset.
+
+### Reproduction Commands
+
+```bash
+# 1. Clone pinned upstream corpora into cache:
+git clone --depth 1 --branch 2024.3 https://github.com/opencypher/openCypher.git benchmark/cache/openCypher
+git clone --depth 1 https://github.com/ldbc/ldbc_snb_interactive_v1_impls.git benchmark/cache/ldbc_snb_impls
+
+# 2. Run openCypher TCK compatibility runner:
+python -m benchmark.tck.runner
+
+# 3. Run LDBC SNB Interactive v1 benchmark (with answer oracle verification):
+python -m benchmark.snb.runner
+
+# 4. Run CI benchmark smoke tests:
+python -m pytest tests/test_benchmark_smoke.py
+```
+
+See [docs/RELEASE_VERIFICATION_REPORT.md](docs/RELEASE_VERIFICATION_REPORT.md) for the full evidence report, including classification taxonomy, latency distributions, and answer oracle validation.
+
 ## References
 
 - ISO/IEC 39075:2024 — Graph Query Language ([standard](https://www.iso.org/standard/76120.html))
 - W3C SHACL — Shapes Constraint Language ([recommendation](https://www.w3.org/TR/shacl/))
 - Lark parsing library ([docs](https://lark-parser.readthedocs.io/))
+

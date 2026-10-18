@@ -71,6 +71,7 @@ class ProjectOp:
     projections: tuple[Projection, ...]
     order_by: Any
     limit: int | None
+    distinct: bool = False
 
 
 @dataclass
@@ -107,6 +108,7 @@ def plan(query: Query, graph: PropertyGraph | None = None) -> Plan:
             projections=query.projections,
             order_by=query.order_by,
             limit=query.limit,
+            distinct=getattr(query, "distinct", False),
         )
     )
     return Plan(ops=final_ops)

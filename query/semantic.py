@@ -164,6 +164,8 @@ def _validate_projection(projection: Projection, bindings: dict[str, _Binding]) 
 
 
 def _validate_ref(ref: Ref, bindings: dict[str, _Binding], context: str) -> None:
+    if ref.var == "*":
+        return
     binding = bindings.get(ref.var)
     if binding is None:
         raise SemanticError(f"{context} references unbound variable {ref.var!r}")

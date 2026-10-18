@@ -92,3 +92,4 @@ class Query:
     projections: tuple[Projection, ...]
     order_by: OrderBy | None
     limit: int | None
+    distinct: bool = False

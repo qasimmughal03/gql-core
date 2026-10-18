@@ -119,7 +119,7 @@ def _expand(op: ExpandOp, rows: Iterable[dict], graph: PropertyGraph) -> Iterato
         if src_node is None:
             continue
         used_edges = row.get("__used_edges__", frozenset())
-        for edge_path, target in _walk(graph, src_node, op):
+        for edge_path, target in _walk(graph, src_node, op, used_edges=used_edges):
             path_edge_ids = frozenset(_base_edge_id(e.id) for e in edge_path)
             if used_edges and (used_edges & path_edge_ids):
                 continue
@@ -152,15 +152,23 @@ def _expand(op: ExpandOp, rows: Iterable[dict], graph: PropertyGraph) -> Iterato
             yield new_row
 
 
-def _walk(graph: PropertyGraph, start: Node, op: ExpandOp) -> Iterator[tuple[list[Edge], Node]]:
+def _walk(
+    graph: PropertyGraph,
+    start: Node,
+    op: ExpandOp,
+    used_edges: frozenset[str] = frozenset(),
+) -> Iterator[tuple[list[Edge], Node]]:
     """Yield (edge_path, target_node) pairs for each match of the rel pattern."""
     qkind = op.quantifier[0]
     if qkind == "one":
         for edge, neighbor in _direct_neighbors(graph, start, op.edge_label, op.direction):
+            eid = _base_edge_id(edge.id)
+            if eid in used_edges:
+                continue
             yield [edge], neighbor
         return
     lo, hi = _quantifier_bounds(op.quantifier)
-    yield from rpq_traverse(graph, start, op.edge_label, op.direction, lo, hi)
+    yield from rpq_traverse(graph, start, op.edge_label, op.direction, lo, hi, initial_used_edges=used_edges)
 
 
 def rpq_traverse(
@@ -170,43 +178,37 @@ def rpq_traverse(
     direction: str,
     lo: int,
     hi: int,
+    initial_used_edges: frozenset[str] = frozenset(),
 ) -> Iterator[tuple[list[Edge], Node]]:
-    """BFS over edges matching edge_label and direction.
+    """Traverse graph matching edge_label, direction, and hop bounds [lo, hi].
 
-    Quantifier semantics (Cypher convention — `*` is shorthand for `*1..`):
-        '*'     → lo=1,  hi=∞      (Cypher's variable-length, default min 1)
-        '+'     → lo=1,  hi=∞
-        '*N'    → lo=hi=N
-        '*M..N' → lo=M,  hi=N
-
-    Reachability semantics: each target node is yielded at most once across
-    the whole traversal, at its shortest-reachable depth. This matches the
-    binding-set semantics of Cypher's variable-length paths — the user gets
-    the set of reachable nodes, not the set of distinct paths.
-
-    The visited set is keyed by node id alone (not (node, depth)); BFS order
-    guarantees the first visit is at the shortest depth.
+    Implements openCypher trail semantics:
+    - Within each path, no relationship instance (by base edge ID) may be traversed more than once.
+    - Nodes may be revisited across distinct edges (allowing cycles, repeated endpoints, and parallel edges).
+    - If multiple distinct paths reach the same destination, each path is yielded.
+    - Traversal terminates because each step consumes a previously unused edge, bounding
+      maximum path length to min(hi, |E|).
     """
-    queue: deque[tuple[Node, list[Edge]]] = deque([(start, [])])
-    visited: set[str] = {start.id}
+    queue: deque[tuple[Node, tuple[Edge, ...], frozenset[str]]] = deque([(start, (), initial_used_edges)])
     if lo == 0:
-        # Explicit `*0..N` lets the start match as a zero-length path target.
         yield [], start
+
     while queue:
-        node, path = queue.popleft()
+        node, path, used_edges = queue.popleft()
         depth = len(path)
         if depth >= hi:
             continue
         for edge, neighbor in _direct_neighbors(graph, node, edge_label, direction):
-            if neighbor.id in visited:
+            eid = _base_edge_id(edge.id)
+            if eid in used_edges:
                 continue
-            new_path = path + [edge]
+            new_path = path + (edge,)
             new_depth = depth + 1
-            visited.add(neighbor.id)
+            new_used = used_edges | {eid}
             if new_depth >= lo:
-                yield new_path, neighbor
+                yield list(new_path), neighbor
             if new_depth < hi:
-                queue.append((neighbor, new_path))
+                queue.append((neighbor, new_path, new_used))
 
 
 def _direct_neighbors(
@@ -287,48 +289,65 @@ def _entity_id(entity: Any) -> str:
 
 def _filter(op: FilterOp, rows: Iterable[dict]) -> Iterator[dict]:
     for row in rows:
-        if _eval_expr(op.expr, row):
+        if _eval_expr(op.expr, row) is True:
             yield row
 
 
-def _eval_expr(expr: Any, row: dict) -> bool:
+def _eval_expr(expr: Any, row: dict) -> bool | None:
     if isinstance(expr, Comparison):
         return _eval_comparison(expr, row)
     if isinstance(expr, And):
-        return all(_eval_expr(c, row) for c in expr.children)
+        results = [_eval_expr(c, row) for c in expr.children]
+        if any(r is False for r in results):
+            return False
+        if any(r is None for r in results):
+            return None
+        return True
     if isinstance(expr, Or):
-        return any(_eval_expr(c, row) for c in expr.children)
+        results = [_eval_expr(c, row) for c in expr.children]
+        if any(r is True for r in results):
+            return True
+        if any(r is None for r in results):
+            return None
+        return False
     if isinstance(expr, Not):
-        return not _eval_expr(expr.inner, row)
+        inner = _eval_expr(expr.inner, row)
+        if inner is None:
+            return None
+        return not inner
     raise TypeError(f"Unknown expression: {type(expr).__name__}")
 
 
-def _eval_comparison(cmp: Comparison, row: dict) -> bool:
+def _eval_comparison(cmp: Comparison, row: dict) -> bool | None:
     lhs_value = _read_ref(cmp.lhs, row)
     return _apply_op(cmp.op, lhs_value, cmp.rhs)
 
 
-def _apply_op(op: str, lhs: Any, rhs: Any) -> bool:
-    if rhs is None:
+def _apply_op(op: str, lhs: Any, rhs: Any) -> bool | None:
+    if lhs is None or rhs is None:
+        return None
+    # Boolean vs non-boolean type mismatch in comparison
+    if isinstance(lhs, bool) != isinstance(rhs, bool):
         if op == "=":
-            return lhs is None
+            return False
         if op == "!=":
-            return lhs is not None
-        return False
-    if lhs is None:
-        return False
-    if op == "=":
-        return lhs == rhs
-    if op == "!=":
-        return lhs != rhs
-    if op == "<":
-        return lhs < rhs
-    if op == "<=":
-        return lhs <= rhs
-    if op == ">":
-        return lhs > rhs
-    if op == ">=":
-        return lhs >= rhs
+            return True
+        return None
+    try:
+        if op == "=":
+            return lhs == rhs
+        if op == "!=":
+            return lhs != rhs
+        if op == "<":
+            return lhs < rhs
+        if op == "<=":
+            return lhs <= rhs
+        if op == ">":
+            return lhs > rhs
+        if op == ">=":
+            return lhs >= rhs
+    except TypeError:
+        return None
     raise ValueError(f"Unsupported operator: {op}")
 
 
@@ -356,13 +375,22 @@ def _matches_inline_filters(
         return True
     for prop, value in filters:
         if prop == "id" and prop not in node.props:
-            if node.id != value:
+            if node.id != value and str(node.id) != str(value):
                 return False
         elif prop == "label" and prop not in node.props:
             if node.label != value:
                 return False
-        elif node.props.get(prop) != value:
-            return False
+        else:
+            if prop not in node.props:
+                return False
+            actual_val = node.props[prop]
+            if actual_val is None or value is None:
+                if actual_val is not value:
+                    return False
+            elif isinstance(actual_val, bool) != isinstance(value, bool):
+                return False
+            elif actual_val != value:
+                return False
     return True
 
 
@@ -391,7 +419,7 @@ def _matches_pushed(
             value = target.label
         else:
             value = None
-        if not _apply_op(cmp.op, value, cmp.rhs):
+        if _apply_op(cmp.op, value, cmp.rhs) is not True:
             return False
     return True
 

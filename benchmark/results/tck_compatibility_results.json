@@ -1,32 +1,48 @@
 {
   "metadata": {
-    "timestamp": "2026-10-18T02:50:16Z",
+    "timestamp": "2026-10-18T03:38:51Z",
     "corpus": "openCypher TCK",
     "git_commit": "677cbafabb8c3c5eed458fd3b1ec0daec8d67d23",
     "release_tag": "2024.3",
     "total_scenarios": 1338,
     "claimed_subset_scenarios": 79,
-    "passed": 76,
-    "failed": 3,
+    "strict_mode": {
+      "passed": 49,
+      "failed": 30,
+      "unsupported": 1259,
+      "blocked": 0,
+      "claimed_pass_rate_pct": 62.03,
+      "overall_coverage_pct": 3.66
+    },
+    "diagnostic_mode": {
+      "passed": 76,
+      "failed": 3,
+      "unsupported": 1259,
+      "blocked": 0,
+      "claimed_pass_rate_pct": 96.2,
+      "naming_drift_passed": 27
+    },
+    "passed": 49,
+    "failed": 30,
     "unsupported": 1259,
     "blocked": 0,
-    "claimed_pass_rate_pct": 96.2,
-    "overall_coverage_pct": 5.68,
-    "duration_seconds": 0.26
+    "claimed_pass_rate_pct": 62.03,
+    "overall_coverage_pct": 3.66,
+    "duration_seconds": 0.23
   },
   "category_breakdown": {
     "clauses": {
       "unsupported": 694,
-      "passed": 58,
-      "failed": 1
+      "passed": 46,
+      "failed": 13
     },
     "expressions": {
-      "failed": 2,
-      "passed": 8,
-      "unsupported": 545
+      "failed": 7,
+      "unsupported": 545,
+      "passed": 3
     },
     "useCases": {
-      "passed": 10,
+      "failed": 10,
       "unsupported": 20
     }
   },
@@ -79,7 +95,219 @@
     "PATTERN_COMPREHENSION": 1,
     "UNSUPPORTED_FUNCTION_TOSTRING": 1
   },
-  "failures": [
+  "strict_failures": [
+    {
+      "scenario_id": "Match3#18",
+      "name": "Handling cyclic patterns when separated into two parts",
+      "file": "Match3.feature",
+      "query": "MATCH (a)-[:A]->(b), (b)-[:B]->(a)\n      RETURN a.name",
+      "reason": "Actual row {'name': 'a'} did not match any remaining expected row in [{'a.name': 'a'}]"
+    },
+    {
+      "scenario_id": "Return2#2",
+      "name": "Returning a node property value",
+      "file": "Return2.feature",
+      "query": "MATCH (a)\n      RETURN a.num",
+      "reason": "Actual row {'num': 1} did not match any remaining expected row in [{'a.num': 1}]"
+    },
+    {
+      "scenario_id": "Return2#3",
+      "name": "Missing node property should become null",
+      "file": "Return2.feature",
+      "query": "MATCH (a)\n      RETURN a.name",
+      "reason": "Actual row {'name': None} did not match any remaining expected row in [{'a.name': None}]"
+    },
+    {
+      "scenario_id": "Return2#4",
+      "name": "Returning a relationship property value",
+      "file": "Return2.feature",
+      "query": "MATCH ()-[r]->()\n      RETURN r.num",
+      "reason": "Actual row {'num': 1} did not match any remaining expected row in [{'r.num': 1}]"
+    },
+    {
+      "scenario_id": "Return2#5",
+      "name": "Missing relationship property should become null",
+      "file": "Return2.feature",
+      "query": "MATCH ()-[r]->()\n      RETURN r.name2",
+      "reason": "Actual row {'name2': None} did not match any remaining expected row in [{'r.name2': None}]"
+    },
+    {
+      "scenario_id": "Return2#11",
+      "name": "RETURN does not lose precision on large integers",
+      "file": "Return2.feature",
+      "query": "MATCH (p:TheLabel)\n      RETURN p.id",
+      "reason": "Actual row {'id': 4611686018427387905} did not match any remaining expected row in [{'p.id': 4611686018427387905}]"
+    },
+    {
+      "scenario_id": "Return3#2",
+      "name": "Returning multiple node property values",
+      "file": "Return3.feature",
+      "query": "MATCH (a)\n      RETURN a.name, a.age, a.seasons",
+      "reason": "Actual row {'name': 'Philip J. Fry', 'age': 2046, 'seasons': ['1', '2', '3', '4', '5', '6', '7']} did not match any remaining expected row in [{'a.name': 'Philip J. Fry', 'a.age': 2046, 'a.seasons': ['1', '2', '3', '4', '5', '6', '7']}]"
+    },
+    {
+      "scenario_id": "Return4#3",
+      "name": "Aliasing expressions",
+      "file": "Return4.feature",
+      "query": "MATCH (a)\n      RETURN a.id AS a, a.id",
+      "reason": "Actual row {'a': 42, 'id': 42} did not match any remaining expected row in [{'a': 42, 'a.id': 42}]"
+    },
+    {
+      "scenario_id": "Return4#4",
+      "name": "Keeping used expression 1",
+      "file": "Return4.feature",
+      "query": "MATCH (n)\n      RETURN cOuNt( * )",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'cOuNt( * )': 1}]"
+    },
+    {
+      "scenario_id": "Return6#7",
+      "name": "Aggregate on property",
+      "file": "Return6.feature",
+      "query": "MATCH (n)\n      RETURN n.num, count(*)",
+      "reason": "Actual row {'num': 33, 'count': 2} did not match any remaining expected row in [{'n.num': 42, 'count(*)': 1}, {'n.num': 33, 'count(*)': 2}]"
+    },
+    {
+      "scenario_id": "Return6#11",
+      "name": "Counting matches",
+      "file": "Return6.feature",
+      "query": "MATCH ()\n      RETURN count(*)",
+      "reason": "Actual row {'count': 100} did not match any remaining expected row in [{'count(*)': 100}]"
+    },
+    {
+      "scenario_id": "Return6#12",
+      "name": "Counting matches per group",
+      "file": "Return6.feature",
+      "query": "MATCH (a:L)-[rel]->(b)\n      RETURN a, count(*)",
+      "reason": "Actual row {'a': Node(id='a', label='L', props={'id': 'a'}), 'count': 2} did not match any remaining expected row in [{'a': '(:L)', 'count(*)': 2}]"
+    },
+    {
+      "scenario_id": "ReturnOrderBy2#7",
+      "name": "Ordering with aggregation",
+      "file": "ReturnOrderBy2.feature",
+      "query": "MATCH (n)\n      RETURN n.name, count(*) AS foo\n        ORDER BY n.name",
+      "reason": "Ordered row mismatch at index 0: expected {'n.name': 'nisse', 'foo': 1}, got {'name': 'nisse', 'foo': 1}"
+    },
+    {
+      "scenario_id": "Aggregation1#1",
+      "name": "Count only non-null values",
+      "file": "Aggregation1.feature",
+      "query": "MATCH (n)\n      RETURN n.name, count(n.num)",
+      "reason": "Actual row {'name': 'a', 'count_n_num': 1} did not match any remaining expected row in [{'n.name': 'a', 'count(n.num)': 1}, {'n.name': 'b', 'count(n.num)': 1}]"
+    },
+    {
+      "scenario_id": "Aggregation1#2",
+      "name": "Counting loop relationships",
+      "file": "Aggregation1.feature",
+      "query": "MATCH ()-[r]-()\n      RETURN count(r)",
+      "reason": "Actual row {'count_r': 1} did not match any remaining expected row in [{'count(r)': 1}]"
+    },
+    {
+      "scenario_id": "Aggregation3#1",
+      "name": "Sum only non-null values",
+      "file": "Aggregation3.feature",
+      "query": "MATCH (n)\n      RETURN n.name, sum(n.num)",
+      "reason": "Actual row {'name': 'a', 'sum_n_num': 75} did not match any remaining expected row in [{'n.name': 'a', 'sum(n.num)': 75}]"
+    },
+    {
+      "scenario_id": "Comparison1#10",
+      "name": "Handling inlined equality of large integer",
+      "file": "Comparison1.feature",
+      "query": "MATCH (p:TheLabel {id: 4611686018427387905})\n      RETURN p.id",
+      "reason": "Actual row {'id': 4611686018427387905} did not match any remaining expected row in [{'p.id': 4611686018427387905}]"
+    },
+    {
+      "scenario_id": "Comparison1#11",
+      "name": "Handling explicit equality of large integer",
+      "file": "Comparison1.feature",
+      "query": "MATCH (p:TheLabel)\n      WHERE p.id = 4611686018427387905\n      RETURN p.id",
+      "reason": "Actual row {'id': 4611686018427387905} did not match any remaining expected row in [{'p.id': 4611686018427387905}]"
+    },
+    {
+      "scenario_id": "Graph6#1",
+      "name": "Statically access a property of a non-null node",
+      "file": "Graph6.feature",
+      "query": "MATCH (n)\n      RETURN n.missing, n.missingToo, n.existing",
+      "reason": "Actual row {'missing': None, 'missingToo': None, 'existing': 42} did not match any remaining expected row in [{'n.missing': None, 'n.missingToo': None, 'n.existing': 42}]"
+    },
+    {
+      "scenario_id": "Graph6#5",
+      "name": "Statically access a property of a non-null relationship",
+      "file": "Graph6.feature",
+      "query": "MATCH ()-[r]->()\n      RETURN r.missing, r.missingToo, r.existing",
+      "reason": "Actual row {'missing': None, 'missingToo': None, 'existing': 42} did not match any remaining expected row in [{'r.missing': None, 'r.missingToo': None, 'r.existing': 42}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#1",
+      "name": "Undirected match in self-relationship graph, count",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH ()--()\n      RETURN count(*)",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'count(*)': 1}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#2",
+      "name": "Undirected match of self-relationship in self-relationship graph, count",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH (n)--(n)\n      RETURN count(*)",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'count(*)': 1}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#3",
+      "name": "Undirected match on simple relationship graph, count",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH ()--()\n      RETURN count(*)",
+      "reason": "Actual row {'count': 2} did not match any remaining expected row in [{'count(*)': 2}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#4",
+      "name": "Directed match on self-relationship graph, count",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH ()-->()\n      RETURN count(*)",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'count(*)': 1}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#5",
+      "name": "Directed match of self-relationship on self-relationship graph, count",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH (n)-->(n)\n      RETURN count(*)",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'count(*)': 1}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#6",
+      "name": "Counting undirected self-relationships in self-relationship graph",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH (n)-[r]-(n)\n      RETURN count(r)",
+      "reason": "Actual row {'count_r': 1} did not match any remaining expected row in [{'count(r)': 1}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#8",
+      "name": "Directed match of a simple relationship, count",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH ()-->()\n      RETURN count(*)",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'count(*)': 1}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#9",
+      "name": "Counting directed self-relationships",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH (n)-[r]->(n)\n      RETURN count(r)",
+      "reason": "Actual row {'count_r': 1} did not match any remaining expected row in [{'count(r)': 1}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#10",
+      "name": "Mixing directed and undirected pattern parts with self-relationship, count",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH (:A)-->()--()\n      RETURN count(*)",
+      "reason": "Actual row {'count': 2} did not match any remaining expected row in [{'count(*)': 2}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#11",
+      "name": "Mixing directed and undirected pattern parts with self-relationship, undirected count",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH ()-[]-()-[]-()\n      RETURN count(*)",
+      "reason": "Actual row {'count': 6} did not match any remaining expected row in [{'count(*)': 6}]"
+    }
+  ],
+  "diagnostic_failures": [
     {
       "scenario_id": "Return4#4",
       "name": "Keeping used expression 1",
@@ -100,6 +328,218 @@
       "file": "Aggregation3.feature",
       "query": "MATCH (n)\n      RETURN n.name, sum(n.num)",
       "reason": "Actual row {'name': 'a', 'sum_n_num': 75} did not match any remaining expected row in [{'n.name': 'a', 'sum(n.num)': 75}]"
+    }
+  ],
+  "failures": [
+    {
+      "scenario_id": "Match3#18",
+      "name": "Handling cyclic patterns when separated into two parts",
+      "file": "Match3.feature",
+      "query": "MATCH (a)-[:A]->(b), (b)-[:B]->(a)\n      RETURN a.name",
+      "reason": "Actual row {'name': 'a'} did not match any remaining expected row in [{'a.name': 'a'}]"
+    },
+    {
+      "scenario_id": "Return2#2",
+      "name": "Returning a node property value",
+      "file": "Return2.feature",
+      "query": "MATCH (a)\n      RETURN a.num",
+      "reason": "Actual row {'num': 1} did not match any remaining expected row in [{'a.num': 1}]"
+    },
+    {
+      "scenario_id": "Return2#3",
+      "name": "Missing node property should become null",
+      "file": "Return2.feature",
+      "query": "MATCH (a)\n      RETURN a.name",
+      "reason": "Actual row {'name': None} did not match any remaining expected row in [{'a.name': None}]"
+    },
+    {
+      "scenario_id": "Return2#4",
+      "name": "Returning a relationship property value",
+      "file": "Return2.feature",
+      "query": "MATCH ()-[r]->()\n      RETURN r.num",
+      "reason": "Actual row {'num': 1} did not match any remaining expected row in [{'r.num': 1}]"
+    },
+    {
+      "scenario_id": "Return2#5",
+      "name": "Missing relationship property should become null",
+      "file": "Return2.feature",
+      "query": "MATCH ()-[r]->()\n      RETURN r.name2",
+      "reason": "Actual row {'name2': None} did not match any remaining expected row in [{'r.name2': None}]"
+    },
+    {
+      "scenario_id": "Return2#11",
+      "name": "RETURN does not lose precision on large integers",
+      "file": "Return2.feature",
+      "query": "MATCH (p:TheLabel)\n      RETURN p.id",
+      "reason": "Actual row {'id': 4611686018427387905} did not match any remaining expected row in [{'p.id': 4611686018427387905}]"
+    },
+    {
+      "scenario_id": "Return3#2",
+      "name": "Returning multiple node property values",
+      "file": "Return3.feature",
+      "query": "MATCH (a)\n      RETURN a.name, a.age, a.seasons",
+      "reason": "Actual row {'name': 'Philip J. Fry', 'age': 2046, 'seasons': ['1', '2', '3', '4', '5', '6', '7']} did not match any remaining expected row in [{'a.name': 'Philip J. Fry', 'a.age': 2046, 'a.seasons': ['1', '2', '3', '4', '5', '6', '7']}]"
+    },
+    {
+      "scenario_id": "Return4#3",
+      "name": "Aliasing expressions",
+      "file": "Return4.feature",
+      "query": "MATCH (a)\n      RETURN a.id AS a, a.id",
+      "reason": "Actual row {'a': 42, 'id': 42} did not match any remaining expected row in [{'a': 42, 'a.id': 42}]"
+    },
+    {
+      "scenario_id": "Return4#4",
+      "name": "Keeping used expression 1",
+      "file": "Return4.feature",
+      "query": "MATCH (n)\n      RETURN cOuNt( * )",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'cOuNt( * )': 1}]"
+    },
+    {
+      "scenario_id": "Return6#7",
+      "name": "Aggregate on property",
+      "file": "Return6.feature",
+      "query": "MATCH (n)\n      RETURN n.num, count(*)",
+      "reason": "Actual row {'num': 33, 'count': 2} did not match any remaining expected row in [{'n.num': 42, 'count(*)': 1}, {'n.num': 33, 'count(*)': 2}]"
+    },
+    {
+      "scenario_id": "Return6#11",
+      "name": "Counting matches",
+      "file": "Return6.feature",
+      "query": "MATCH ()\n      RETURN count(*)",
+      "reason": "Actual row {'count': 100} did not match any remaining expected row in [{'count(*)': 100}]"
+    },
+    {
+      "scenario_id": "Return6#12",
+      "name": "Counting matches per group",
+      "file": "Return6.feature",
+      "query": "MATCH (a:L)-[rel]->(b)\n      RETURN a, count(*)",
+      "reason": "Actual row {'a': Node(id='a', label='L', props={'id': 'a'}), 'count': 2} did not match any remaining expected row in [{'a': '(:L)', 'count(*)': 2}]"
+    },
+    {
+      "scenario_id": "ReturnOrderBy2#7",
+      "name": "Ordering with aggregation",
+      "file": "ReturnOrderBy2.feature",
+      "query": "MATCH (n)\n      RETURN n.name, count(*) AS foo\n        ORDER BY n.name",
+      "reason": "Ordered row mismatch at index 0: expected {'n.name': 'nisse', 'foo': 1}, got {'name': 'nisse', 'foo': 1}"
+    },
+    {
+      "scenario_id": "Aggregation1#1",
+      "name": "Count only non-null values",
+      "file": "Aggregation1.feature",
+      "query": "MATCH (n)\n      RETURN n.name, count(n.num)",
+      "reason": "Actual row {'name': 'a', 'count_n_num': 1} did not match any remaining expected row in [{'n.name': 'a', 'count(n.num)': 1}, {'n.name': 'b', 'count(n.num)': 1}]"
+    },
+    {
+      "scenario_id": "Aggregation1#2",
+      "name": "Counting loop relationships",
+      "file": "Aggregation1.feature",
+      "query": "MATCH ()-[r]-()\n      RETURN count(r)",
+      "reason": "Actual row {'count_r': 1} did not match any remaining expected row in [{'count(r)': 1}]"
+    },
+    {
+      "scenario_id": "Aggregation3#1",
+      "name": "Sum only non-null values",
+      "file": "Aggregation3.feature",
+      "query": "MATCH (n)\n      RETURN n.name, sum(n.num)",
+      "reason": "Actual row {'name': 'a', 'sum_n_num': 75} did not match any remaining expected row in [{'n.name': 'a', 'sum(n.num)': 75}]"
+    },
+    {
+      "scenario_id": "Comparison1#10",
+      "name": "Handling inlined equality of large integer",
+      "file": "Comparison1.feature",
+      "query": "MATCH (p:TheLabel {id: 4611686018427387905})\n      RETURN p.id",
+      "reason": "Actual row {'id': 4611686018427387905} did not match any remaining expected row in [{'p.id': 4611686018427387905}]"
+    },
+    {
+      "scenario_id": "Comparison1#11",
+      "name": "Handling explicit equality of large integer",
+      "file": "Comparison1.feature",
+      "query": "MATCH (p:TheLabel)\n      WHERE p.id = 4611686018427387905\n      RETURN p.id",
+      "reason": "Actual row {'id': 4611686018427387905} did not match any remaining expected row in [{'p.id': 4611686018427387905}]"
+    },
+    {
+      "scenario_id": "Graph6#1",
+      "name": "Statically access a property of a non-null node",
+      "file": "Graph6.feature",
+      "query": "MATCH (n)\n      RETURN n.missing, n.missingToo, n.existing",
+      "reason": "Actual row {'missing': None, 'missingToo': None, 'existing': 42} did not match any remaining expected row in [{'n.missing': None, 'n.missingToo': None, 'n.existing': 42}]"
+    },
+    {
+      "scenario_id": "Graph6#5",
+      "name": "Statically access a property of a non-null relationship",
+      "file": "Graph6.feature",
+      "query": "MATCH ()-[r]->()\n      RETURN r.missing, r.missingToo, r.existing",
+      "reason": "Actual row {'missing': None, 'missingToo': None, 'existing': 42} did not match any remaining expected row in [{'r.missing': None, 'r.missingToo': None, 'r.existing': 42}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#1",
+      "name": "Undirected match in self-relationship graph, count",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH ()--()\n      RETURN count(*)",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'count(*)': 1}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#2",
+      "name": "Undirected match of self-relationship in self-relationship graph, count",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH (n)--(n)\n      RETURN count(*)",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'count(*)': 1}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#3",
+      "name": "Undirected match on simple relationship graph, count",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH ()--()\n      RETURN count(*)",
+      "reason": "Actual row {'count': 2} did not match any remaining expected row in [{'count(*)': 2}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#4",
+      "name": "Directed match on self-relationship graph, count",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH ()-->()\n      RETURN count(*)",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'count(*)': 1}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#5",
+      "name": "Directed match of self-relationship on self-relationship graph, count",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH (n)-->(n)\n      RETURN count(*)",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'count(*)': 1}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#6",
+      "name": "Counting undirected self-relationships in self-relationship graph",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH (n)-[r]-(n)\n      RETURN count(r)",
+      "reason": "Actual row {'count_r': 1} did not match any remaining expected row in [{'count(r)': 1}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#8",
+      "name": "Directed match of a simple relationship, count",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH ()-->()\n      RETURN count(*)",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'count(*)': 1}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#9",
+      "name": "Counting directed self-relationships",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH (n)-[r]->(n)\n      RETURN count(r)",
+      "reason": "Actual row {'count_r': 1} did not match any remaining expected row in [{'count(r)': 1}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#10",
+      "name": "Mixing directed and undirected pattern parts with self-relationship, count",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH (:A)-->()--()\n      RETURN count(*)",
+      "reason": "Actual row {'count': 2} did not match any remaining expected row in [{'count(*)': 2}]"
+    },
+    {
+      "scenario_id": "CountingSubgraphMatches1#11",
+      "name": "Mixing directed and undirected pattern parts with self-relationship, undirected count",
+      "file": "CountingSubgraphMatches1.feature",
+      "query": "MATCH ()-[]-()-[]-()\n      RETURN count(*)",
+      "reason": "Actual row {'count': 6} did not match any remaining expected row in [{'count(*)': 6}]"
     }
   ],
   "scenarios": [
@@ -1619,8 +2059,8 @@
       "scenario_id": "Match3#18",
       "feature": "Match3 - Match fixed length patterns",
       "name": "Handling cyclic patterns when separated into two parts",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'name': 'a'} did not match any remaining expected row in [{'a.name': 'a'}]",
       "query": "MATCH (a)-[:A]->(b), (b)-[:B]->(a)\n      RETURN a.name"
     },
     {
@@ -3699,32 +4139,32 @@
       "scenario_id": "Return2#2",
       "feature": "Return2 - Return single expression (correctly projecting an expression)",
       "name": "Returning a node property value",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'num': 1} did not match any remaining expected row in [{'a.num': 1}]",
       "query": "MATCH (a)\n      RETURN a.num"
     },
     {
       "scenario_id": "Return2#3",
       "feature": "Return2 - Return single expression (correctly projecting an expression)",
       "name": "Missing node property should become null",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'name': None} did not match any remaining expected row in [{'a.name': None}]",
       "query": "MATCH (a)\n      RETURN a.name"
     },
     {
       "scenario_id": "Return2#4",
       "feature": "Return2 - Return single expression (correctly projecting an expression)",
       "name": "Returning a relationship property value",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'num': 1} did not match any remaining expected row in [{'r.num': 1}]",
       "query": "MATCH ()-[r]->()\n      RETURN r.num"
     },
     {
       "scenario_id": "Return2#5",
       "feature": "Return2 - Return single expression (correctly projecting an expression)",
       "name": "Missing relationship property should become null",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'name2': None} did not match any remaining expected row in [{'r.name2': None}]",
       "query": "MATCH ()-[r]->()\n      RETURN r.name2"
     },
     {
@@ -3771,8 +4211,8 @@
       "scenario_id": "Return2#11",
       "feature": "Return2 - Return single expression (correctly projecting an expression)",
       "name": "RETURN does not lose precision on large integers",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'id': 4611686018427387905} did not match any remaining expected row in [{'p.id': 4611686018427387905}]",
       "query": "MATCH (p:TheLabel)\n      RETURN p.id"
     },
     {
@@ -3828,7 +4268,7 @@
       "feature": "Return2 - Return single expression (correctly projecting an expression)",
       "name": "Fail on projecting a non-existent function",
       "status": "passed",
-      "reason": "Correctly raised compile-time validation error: UnexpectedToken (Unexpected token Token('LPAR', '(') at line 2, column 17.\nExpected one of: \n\t* $END\n\t* COMMA\n\t* ORDER\n\t* LIMIT\n\t* DOT\n\t* AS\nPrevious tokens: [Token('CNAME', 'foo')]\n)",
+      "reason": "Correctly raised compile-time validation error: UnexpectedToken (Unexpected token Token('LPAR', '(') at line 2, column 17.\nExpected one of: \n\t* AS\n\t* LIMIT\n\t* DOT\n\t* COMMA\n\t* $END\n\t* ORDER\nPrevious tokens: [Token('CNAME', 'foo')]\n)",
       "query": "MATCH (a)\n      RETURN foo(a)"
     },
     {
@@ -3843,8 +4283,8 @@
       "scenario_id": "Return3#2",
       "feature": "Return3 - Return multiple expressions (if column order correct)",
       "name": "Returning multiple node property values",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'name': 'Philip J. Fry', 'age': 2046, 'seasons': ['1', '2', '3', '4', '5', '6', '7']} did not match any remaining expected row in [{'a.name': 'Philip J. Fry', 'a.age': 2046, 'a.seasons': ['1', '2', '3', '4', '5', '6', '7']}]",
       "query": "MATCH (a)\n      RETURN a.name, a.age, a.seasons"
     },
     {
@@ -3875,8 +4315,8 @@
       "scenario_id": "Return4#3",
       "feature": "Return4 - Column renaming",
       "name": "Aliasing expressions",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'a': 42, 'id': 42} did not match any remaining expected row in [{'a': 42, 'a.id': 42}]",
       "query": "MATCH (a)\n      RETURN a.id AS a, a.id"
     },
     {
@@ -4035,8 +4475,8 @@
       "scenario_id": "Return6#7",
       "feature": "Return6 - Implicit grouping with aggregates",
       "name": "Aggregate on property",
-      "status": "passed",
-      "reason": "Exact match on 2 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'num': 33, 'count': 2} did not match any remaining expected row in [{'n.num': 42, 'count(*)': 1}, {'n.num': 33, 'count(*)': 2}]",
       "query": "MATCH (n)\n      RETURN n.num, count(*)"
     },
     {
@@ -4067,16 +4507,16 @@
       "scenario_id": "Return6#11",
       "feature": "Return6 - Implicit grouping with aggregates",
       "name": "Counting matches",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'count': 100} did not match any remaining expected row in [{'count(*)': 100}]",
       "query": "MATCH ()\n      RETURN count(*)"
     },
     {
       "scenario_id": "Return6#12",
       "feature": "Return6 - Implicit grouping with aggregates",
       "name": "Counting matches per group",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'a': Node(id='a', label='L', props={'id': 'a'}), 'count': 2} did not match any remaining expected row in [{'a': '(:L)', 'count(*)': 2}]",
       "query": "MATCH (a:L)-[rel]->(b)\n      RETURN a, count(*)"
     },
     {
@@ -4323,8 +4763,8 @@
       "scenario_id": "ReturnOrderBy2#7",
       "feature": "ReturnOrderBy2 - Order by a single expression (order of projection)",
       "name": "Ordering with aggregation",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=True)",
+      "status": "failed",
+      "reason": "Ordered row mismatch at index 0: expected {'n.name': 'nisse', 'foo': 1}, got {'name': 'nisse', 'foo': 1}",
       "query": "MATCH (n)\n      RETURN n.name, count(*) AS foo\n        ORDER BY n.name"
     },
     {
@@ -6139,8 +6579,8 @@
       "scenario_id": "Aggregation1#2",
       "feature": "Aggregation1 - Count",
       "name": "Counting loop relationships",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'count_r': 1} did not match any remaining expected row in [{'count(r)': 1}]",
       "query": "MATCH ()-[r]-()\n      RETURN count(r)"
     },
     {
@@ -6611,16 +7051,16 @@
       "scenario_id": "Comparison1#10",
       "feature": "Comparison1 - Equality",
       "name": "Handling inlined equality of large integer",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'id': 4611686018427387905} did not match any remaining expected row in [{'p.id': 4611686018427387905}]",
       "query": "MATCH (p:TheLabel {id: 4611686018427387905})\n      RETURN p.id"
     },
     {
       "scenario_id": "Comparison1#11",
       "feature": "Comparison1 - Equality",
       "name": "Handling explicit equality of large integer",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'id': 4611686018427387905} did not match any remaining expected row in [{'p.id': 4611686018427387905}]",
       "query": "MATCH (p:TheLabel)\n      WHERE p.id = 4611686018427387905\n      RETURN p.id"
     },
     {
@@ -7011,8 +7451,8 @@
       "scenario_id": "Graph6#1",
       "feature": "Graph6 - Static property access",
       "name": "Statically access a property of a non-null node",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'missing': None, 'missingToo': None, 'existing': 42} did not match any remaining expected row in [{'n.missing': None, 'n.missingToo': None, 'n.existing': 42}]",
       "query": "MATCH (n)\n      RETURN n.missing, n.missingToo, n.existing"
     },
     {
@@ -7043,8 +7483,8 @@
       "scenario_id": "Graph6#5",
       "feature": "Graph6 - Static property access",
       "name": "Statically access a property of a non-null relationship",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'missing': None, 'missingToo': None, 'existing': 42} did not match any remaining expected row in [{'r.missing': None, 'r.missingToo': None, 'r.existing': 42}]",
       "query": "MATCH ()-[r]->()\n      RETURN r.missing, r.missingToo, r.existing"
     },
     {
@@ -10571,48 +11011,48 @@
       "scenario_id": "CountingSubgraphMatches1#1",
       "feature": "CountingSubgraphMatches1 - Matching subgraph patterns and count the number of matches",
       "name": "Undirected match in self-relationship graph, count",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'count(*)': 1}]",
       "query": "MATCH ()--()\n      RETURN count(*)"
     },
     {
       "scenario_id": "CountingSubgraphMatches1#2",
       "feature": "CountingSubgraphMatches1 - Matching subgraph patterns and count the number of matches",
       "name": "Undirected match of self-relationship in self-relationship graph, count",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'count(*)': 1}]",
       "query": "MATCH (n)--(n)\n      RETURN count(*)"
     },
     {
       "scenario_id": "CountingSubgraphMatches1#3",
       "feature": "CountingSubgraphMatches1 - Matching subgraph patterns and count the number of matches",
       "name": "Undirected match on simple relationship graph, count",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'count': 2} did not match any remaining expected row in [{'count(*)': 2}]",
       "query": "MATCH ()--()\n      RETURN count(*)"
     },
     {
       "scenario_id": "CountingSubgraphMatches1#4",
       "feature": "CountingSubgraphMatches1 - Matching subgraph patterns and count the number of matches",
       "name": "Directed match on self-relationship graph, count",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'count(*)': 1}]",
       "query": "MATCH ()-->()\n      RETURN count(*)"
     },
     {
       "scenario_id": "CountingSubgraphMatches1#5",
       "feature": "CountingSubgraphMatches1 - Matching subgraph patterns and count the number of matches",
       "name": "Directed match of self-relationship on self-relationship graph, count",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'count(*)': 1}]",
       "query": "MATCH (n)-->(n)\n      RETURN count(*)"
     },
     {
       "scenario_id": "CountingSubgraphMatches1#6",
       "feature": "CountingSubgraphMatches1 - Matching subgraph patterns and count the number of matches",
       "name": "Counting undirected self-relationships in self-relationship graph",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'count_r': 1} did not match any remaining expected row in [{'count(r)': 1}]",
       "query": "MATCH (n)-[r]-(n)\n      RETURN count(r)"
     },
     {
@@ -10627,32 +11067,32 @@
       "scenario_id": "CountingSubgraphMatches1#8",
       "feature": "CountingSubgraphMatches1 - Matching subgraph patterns and count the number of matches",
       "name": "Directed match of a simple relationship, count",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'count(*)': 1}]",
       "query": "MATCH ()-->()\n      RETURN count(*)"
     },
     {
       "scenario_id": "CountingSubgraphMatches1#9",
       "feature": "CountingSubgraphMatches1 - Matching subgraph patterns and count the number of matches",
       "name": "Counting directed self-relationships",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'count_r': 1} did not match any remaining expected row in [{'count(r)': 1}]",
       "query": "MATCH (n)-[r]->(n)\n      RETURN count(r)"
     },
     {
       "scenario_id": "CountingSubgraphMatches1#10",
       "feature": "CountingSubgraphMatches1 - Matching subgraph patterns and count the number of matches",
       "name": "Mixing directed and undirected pattern parts with self-relationship, count",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'count': 2} did not match any remaining expected row in [{'count(*)': 2}]",
       "query": "MATCH (:A)-->()--()\n      RETURN count(*)"
     },
     {
       "scenario_id": "CountingSubgraphMatches1#11",
       "feature": "CountingSubgraphMatches1 - Matching subgraph patterns and count the number of matches",
       "name": "Mixing directed and undirected pattern parts with self-relationship, undirected count",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'count': 6} did not match any remaining expected row in [{'count(*)': 6}]",
       "query": "MATCH ()-[]-()-[]-()\n      RETURN count(*)"
     },
     {

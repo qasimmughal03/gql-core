@@ -69,6 +69,7 @@ queries:
   - - Bob
   - - Charlie
   - - Diana
+  - - Diana
   query_class: rpq
 - name: oldest_person
   purpose: MAX aggregation

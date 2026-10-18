@@ -70,7 +70,7 @@ def _normalize_cell_for_cmp(actual: Any, expected: Any) -> bool:
                             if not _normalize_cell_for_cmp(actual.props.get(pk), pv):
                                 return False
                     return True
-            return str(actual.id) == s or (s in actual.props.values())
+            return str(actual.id) == s
         return False
 
     if isinstance(expected, str):
@@ -79,14 +79,31 @@ def _normalize_cell_for_cmp(actual: Any, expected: Any) -> bool:
     return actual == expected
 
 
-def _match_row(actual_row: dict[str, Any], expected_row: dict[str, Any], col_names: list[str]) -> bool:
-    """Strict key-based column matching between actual and expected row."""
-    # Length of projected row must match expected row
+def _match_row(
+    actual_row: dict[str, Any],
+    expected_row: dict[str, Any],
+    col_names: list[str],
+    relaxed_columns: bool = False,
+) -> bool:
+    """Key-based column matching between actual and expected row.
+
+    In strict mode (relaxed_columns=False), exact column names are required.
+    In diagnostic mode (relaxed_columns=True), candidate expansions for expressions
+    containing '.' or '(' are permitted to analyze projection-naming drift.
+    """
     if len(actual_row) != len(expected_row):
         return False
 
-    used_actual_keys: set[str] = set()
+    if not relaxed_columns:
+        for exp_col, exp_val in expected_row.items():
+            if exp_col not in actual_row:
+                return False
+            if not _normalize_cell_for_cmp(actual_row[exp_col], exp_val):
+                return False
+        return True
 
+    # Diagnostic mode: candidate matching for unaliased expressions
+    used_actual_keys: set[str] = set()
     for exp_col, exp_val in expected_row.items():
         candidates = [exp_col]
         if "." in exp_col:
@@ -111,7 +128,7 @@ def _match_row(actual_row: dict[str, Any], expected_row: dict[str, Any], col_nam
     return len(used_actual_keys) == len(expected_row)
 
 
-def run_scenario(scenario: TCKScenario) -> dict[str, Any]:
+def run_scenario(scenario: TCKScenario, relaxed_columns: bool = False) -> dict[str, Any]:
     """Execute a single TCK scenario and return classification & result status.
     
     Returns:
@@ -276,7 +293,7 @@ def run_scenario(scenario: TCKScenario) -> dict[str, Any]:
     # 7. Verify rows (ordered or unordered multiset)
     if scenario.in_order:
         for idx, (act, exp) in enumerate(zip(rows, scenario.expected_rows)):
-            if not _match_row(act, exp, scenario.expected_columns):
+            if not _match_row(act, exp, scenario.expected_columns, relaxed_columns=relaxed_columns):
                 return {
                     "scenario_id": scenario.scenario_id,
                     "feature": scenario.feature,
@@ -291,7 +308,7 @@ def run_scenario(scenario: TCKScenario) -> dict[str, Any]:
         for act in rows:
             found_idx = None
             for idx, exp in enumerate(unmatched_expected):
-                if _match_row(act, exp, scenario.expected_columns):
+                if _match_row(act, exp, scenario.expected_columns, relaxed_columns=relaxed_columns):
                     found_idx = idx
                     break
             if found_idx is not None:

@@ -16,8 +16,8 @@ The independent engineering audit and verification process confirms that **GQL-C
 
 The codebase meets all engineering criteria for an open-source embedded property-graph query engine:
 - **Reproducible Engineering Evidence**: Conformance and performance claims are backed by pinned external suites (openCypher TCK and LDBC SNB) and verified against an independent SQLite Answer Oracle.
-- **Zero-Friction Usability**: Zero runtime dependencies outside the standard library and `lark` parser. Installs via standard wheel/sdist distributions and integrates natively with NetworkX, Pandas/CSV, JSON, and Python dictionaries.
-- **Sound Semantic Foundations**: Trail semantics (relationship isomorphism) and bounded regular path queries are mathematically sound and fully tested.
+- **Zero-Friction Usability**: Standard library plus lightweight declared runtime dependencies (`lark>=1.2.2`, `pyyaml>=6.0.2`, `requests>=2.32.3`). Installs via standard wheel/sdist distributions and integrates natively with NetworkX, JSON, CSV records, and Python dictionaries.
+- **Sound Semantic Foundations**: Trail semantics (openCypher relationship trail uniqueness), three-valued logic (3VL) null semantics, and bounded regular path queries are mathematically sound and fully tested.
 - **Honest Language Boundaries**: Declares exact language boundaries without obscuring defects or inflating benchmark coverage.
 
 ---
@@ -26,34 +26,37 @@ The codebase meets all engineering criteria for an open-source embedded property
 
 | Subsystem | Included & Verified Capabilities | Documented Limitations / Excluded Scope |
 | :--- | :--- | :--- |
-| **Query Engine** | Read-only pattern matching (`MATCH`), inline property filters, `WHERE` predicate logic (`AND`, `OR`, `NOT`, `=`, `!=`, `<`, `>`, `<=`, `>=`), RPQ bounded quantifiers (`+`, `*`, `*lo..hi`), aggregations (`COUNT`, `SUM`, `AVG`, `MIN`, `MAX`), multi-column `ORDER BY`, `LIMIT`. | No query-language mutations (`CREATE`, `MERGE`, `DELETE`). No multi-clause piping (`WITH`, `UNWIND`). No built-in scalar functions (`coalesce`, `size`). Single label per node. |
-| **Path Semantics** | Relationship trail semantics (openCypher relationship isomorphism): no relationship instance is traversed more than once per pattern part. Cycle-bounded traversal. | Does not support weighted shortest path or arbitrary Cypher path assignment (`p = (a)-->*(b)`). |
-| **Graph Store** | In-memory directed multigraph `PropertyGraph` with adjacency indexing by node and edge label. Thread-safe read operations. | Pure in-memory (no on-disk persistence or WAL). Memory capacity determined by host RAM (~1.8M elements per 1 GB RAM). |
-| **Adapters & Ingestion** | Zero-friction adapters: `from_networkx`, `to_networkx`, `from_records`, `from_edge_list`, `from_adjacency_dict`. JSON/CSV serializers. | Multi-GB distributed parallel streaming ingestion deferred to v0.3+. |
-| **Natural Language** | Zero-setup `ask(query, graph)` interface: schema-directed pattern synthesizer with heuristic fallback and schema-prompt generation. | Heuristic synthesizer supports common 1-hop and 2-hop graph lookups; complex multi-hop queries recommend explicit Cypher or LLM backend. |
-| **Public API & CLI** | Public API: `gql_core.run()`, `parse()`, `plan()`, `PropertyGraph`, `Node`, `Edge`. CLI: `gql-core query`, `gql-core ask`, `gql-core stats`. | Package namespace unified under `gql_core`. |
+| **Query Engine** | Read-only pattern matching (`MATCH`), inline property filters, `WHERE` predicate logic with 3VL null semantics (`AND`, `OR`, `NOT`, `=`, `!=`, `<`, `>`, `<=`, `>=`), RPQ quantifiers (`+`, `*`, `*lo..hi`), aggregations (`COUNT`, `SUM`, `AVG`, `MIN`, `MAX`), multi-column `ORDER BY`, `LIMIT`. | No query-language mutations (`CREATE`, `MERGE`, `DELETE`, `SET`, `REMOVE`). No multi-clause piping (`WITH`, `UNWIND`). No built-in scalar functions (`coalesce`, `size`). Single label per node. No `RETURN DISTINCT` in grammar. |
+| **Path Semantics** | OpenCypher relationship trail semantics (relationship uniqueness): no relationship instance is traversed more than once per path. Cycle-bounded traversal, exact hop counts, bounded ranges, repeated endpoints, and multiple paths to the same destination. | Does not support weighted shortest path or arbitrary Cypher path assignment (`p = (a)-->*(b)`). |
+| **Graph Store** | In-memory directed multigraph `PropertyGraph` supporting native node ID types (`int`, `str`, etc.), integer ID 0, falsy properties, and adjacency indexing by label. | Pure in-memory (no on-disk persistence or WAL). No internal locks; concurrent reads safe under GIL, concurrent writes require external locking. Memory capacity determined by host RAM (~1.8M elements per 1 GB RAM). |
+| **Adapters & Ingestion** | Zero-friction adapters: `from_networkx` (supporting `MultiGraph` parallel edges), `from_records`, `from_edges`, `from_dict`. Rejects empty/None IDs and duplicate collisions. | Multi-GB distributed parallel streaming ingestion deferred to v0.3+. |
+| **Natural Language** | Zero-setup `ask(graph, natural_query, schema_path, client, explain)` interface: schema-directed pattern synthesizer with heuristic fallback and schema-prompt generation for pluggable LLM clients. | Heuristic synthesizer supports common 1-hop and 2-hop graph lookups; complex multi-hop queries recommend explicit Cypher or LLM backend. |
+| **Public API & CLI** | Public API: `gql_core.run()`, `run_query()`, `parse()`, `plan()`, `ask()`, `PropertyGraph`, `Node`, `Edge`. CLI: `gql-core validate`, `ingest`, `query`, `ask`, `mirror`, `benchmark`, `version`. | Python requirement: `>=3.11`. Runtime dependencies: `lark`, `pyyaml`, `requests`. |
 
 ---
 
 ## 3. Verification Evidence Summary
 
 ### 3.1 Test Suite Verification
-- **Total Tests**: **269 unit, regression, and property tests**
-- **Test Pass Rate**: **100% (269 / 269 passing in 20.4 seconds)**
+- **Total Tests**: **276 unit, regression, and property tests**
+- **Test Pass Rate**: **100% (276 / 276 passing in 11.3 seconds)**
 - **Test Categories**:
   - AST, parser, and semantic analyzer static checking
   - Physical relational planning and execution
-  - Trail semantics and relationship isomorphism
-  - Missing-property and null semantics
-  - Identifier type preservation and record ID 0
-  - Zero-friction adapters and natural language ASK interface
-  - Public API and CLI smoke testing
+  - OpenCypher trail semantics, diamond-graph exact 2-hop traversal, cycles, and parallel edges
+  - Three-valued logic (3VL) null semantics for `NOT`, `AND`, `OR`, and comparisons
+  - Native identifier preservation (`1` vs `"1"`), record ID 0, and collision rejection
+  - Zero-friction adapters (`from_networkx`, `from_records`, `from_edges`, `from_dict`)
+  - Public API and out-of-tree wheel installation smoke testing
 
 ### 3.2 openCypher TCK Conformance Audit
 - **Corpus**: openCypher TCK release `2024.3` (commit `677cbafabb8c3c5eed458fd3b1ec0daec8d67d23`, 1,338 scenarios).
-- **Harness Audit**: Eliminated all false positives (removed positional matching fallback, enforced strict typing and error classification).
-- **Claimed Subset Coverage**: **76 / 79 scenarios passed (96.20%)**.
-- **Remaining Discrepancies**: Exactly 3 scenarios fail due to unaliased column naming (`Return4#4`, `Aggregation1#1`, `Aggregation3#1`), which are documented as engine design decisions. When `AS alias` is provided, conformity is 100%.
+- **Harness Audit**: Eliminated false positives (removed permissive property value fallback, separated strict exact column matching from diagnostic candidate matching).
+- **Strict Mode (Exact openCypher column names required)**: **49 / 79 scenarios passed (62.0%)**, 30 failed.
+- **Diagnostic Mode (Relaxed unaliased expression column names)**: **76 / 79 scenarios passed (96.2%)**, 3 failed.
+- **Failure Taxonomy**:
+  - 27 scenarios fail strictly due to projection naming differences (GQL-Core returns clean attribute/aggregate names `"num"`, `"count"` instead of verbatim Cypher strings `"a.num"`, `"count(*)"`).
+  - Exactly 3 scenarios fail due to semantic differences: `Return4#4` (case-insensitive expression aliases), `Aggregation1#1` (null filtering in COUNT), `Aggregation3#1` (grouping on empty match set).
 
 ### 3.3 LDBC SNB Interactive v1 Performance Audit
 - **Dataset**: Official LDBC SNB SF0.1 Initial Snapshot (327,588 nodes, 1,477,965 edges, SHA-256: `208a02f92f61ab3c9433c6a7c1ca7f9e10eeddffa12f3514405d5c6e0b9c2e95`).

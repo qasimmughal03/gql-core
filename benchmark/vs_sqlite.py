@@ -154,7 +154,11 @@ def _prepare_cypher(source: str, graph: PropertyGraph):
     return plan_query(parsed, graph)
 
 
-def _canonical_rows(rows: list, key_columns: tuple[str, ...]) -> list[tuple]:
+def _canonical_rows(
+    rows: list,
+    key_columns: tuple[str, ...],
+    distinct: bool = False,
+) -> list[tuple]:
     """Return a sorted list-of-tuples for deterministic comparison.
 
     GQL rows are dicts keyed by the alias chosen by the model, which may differ
@@ -173,6 +177,8 @@ def _canonical_rows(rows: list, key_columns: tuple[str, ...]) -> list[tuple]:
                 canon.append(tuple(r.values()))
         else:
             canon.append(tuple(r))
+    if distinct:
+        canon = list(dict.fromkeys(canon))
     canon.sort(key=lambda t: tuple((v is None, v if v is not None else "") for v in t))
     return canon
 
@@ -220,7 +226,8 @@ def _run_class(
         cypher_plan = _prepare_cypher(q["cypher"], graph)
         cypher_rows = execute(cypher_plan, graph)
         sql_rows = cursor.execute(q["sql"]).fetchall()
-        canon_cypher = _canonical_rows(cypher_rows, q["key_columns"])
+        is_distinct = "DISTINCT" in q.get("sql", "").upper()
+        canon_cypher = _canonical_rows(cypher_rows, q["key_columns"], distinct=is_distinct)
         canon_sql = _canonical_rows(sql_rows, q["key_columns"])
         correct = _rows_equal(canon_cypher, canon_sql)
 

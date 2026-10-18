@@ -89,7 +89,8 @@ def test_all_nl_queries_cross_engine_parity(graph: PropertyGraph, mirror):
     mismatches = []
     for raw_q in NL_QUERIES:
         q, cypher_rows, sql_rows = _run_pair(graph, mirror, raw_q)
-        canon_c = _canonical_rows(cypher_rows, q["key_columns"])
+        is_distinct = "DISTINCT" in q.get("sql", "").upper()
+        canon_c = _canonical_rows(cypher_rows, q["key_columns"], distinct=is_distinct)
         canon_s = _canonical_rows(sql_rows, q["key_columns"])
         if not _rows_equal(canon_c, canon_s):
             mismatches.append(

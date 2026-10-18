@@ -87,12 +87,12 @@ class TestZeroFrictionAdapters:
         graph = PropertyGraph.from_networkx(G, default_node_label="Step", default_edge_label="NEXT")
 
         rows = run_query(
-            'MATCH (a:Step)-[:NEXT*1..2]-(b:Step) WHERE a.id = "0" RETURN b.id ORDER BY b.id ASC',
+            "MATCH (a:Step)-[:NEXT*1..2]-(b:Step) WHERE a.id = 0 RETURN b.id ORDER BY b.id ASC",
             graph,
         )
         reachable = [r["id"] for r in rows]
-        assert "1" in reachable
-        assert "2" in reachable
+        assert 1 in reachable
+        assert 2 in reachable
 
 
 class TestNaturalLanguageInterface:

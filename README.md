@@ -101,39 +101,62 @@ Three scoring modes:
 | `gql-core validate --schema S --data D` | Validate graph against shapes |
 | `gql-core ingest --schema S --data D` | Ingest graph, print stats |
 | `gql-core query --schema S --data D "..."` | Run a GQL-Core query |
+| `gql-core ask --schema S --data D "..."` | Ask a natural language question |
 | `gql-core mirror --schema S --data D --db out.db` | Build SQLite mirror |
 | `gql-core benchmark --schema S --data D --suite Q.yaml` | Run benchmark suite |
 | `gql-core version` | Print version |
 
 ## Query Language (GQL-Core)
 
-A documented subset of ISO/IEC 39075:2024:
+A documented subset of ISO/IEC 39075:2024 (and openCypher read dialect):
 
 - `MATCH` with comma-separated patterns, node labels `(var:Label)`, inline filters `{prop: value}`
 - Directed `-[e:LABEL]->` / `<-[]-` and undirected `-[]-` edges
-- RPQ quantifiers: `*` (1..∞), `+`, `*N`, `*M..N`
-- `WHERE` with `AND`, `OR`, `NOT`, parentheses
-- `RETURN` with `COUNT`, `SUM`, `AVG`, `MIN`, `MAX`, `AS` aliases
+- RPQ quantifiers: `*` (1..∞), `+`, `*N`, `*M..N` with openCypher relationship trail semantics (no relationship instance may appear twice in a path; multiple paths to destination preserved)
+- `WHERE` predicate logic with three-valued logic (3VL) null semantics (`AND`, `OR`, `NOT`, parentheses, comparisons `=`, `!=`, `<`, `>`, `<=`, `>=`)
+- `RETURN` with aggregates `COUNT`, `SUM`, `AVG`, `MIN`, `MAX`, column aliasing `AS alias`
 - `ORDER BY` (ASC/DESC, multi-column), `LIMIT`
+
+Explicitly excluded: mutations (`CREATE`, `MERGE`, `DELETE`, `SET`, `REMOVE`), multi-clause piping (`WITH`, `UNWIND`), `RETURN DISTINCT`, path variable assignment (`p = ...`).
 
 The Lark grammar at `gql_core/query/grammar.lark` is the normative spec.
 
-## Python API
+## Python API & Adapters
 
 ```python
-from gql_core import PropertyGraph, ShapeValidator, GraphIngester, run_query
+import gql_core
+from gql_core import PropertyGraph, Node, Edge, ShapeValidator, GraphIngester, run_query
 
-graph = PropertyGraph()
-validator = ShapeValidator("my-shapes.yaml")
-ingester = GraphIngester(graph, validator)
-ingester.ingest_file("my-graph.json")
+# 1. Zero-Friction Adapters:
+# From NetworkX (preserves native int vs str node IDs and MultiGraph parallel edges)
+import networkx as nx
+G = nx.MultiDiGraph()
+G.add_edge(1, 2, key="e1", label="FOLLOWS")
+graph_nx = PropertyGraph.from_networkx(G)
 
+# From Records (preserves int 0 and falsy properties, rejects duplicate collisions)
+nodes = [{"id": 0, "label": "Person", "name": "Alice", "active": False}]
+edges = [{"src": 0, "dst": 1, "label": "KNOWS"}]
+graph_rec = PropertyGraph.from_records(nodes, edges)
+
+# From Edge Tuples (pairs, triples, or 4-tuples with properties)
+graph_edges = PropertyGraph.from_edges([(1, 2, "KNOWS", {"since": 2024})])
+
+# 2. Query Execution:
 rows = run_query(
-    "MATCH (n:Person)-[:KNOWS]-(f:Person) WHERE n.name = 'Alice' RETURN f.name",
-    graph,
-    schema_path="my-shapes.yaml",
+    "MATCH (a:Person)-[:KNOWS]->(b) WHERE a.id = 0 RETURN b.name AS friend",
+    graph_rec,
 )
+
+# 3. Natural Language Interface:
+result = gql_core.ask(graph_rec, "Who does Alice know?", client=None)
 ```
+
+### Runtime Environment & Thread Safety
+
+- **Supported Python Versions**: `Python >= 3.11`
+- **Runtime Dependencies**: `lark>=1.2.2`, `pyyaml>=6.0.2`, `requests>=2.32.3`.
+- **Thread Safety**: `PropertyGraph` is a pure in-memory store without internal locking. Concurrent reads are safe under standard CPython GIL semantics. Concurrent writes require external synchronization.
 
 ## Cricket Example
 

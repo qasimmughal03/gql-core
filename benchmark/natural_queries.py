@@ -584,7 +584,7 @@ NL_QUERIES: list[dict] = [
         "query_class": "rpq",
         "cypher": (
             "MATCH (p1:Player)-[:TEAMMATES_WITH*1..3]-(p2:Player) "
-            'WHERE p1.name = "Babar Azam" '
+            'WHERE p1.name = "Babar Azam" AND p2.name != "Babar Azam" '
             "RETURN p2.name AS within_3_hops "
             "ORDER BY within_3_hops ASC"
         ),

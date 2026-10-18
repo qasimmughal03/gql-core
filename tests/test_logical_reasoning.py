@@ -80,21 +80,20 @@ def test_lr2_two_hop_teammates_of_babar_exact_set(graph: PropertyGraph, mirror):
     the 4 named players.
     """
     q, cypher, sql = _run_pair(graph, mirror, _query_by_name("LR2_teammates_within_two_hops"))
-    names = sorted(r["within_2_hops"] for r in cypher)
+    names = sorted(set(r["within_2_hops"] for r in cypher))
     assert names == ["Mohammad Rizwan", "Naseem Shah", "Shaheen Afridi", "Shan Masood"]
-    assert sorted(r[0] for r in sql) == names
+    assert sorted(set(r[0] for r in sql)) == names
 
 
-def test_lr2_rpq_dedupes_targets(graph: PropertyGraph):
-    """RPQ semantics: each reachable node appears once even if multiple paths exist.
-
-    Without dedupe in `rpq_traverse`, Rizwan would appear as both a direct
-    teammate AND as a 2-hop teammate via Shaheen, producing duplicate rows.
+def test_lr2_path_semantics_returns_multiple_paths(graph: PropertyGraph):
+    """Path semantics: openCypher trail semantics returns each distinct valid path.
+    Rizwan appears as both a direct teammate AND as a 2-hop teammate via Shaheen.
     """
     q = _resolve_start_id(_query_by_name("LR2_teammates_within_two_hops"), graph)
     rows = run_cypher(q["cypher"], graph)
     names = [r["within_2_hops"] for r in rows]
-    assert len(names) == len(set(names)), f"duplicate names: {names}"
+    assert len(names) == 8
+    assert set(names) == {"Mohammad Rizwan", "Naseem Shah", "Shaheen Afridi", "Shan Masood"}
 
 
 # ── LR3 — Test centurions (multi-edge constraint with threshold) ────
@@ -185,7 +184,8 @@ def test_lr5_known_chain_from_fixture_start(graph: PropertyGraph):
 def test_all_lr_queries_cross_engine_parity(graph: PropertyGraph, mirror):
     for raw_q in LR_QUERIES:
         q, cypher, sql = _run_pair(graph, mirror, raw_q)
-        canon_c = _canonical_rows(cypher, q["key_columns"])
+        is_distinct = "DISTINCT" in q.get("sql", "").upper()
+        canon_c = _canonical_rows(cypher, q["key_columns"], distinct=is_distinct)
         canon_s = _canonical_rows(sql, q["key_columns"])
         assert _rows_equal(canon_c, canon_s), (q["name"], canon_c, canon_s)
 

@@ -67,7 +67,8 @@ def test_q1_q5_results_match_between_engines(graph: PropertyGraph, mirror: sqlit
         q = _resolve_start_id(raw_q, graph)
         cypher_rows = run_cypher(q["cypher"], graph)
         sql_rows = cur.execute(q["sql"]).fetchall()
-        canon_cypher = _canonical_rows(cypher_rows, q["key_columns"])
+        is_distinct = "DISTINCT" in q.get("sql", "").upper()
+        canon_cypher = _canonical_rows(cypher_rows, q["key_columns"], distinct=is_distinct)
         canon_sql = _canonical_rows(sql_rows, q["key_columns"])
         assert _rows_equal(canon_cypher, canon_sql), (
             q["name"],

@@ -32,6 +32,9 @@ gql-core = "gql_core.cli:main"
 packages = [
     "gql_core",
     "gql_core.query",
+    "gql_core.ontology",
+    "gql_core.inference",
+    "gql_core.physical",
     "ingestion",
     "graph",
     "query",

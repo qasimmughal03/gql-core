@@ -88,8 +88,30 @@ class PropertyGraph:
     def get_node(self, node_id: Any) -> Node | None:
         return self._nodes.get(node_id)
 
+    def has_node(self, node_id: Any) -> bool:
+        return node_id in self._nodes
+
     def get_edge(self, edge_id: Any) -> Edge | None:
         return self._edges.get(edge_id)
+
+    def has_edge(self, edge_id: Any) -> bool:
+        return edge_id in self._edges
+
+    def outgoing(self, node_id: Any, label: str | None = None) -> list[Edge]:
+        edges = []
+        for eid in self._out.get(node_id, ()):
+            e = self._edges[eid]
+            if label is None or e.label == label:
+                edges.append(e)
+        return edges
+
+    def incoming(self, node_id: Any, label: str | None = None) -> list[Edge]:
+        edges = []
+        for eid in self._in.get(node_id, ()):
+            e = self._edges[eid]
+            if label is None or e.label == label:
+                edges.append(e)
+        return edges
 
     def neighbors(
         self,

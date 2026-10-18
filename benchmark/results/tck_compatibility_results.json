@@ -1,33 +1,33 @@
 {
   "metadata": {
-    "timestamp": "2026-10-18T02:05:21Z",
+    "timestamp": "2026-10-18T02:50:16Z",
     "corpus": "openCypher TCK",
     "git_commit": "677cbafabb8c3c5eed458fd3b1ec0daec8d67d23",
     "release_tag": "2024.3",
     "total_scenarios": 1338,
     "claimed_subset_scenarios": 79,
-    "passed": 75,
-    "failed": 4,
+    "passed": 76,
+    "failed": 3,
     "unsupported": 1259,
     "blocked": 0,
-    "claimed_pass_rate_pct": 94.94,
-    "overall_coverage_pct": 5.61,
-    "duration_seconds": 0.16
+    "claimed_pass_rate_pct": 96.2,
+    "overall_coverage_pct": 5.68,
+    "duration_seconds": 0.26
   },
   "category_breakdown": {
     "clauses": {
       "unsupported": 694,
-      "passed": 57,
-      "failed": 2
+      "passed": 58,
+      "failed": 1
     },
     "expressions": {
-      "passed": 10,
+      "failed": 2,
+      "passed": 8,
       "unsupported": 545
     },
     "useCases": {
-      "passed": 8,
-      "unsupported": 20,
-      "failed": 2
+      "passed": 10,
+      "unsupported": 20
     }
   },
   "unsupported_breakdown": {
@@ -81,32 +81,25 @@
   },
   "failures": [
     {
-      "scenario_id": "Match3#15",
-      "name": "Mixing directed and undirected pattern parts with self-relationship, simple",
-      "file": "Match3.feature",
-      "query": "MATCH (x:A)-[r1]->(y)-[r2]-(z)\n      RETURN x, r1, y, r2, z",
-      "reason": "Row count mismatch: expected 2, got 3. Actual rows: [{'x': Node(id='node_1', label='A', props={'id': 'node_1'}), 'r1': Edge(id='rel_3', label='T1', src='node_1', dst='l', props={}), 'y': Node(id='l', label='Looper', props={'id': 'l'}), 'r2': Edge(id='rel_4', label='LOOP', src='l', dst='l', props={}), 'z': Node(id='l', label='Looper', props={'id': 'l'})}, {'x': Node(id='node_1', label='A', props={'id': 'node_1'}), 'r1': Edge(id='rel_3', label='T1', src='node_1', dst='l', props={}), 'y': Node(id='l', label='Looper', props={'id': 'l'}), 'r2': Edge(id='rel_6', label='T2', src='l', dst='node_5', props={}), 'z': Node(id='node_5', label='B', props={'id': 'node_5'})}, {'x': Node(id='node_1', label='A', props={'id': 'node_1'}), 'r1': Edge(id='rel_3', label='T1', src='node_1', dst='l', props={}), 'y': Node(id='l', label='Looper', props={'id': 'l'}), 'r2': Edge(id='rel_3', label='T1', src='node_1', dst='l', props={}), 'z': Node(id='node_1', label='A', props={'id': 'node_1'})}]"
+      "scenario_id": "Return4#4",
+      "name": "Keeping used expression 1",
+      "file": "Return4.feature",
+      "query": "MATCH (n)\n      RETURN cOuNt( * )",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'cOuNt( * )': 1}]"
     },
     {
-      "scenario_id": "Match3#16",
-      "name": "Mixing directed and undirected pattern parts with self-relationship, undirected",
-      "file": "Match3.feature",
-      "query": "MATCH (x)-[r1]-(y)-[r2]-(z)\n      RETURN x, r1, y, r2, z",
-      "reason": "Row count mismatch: expected 6, got 11. Actual rows: [{'x': Node(id='node_1', label='A', props={'id': 'node_1'}), 'r1': Edge(id='rel_3', label='T1', src='node_1', dst='l', props={}), 'y': Node(id='l', label='Looper', props={'id': 'l'}), 'r2': Edge(id='rel_4', label='LOOP', src='l', dst='l', props={}), 'z': Node(id='l', label='Looper', props={'id': 'l'})}, {'x': Node(id='node_1', label='A', props={'id': 'node_1'}), 'r1': Edge(id='rel_3', label='T1', src='node_1', dst='l', props={}), 'y': Node(id='l', label='Looper', props={'id': 'l'}), 'r2': Edge(id='rel_6', label='T2', src='l', dst='node_5', props={}), 'z': Node(id='node_5', label='B', props={'id': 'node_5'})}, {'x': Node(id='node_1', label='A', props={'id': 'node_1'}), 'r1': Edge(id='rel_3', label='T1', src='node_1', dst='l', props={}), 'y': Node(id='l', label='Looper', props={'id': 'l'}), 'r2': Edge(id='rel_3', label='T1', src='node_1', dst='l', props={}), 'z': Node(id='node_1', label='A', props={'id': 'node_1'})}, {'x': Node(id='l', label='Looper', props={'id': 'l'}), 'r1': Edge(id='rel_4', label='LOOP', src='l', dst='l', props={}), 'y': Node(id='l', label='Looper', props={'id': 'l'}), 'r2': Edge(id='rel_4', label='LOOP', src='l', dst='l', props={}), 'z': Node(id='l', label='Looper', props={'id': 'l'})}, {'x': Node(id='l', label='Looper', props={'id': 'l'}), 'r1': Edge(id='rel_4', label='LOOP', src='l', dst='l', props={}), 'y': Node(id='l', label='Looper', props={'id': 'l'}), 'r2': Edge(id='rel_6', label='T2', src='l', dst='node_5', props={}), 'z': Node(id='node_5', label='B', props={'id': 'node_5'})}]"
+      "scenario_id": "Aggregation1#1",
+      "name": "Count only non-null values",
+      "file": "Aggregation1.feature",
+      "query": "MATCH (n)\n      RETURN n.name, count(n.num)",
+      "reason": "Actual row {'name': 'a', 'count_n_num': 1} did not match any remaining expected row in [{'n.name': 'a', 'count(n.num)': 1}, {'n.name': 'b', 'count(n.num)': 1}]"
     },
     {
-      "scenario_id": "CountingSubgraphMatches1#10",
-      "name": "Mixing directed and undirected pattern parts with self-relationship, count",
-      "file": "CountingSubgraphMatches1.feature",
-      "query": "MATCH (:A)-->()--()\n      RETURN count(*)",
-      "reason": "Actual row {'count': 3} did not match any remaining expected row in [{'count(*)': 2}]"
-    },
-    {
-      "scenario_id": "CountingSubgraphMatches1#11",
-      "name": "Mixing directed and undirected pattern parts with self-relationship, undirected count",
-      "file": "CountingSubgraphMatches1.feature",
-      "query": "MATCH ()-[]-()-[]-()\n      RETURN count(*)",
-      "reason": "Actual row {'count': 11} did not match any remaining expected row in [{'count(*)': 6}]"
+      "scenario_id": "Aggregation3#1",
+      "name": "Sum only non-null values",
+      "file": "Aggregation3.feature",
+      "query": "MATCH (n)\n      RETURN n.name, sum(n.num)",
+      "reason": "Actual row {'name': 'a', 'sum_n_num': 75} did not match any remaining expected row in [{'n.name': 'a', 'sum(n.num)': 75}]"
     }
   ],
   "scenarios": [
@@ -1602,16 +1595,16 @@
       "scenario_id": "Match3#15",
       "feature": "Match3 - Match fixed length patterns",
       "name": "Mixing directed and undirected pattern parts with self-relationship, simple",
-      "status": "failed",
-      "reason": "Row count mismatch: expected 2, got 3. Actual rows: [{'x': Node(id='node_1', label='A', props={'id': 'node_1'}), 'r1': Edge(id='rel_3', label='T1', src='node_1', dst='l', props={}), 'y': Node(id='l', label='Looper', props={'id': 'l'}), 'r2': Edge(id='rel_4', label='LOOP', src='l', dst='l', props={}), 'z': Node(id='l', label='Looper', props={'id': 'l'})}, {'x': Node(id='node_1', label='A', props={'id': 'node_1'}), 'r1': Edge(id='rel_3', label='T1', src='node_1', dst='l', props={}), 'y': Node(id='l', label='Looper', props={'id': 'l'}), 'r2': Edge(id='rel_6', label='T2', src='l', dst='node_5', props={}), 'z': Node(id='node_5', label='B', props={'id': 'node_5'})}, {'x': Node(id='node_1', label='A', props={'id': 'node_1'}), 'r1': Edge(id='rel_3', label='T1', src='node_1', dst='l', props={}), 'y': Node(id='l', label='Looper', props={'id': 'l'}), 'r2': Edge(id='rel_3', label='T1', src='node_1', dst='l', props={}), 'z': Node(id='node_1', label='A', props={'id': 'node_1'})}]",
+      "status": "passed",
+      "reason": "Exact match on 2 rows (in_order=False)",
       "query": "MATCH (x:A)-[r1]->(y)-[r2]-(z)\n      RETURN x, r1, y, r2, z"
     },
     {
       "scenario_id": "Match3#16",
       "feature": "Match3 - Match fixed length patterns",
       "name": "Mixing directed and undirected pattern parts with self-relationship, undirected",
-      "status": "failed",
-      "reason": "Row count mismatch: expected 6, got 11. Actual rows: [{'x': Node(id='node_1', label='A', props={'id': 'node_1'}), 'r1': Edge(id='rel_3', label='T1', src='node_1', dst='l', props={}), 'y': Node(id='l', label='Looper', props={'id': 'l'}), 'r2': Edge(id='rel_4', label='LOOP', src='l', dst='l', props={}), 'z': Node(id='l', label='Looper', props={'id': 'l'})}, {'x': Node(id='node_1', label='A', props={'id': 'node_1'}), 'r1': Edge(id='rel_3', label='T1', src='node_1', dst='l', props={}), 'y': Node(id='l', label='Looper', props={'id': 'l'}), 'r2': Edge(id='rel_6', label='T2', src='l', dst='node_5', props={}), 'z': Node(id='node_5', label='B', props={'id': 'node_5'})}, {'x': Node(id='node_1', label='A', props={'id': 'node_1'}), 'r1': Edge(id='rel_3', label='T1', src='node_1', dst='l', props={}), 'y': Node(id='l', label='Looper', props={'id': 'l'}), 'r2': Edge(id='rel_3', label='T1', src='node_1', dst='l', props={}), 'z': Node(id='node_1', label='A', props={'id': 'node_1'})}, {'x': Node(id='l', label='Looper', props={'id': 'l'}), 'r1': Edge(id='rel_4', label='LOOP', src='l', dst='l', props={}), 'y': Node(id='l', label='Looper', props={'id': 'l'}), 'r2': Edge(id='rel_4', label='LOOP', src='l', dst='l', props={}), 'z': Node(id='l', label='Looper', props={'id': 'l'})}, {'x': Node(id='l', label='Looper', props={'id': 'l'}), 'r1': Edge(id='rel_4', label='LOOP', src='l', dst='l', props={}), 'y': Node(id='l', label='Looper', props={'id': 'l'}), 'r2': Edge(id='rel_6', label='T2', src='l', dst='node_5', props={}), 'z': Node(id='node_5', label='B', props={'id': 'node_5'})}]",
+      "status": "passed",
+      "reason": "Exact match on 6 rows (in_order=False)",
       "query": "MATCH (x)-[r1]-(y)-[r2]-(z)\n      RETURN x, r1, y, r2, z"
     },
     {
@@ -2659,7 +2652,7 @@
       "feature": "MatchWhere1 - Filter single variable",
       "name": "Fail on aggregation in WHERE",
       "status": "passed",
-      "reason": "Correctly raised UnexpectedToken: Unexpected token Token('LPAR', '(') at line 2, column 18.\nExpected one of: \n\t* OP\n\t* DOT\nPrevious to",
+      "reason": "Correctly raised compile-time validation error: UnexpectedToken (Unexpected token Token('LPAR', '(') at line 2, column 18.\nExpected one of: \n\t* DOT\n\t* OP\nPrevious tokens: [Token('CNAME', 'count')]\n)",
       "query": "MATCH (a)\n      WHERE count(a) > 10\n      RETURN a"
     },
     {
@@ -3691,7 +3684,7 @@
       "feature": "Return1 - Return single variable (correct return of values according to their type)",
       "name": "Fail when returning an undefined variable",
       "status": "passed",
-      "reason": "Correctly raised SemanticError: RETURN references unbound variable 'foo'",
+      "reason": "Correctly raised compile-time validation error: SemanticError (RETURN references unbound variable 'foo')",
       "query": "MATCH ()\n      RETURN foo"
     },
     {
@@ -3835,7 +3828,7 @@
       "feature": "Return2 - Return single expression (correctly projecting an expression)",
       "name": "Fail on projecting a non-existent function",
       "status": "passed",
-      "reason": "Correctly raised UnexpectedToken: Unexpected token Token('LPAR', '(') at line 2, column 17.\nExpected one of: \n\t* COMMA\n\t* AS\n\t* DOT\n\t*",
+      "reason": "Correctly raised compile-time validation error: UnexpectedToken (Unexpected token Token('LPAR', '(') at line 2, column 17.\nExpected one of: \n\t* $END\n\t* COMMA\n\t* ORDER\n\t* LIMIT\n\t* DOT\n\t* AS\nPrevious tokens: [Token('CNAME', 'foo')]\n)",
       "query": "MATCH (a)\n      RETURN foo(a)"
     },
     {
@@ -3890,8 +3883,8 @@
       "scenario_id": "Return4#4",
       "feature": "Return4 - Column renaming",
       "name": "Keeping used expression 1",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'count': 1} did not match any remaining expected row in [{'cOuNt( * )': 1}]",
       "query": "MATCH (n)\n      RETURN cOuNt( * )"
     },
     {
@@ -4619,7 +4612,7 @@
       "feature": "ReturnSkipLimit2 - Limit",
       "name": "Fail when using non-constants in LIMIT",
       "status": "passed",
-      "reason": "Correctly raised UnexpectedToken: Unexpected token Token('CNAME', 'n') at line 1, column 26.\nExpected one of: \n\t* INT\nPrevious tokens:",
+      "reason": "Correctly raised compile-time validation error: UnexpectedToken (Unexpected token Token('CNAME', 'n') at line 1, column 26.\nExpected one of: \n\t* INT\nPrevious tokens: [Token('LIMIT', 'LIMIT')]\n)",
       "query": "MATCH (n) RETURN n LIMIT n.count"
     },
     {
@@ -4643,7 +4636,7 @@
       "feature": "ReturnSkipLimit2 - Limit",
       "name": "Fail when using negative value in LIMIT 1",
       "status": "passed",
-      "reason": "Correctly raised UnexpectedToken: Unexpected token Token('SIGNED_NUMBER', '-1') at line 3, column 15.\nExpected one of: \n\t* INT\nPreviou",
+      "reason": "Correctly raised compile-time validation error: UnexpectedToken (Unexpected token Token('SIGNED_NUMBER', '-1') at line 3, column 15.\nExpected one of: \n\t* INT\nPrevious tokens: [Token('LIMIT', 'LIMIT')]\n)",
       "query": "MATCH (n)\n      RETURN n\n        LIMIT -1"
     },
     {
@@ -4651,7 +4644,7 @@
       "feature": "ReturnSkipLimit2 - Limit",
       "name": "Fail when using negative value in LIMIT 2",
       "status": "passed",
-      "reason": "Correctly raised UnexpectedToken: Unexpected token Token('SIGNED_NUMBER', '-1') at line 3, column 13.\nExpected one of: \n\t* INT\nPreviou",
+      "reason": "Correctly raised compile-time validation error: UnexpectedToken (Unexpected token Token('SIGNED_NUMBER', '-1') at line 3, column 13.\nExpected one of: \n\t* INT\nPrevious tokens: [Token('LIMIT', 'LIMIT')]\n)",
       "query": "MATCH (p:Person)\n      RETURN p.name AS name\n      LIMIT -1"
     },
     {
@@ -4675,7 +4668,7 @@
       "feature": "ReturnSkipLimit2 - Limit",
       "name": "Fail when using floating point in LIMIT 1",
       "status": "passed",
-      "reason": "Correctly raised UnexpectedToken: Unexpected token Token('SIGNED_NUMBER', '.7') at line 3, column 16.\nExpected one of: \n\t* $END\nPrevio",
+      "reason": "Correctly raised compile-time validation error: UnexpectedToken (Unexpected token Token('SIGNED_NUMBER', '.7') at line 3, column 16.\nExpected one of: \n\t* $END\nPrevious tokens: [Token('INT', '1')]\n)",
       "query": "MATCH (n)\n      RETURN n\n        LIMIT 1.7"
     },
     {
@@ -4683,7 +4676,7 @@
       "feature": "ReturnSkipLimit2 - Limit",
       "name": "Fail when using floating point in LIMIT 2",
       "status": "passed",
-      "reason": "Correctly raised UnexpectedToken: Unexpected token Token('SIGNED_NUMBER', '.5') at line 3, column 14.\nExpected one of: \n\t* $END\nPrevio",
+      "reason": "Correctly raised compile-time validation error: UnexpectedToken (Unexpected token Token('SIGNED_NUMBER', '.5') at line 3, column 14.\nExpected one of: \n\t* $END\nPrevious tokens: [Token('INT', '1')]\n)",
       "query": "MATCH (p:Person)\n      RETURN p.name AS name\n      LIMIT 1.5"
     },
     {
@@ -6138,8 +6131,8 @@
       "scenario_id": "Aggregation1#1",
       "feature": "Aggregation1 - Count",
       "name": "Count only non-null values",
-      "status": "passed",
-      "reason": "Exact match on 2 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'name': 'a', 'count_n_num': 1} did not match any remaining expected row in [{'n.name': 'a', 'count(n.num)': 1}, {'n.name': 'b', 'count(n.num)': 1}]",
       "query": "MATCH (n)\n      RETURN n.name, count(n.num)"
     },
     {
@@ -6250,8 +6243,8 @@
       "scenario_id": "Aggregation3#1",
       "feature": "Aggregation3 - Sum",
       "name": "Sum only non-null values",
-      "status": "passed",
-      "reason": "Exact match on 1 rows (in_order=False)",
+      "status": "failed",
+      "reason": "Actual row {'name': 'a', 'sum_n_num': 75} did not match any remaining expected row in [{'n.name': 'a', 'sum(n.num)': 75}]",
       "query": "MATCH (n)\n      RETURN n.name, sum(n.num)"
     },
     {
@@ -9331,7 +9324,7 @@
       "feature": "Pattern1 - Pattern predicate",
       "name": "Fail on checking self pattern",
       "status": "passed",
-      "reason": "Correctly raised UnexpectedToken: Unexpected token Token('RPAR', ')') at line 1, column 19.\nExpected one of: \n\t* OP\n",
+      "reason": "Correctly raised compile-time validation error: UnexpectedToken (Unexpected token Token('RPAR', ')') at line 1, column 19.\nExpected one of: \n\t* OP\n)",
       "query": "MATCH (n) WHERE (n) RETURN n"
     },
     {
@@ -10650,16 +10643,16 @@
       "scenario_id": "CountingSubgraphMatches1#10",
       "feature": "CountingSubgraphMatches1 - Matching subgraph patterns and count the number of matches",
       "name": "Mixing directed and undirected pattern parts with self-relationship, count",
-      "status": "failed",
-      "reason": "Actual row {'count': 3} did not match any remaining expected row in [{'count(*)': 2}]",
+      "status": "passed",
+      "reason": "Exact match on 1 rows (in_order=False)",
       "query": "MATCH (:A)-->()--()\n      RETURN count(*)"
     },
     {
       "scenario_id": "CountingSubgraphMatches1#11",
       "feature": "CountingSubgraphMatches1 - Matching subgraph patterns and count the number of matches",
       "name": "Mixing directed and undirected pattern parts with self-relationship, undirected count",
-      "status": "failed",
-      "reason": "Actual row {'count': 11} did not match any remaining expected row in [{'count(*)': 6}]",
+      "status": "passed",
+      "reason": "Exact match on 1 rows (in_order=False)",
       "query": "MATCH ()-[]-()-[]-()\n      RETURN count(*)"
     },
     {

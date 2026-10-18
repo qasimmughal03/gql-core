@@ -1,8 +1,9 @@
 """LDBC SNB Interactive v1 Benchmark Runner for GQL-Core.
 
-Executes supported SNB queries strictly through GQL-Core's public API, verifies
+Executes official read operations strictly through GQL-Core's public API, verifies
 exact answer correctness against the relational SQLite Oracle, records end-to-end
 and separate phase latencies, and outputs a complete reproducible report.
+Distinguishes official operations (Categories A & B) from simplified adaptations (Category C).
 """
 
 from __future__ import annotations
@@ -25,19 +26,23 @@ import gql_core
 from gql_core import parse, plan
 from gql_core.query.executor import execute
 from benchmark.snb.inventory import SNB_READ_QUERY_INVENTORY, get_inventory_summary
-from benchmark.snb.loader import load_snb_dataset
+from benchmark.snb.loader import load_snb_dataset, DATASET_CATALOG
 from benchmark.snb.oracle import SNBAnswerOracle
 
 DEFAULT_OUTPUT_JSON = Path("benchmark/results/snb_interactive_results.json")
 
-# Benchmark parameter sets (using official LDBC SNB parameters)
-TEST_WORKLOAD = [
+# Official SF0.1 Workload
+# Tested on official SF0.1 dataset (327,588 nodes, 1,477,965 edges)
+WORKLOAD_SF01 = [
+    # ── Category A: Exact Supported Official Operation ──────────
     {
         "query_id": "IS1",
-        "param_id": "IS1_p1",
-        "params": {"personId": 4398046511192},
+        "semantic_category": "A",
+        "category_description": "Exact supported official operation",
+        "parameter_id": "IS1_sf01_p1",
+        "params": {"personId": 2199023256816},
         "query": (
-            "MATCH (n:Person {id: 4398046511192})-[:IS_LOCATED_IN]->(p:City) "
+            "MATCH (n:Person {id: 2199023256816})-[:IS_LOCATED_IN]->(p:City) "
             "RETURN n.firstName AS firstName, n.lastName AS lastName, n.birthday AS birthday, "
             "n.locationIP AS locationIP, n.browserUsed AS browserUsed, p.id AS cityId, "
             "n.gender AS gender, n.creationDate AS creationDate"
@@ -45,21 +50,27 @@ TEST_WORKLOAD = [
     },
     {
         "query_id": "IS1",
-        "param_id": "IS1_p2",
-        "params": {"personId": 8796093022220},
+        "semantic_category": "A",
+        "category_description": "Exact supported official operation",
+        "parameter_id": "IS1_sf01_p2",
+        "params": {"personId": 6597069767242},
         "query": (
-            "MATCH (n:Person {id: 8796093022220})-[:IS_LOCATED_IN]->(p:City) "
+            "MATCH (n:Person {id: 6597069767242})-[:IS_LOCATED_IN]->(p:City) "
             "RETURN n.firstName AS firstName, n.lastName AS lastName, n.birthday AS birthday, "
             "n.locationIP AS locationIP, n.browserUsed AS browserUsed, p.id AS cityId, "
             "n.gender AS gender, n.creationDate AS creationDate"
         ),
     },
+
+    # ── Category B: Semantically Equivalent Translation ──────────
     {
         "query_id": "IS3",
-        "param_id": "IS3_p1",
-        "params": {"personId": 4398046511192},
+        "semantic_category": "B",
+        "category_description": "Semantically equivalent translation",
+        "parameter_id": "IS3_sf01_p1",
+        "params": {"personId": 2199023256816},
         "query": (
-            "MATCH (n:Person {id: 4398046511192})-[r:KNOWS]-(friend:Person) "
+            "MATCH (n:Person {id: 2199023256816})-[r:KNOWS]-(friend:Person) "
             "RETURN friend.id AS personId, friend.firstName AS firstName, "
             "friend.lastName AS lastName, r.creationDate AS friendshipCreationDate "
             "ORDER BY friendshipCreationDate DESC, personId ASC"
@@ -67,59 +78,63 @@ TEST_WORKLOAD = [
     },
     {
         "query_id": "IS3",
-        "param_id": "IS3_p2",
-        "params": {"personId": 8796093022220},
+        "semantic_category": "B",
+        "category_description": "Semantically equivalent translation",
+        "parameter_id": "IS3_sf01_p2",
+        "params": {"personId": 6597069767242},
         "query": (
-            "MATCH (n:Person {id: 8796093022220})-[r:KNOWS]-(friend:Person) "
+            "MATCH (n:Person {id: 6597069767242})-[r:KNOWS]-(friend:Person) "
             "RETURN friend.id AS personId, friend.firstName AS firstName, "
             "friend.lastName AS lastName, r.creationDate AS friendshipCreationDate "
             "ORDER BY friendshipCreationDate DESC, personId ASC"
         ),
     },
+
+    # ── Category C: Simplified / Partially Equivalent Adaptations ─
     {
         "query_id": "IS5",
-        "param_id": "IS5_p1",
-        "params": {"messageId": 206158431836},
+        "semantic_category": "C",
+        "category_description": "Simplified or partially equivalent adaptation (Post only)",
+        "parameter_id": "IS5_sf01_p1",
+        "params": {"messageId": 206158430209},
         "query": (
-            "MATCH (m:Post {id: 206158431836})-[:HAS_CREATOR]->(p:Person) "
+            "MATCH (m:Post {id: 206158430209})-[:HAS_CREATOR]->(p:Person) "
             "RETURN p.id AS personId, p.firstName AS firstName, p.lastName AS lastName"
         ),
-    },
-    {
-        "query_id": "IS5",
-        "param_id": "IS5_p2",
-        "params": {"messageId": 206158431840},
-        "query": (
-            "MATCH (m:Post {id: 206158431840})-[:HAS_CREATOR]->(p:Person) "
-            "RETURN p.id AS personId, p.firstName AS firstName, p.lastName AS lastName"
-        ),
+        "notes": "Adapted from Message to Post. Only matches post authors; does not match comments.",
     },
     {
         "query_id": "IC2",
-        "param_id": "IC2_p1",
-        "params": {"personId": 10995116278009, "maxDate": 1287187200000},
+        "semantic_category": "C",
+        "category_description": "Simplified or partially equivalent adaptation (Post only)",
+        "parameter_id": "IC2_sf01_p1",
+        "params": {"personId": 2199023256816, "maxDate": 1354320000000},
         "query": (
-            "MATCH (:Person {id: 10995116278009})-[:KNOWS]-(friend:Person)<-[:HAS_CREATOR]-(message:Post) "
-            "WHERE message.creationDate <= 1287187200000 "
+            "MATCH (:Person {id: 2199023256816})-[:KNOWS]-(friend:Person)<-[:HAS_CREATOR]-(message:Post) "
+            "WHERE message.creationDate <= 1354320000000 "
             "RETURN friend.id AS personId, friend.firstName AS personFirstName, "
             "friend.lastName AS personLastName, message.id AS postOrCommentId, "
             "message.content AS postOrCommentContent, message.creationDate AS postOrCommentCreationDate "
             "ORDER BY postOrCommentCreationDate DESC, postOrCommentId ASC "
             "LIMIT 20"
         ),
+        "notes": "Adapted from Message to Post, omitting comments and coalesce(content, imageFile).",
     },
     {
         "query_id": "IC8",
-        "param_id": "IC8_p1",
-        "params": {"personId": 143},
+        "semantic_category": "C",
+        "category_description": "Simplified or partially equivalent adaptation (Post replies only)",
+        "parameter_id": "IC8_sf01_p1",
+        "params": {"personId": 2199023256816},
         "query": (
-            "MATCH (start:Person {id: 143})<-[:HAS_CREATOR]-(post:Post)<-[:REPLY_OF]-(comment:Comment)-[:HAS_CREATOR]->(person:Person) "
+            "MATCH (start:Person {id: 2199023256816})<-[:HAS_CREATOR]-(post:Post)<-[:REPLY_OF]-(comment:Comment)-[:HAS_CREATOR]->(person:Person) "
             "RETURN person.id AS personId, person.firstName AS personFirstName, "
             "person.lastName AS personLastName, comment.creationDate AS commentCreationDate, "
             "comment.id AS commentId, comment.content AS commentContent "
             "ORDER BY commentCreationDate DESC, commentId ASC "
             "LIMIT 20"
         ),
+        "notes": "Adapted from Message to Post. Only matches replies to Posts, not threaded replies to Comments.",
     },
 ]
 
@@ -144,8 +159,9 @@ def _percentile(data: list[float], p: float) -> float:
 
 
 def run_benchmark(
+    dataset: str = "official_sf01",
     output_json: Path | str = DEFAULT_OUTPUT_JSON,
-    warmup_runs: int = 3,
+    warmup_runs: int = 2,
     sample_runs: int = 10,
 ) -> dict[str, Any]:
     output_json = Path(output_json)
@@ -157,43 +173,46 @@ def run_benchmark(
     print("============================================================")
 
     # 1. Load Dataset
-    print("  Loading official LDBC SNB initial snapshot dataset...")
-    graph, load_stats = load_snb_dataset()
+    print(f"  Loading dataset [{dataset}]...")
+    graph, load_stats = load_snb_dataset(dataset)
     print(f"  Loaded {load_stats['nodes']} nodes and {load_stats['edges']} edges in {load_stats['load_time_seconds']}s")
     print(f"  Peak memory RSS delta: {load_stats['peak_memory_rss_mb']} MB")
     print("------------------------------------------------------------")
 
     # 2. Initialize Answer Oracle
     print("  Initializing relational SQLite Answer Oracle...")
-    oracle = SNBAnswerOracle()
+    oracle = SNBAnswerOracle(dataset)
     print("  Answer Oracle initialized successfully.")
     print("------------------------------------------------------------")
 
     # 3. Execute Workload
     results = []
+    official_passes = 0
+    official_evals = 0
     all_passed_correctness = True
 
-    for item in TEST_WORKLOAD:
+    for item in WORKLOAD_SF01:
         qid = item["query_id"]
-        pid = item["param_id"]
+        cat = item["semantic_category"]
+        pid = item["parameter_id"]
         q_str = item["query"]
         params = item["params"]
 
-        print(f"  Running {qid} [{pid}]...", end="", flush=True)
+        print(f"  Running {qid} [Cat {cat} | {pid}]...", end="", flush=True)
 
-        # Compute Oracle Answer
+        # Compute Oracle Answer & Oracle latency
         if qid == "IS1":
-            expected = oracle.execute_is1(params["personId"])
+            expected, ora_lat = oracle.execute_is1(params["personId"])
         elif qid == "IS3":
-            expected = oracle.execute_is3(params["personId"])
+            expected, ora_lat = oracle.execute_is3(params["personId"])
         elif qid == "IS5":
-            expected = oracle.execute_is5(params["messageId"])
+            expected, ora_lat = oracle.execute_is5_adapted_post(params["messageId"])
         elif qid == "IC2":
-            expected = oracle.execute_ic2(params["personId"], params["maxDate"])
+            expected, ora_lat = oracle.execute_ic2_adapted_post(params["personId"], params["maxDate"])
         elif qid == "IC8":
-            expected = oracle.execute_ic8(params["personId"])
+            expected, ora_lat = oracle.execute_ic8_adapted_post(params["personId"])
         else:
-            expected = []
+            expected, ora_lat = [], 0.0
 
         # Warm-up runs
         for _ in range(warmup_runs):
@@ -209,12 +228,12 @@ def run_benchmark(
             elapsed_ms = (time.perf_counter() - t0) * 1000.0
             latencies_ms.append(elapsed_ms)
 
-        # Measure separate phase timings (average over 5 runs)
+        # Measure separate phase timings (average over 3 runs)
         parse_times: list[float] = []
         plan_times: list[float] = []
         exec_times: list[float] = []
 
-        for _ in range(5):
+        for _ in range(3):
             t_p0 = time.perf_counter()
             ast = parse(q_str)
             t_p1 = time.perf_counter()
@@ -235,6 +254,11 @@ def run_benchmark(
         else:
             status_str = "VERIFIED_EXACT_MATCH"
 
+        if cat in ("A", "B"):
+            official_evals += 1
+            if is_correct:
+                official_passes += 1
+
         sorted_lats = sorted(latencies_ms)
         median_lat = statistics.median(sorted_lats)
         mean_lat = statistics.mean(sorted_lats)
@@ -245,10 +269,12 @@ def run_benchmark(
         avg_plan = statistics.mean(plan_times)
         avg_exec = statistics.mean(exec_times)
 
-        print(f" {status_str} | rows={len(actual_rows)} | med={median_lat:.3f}ms | p95={p95_lat:.3f}ms")
+        print(f" {status_str} | rows={len(actual_rows)} | med={median_lat:.3f}ms | p95={p95_lat:.3f}ms | sqlite_med={ora_lat:.3f}ms")
 
         results.append({
             "query_id": qid,
+            "semantic_category": cat,
+            "category_description": item["category_description"],
             "parameter_id": pid,
             "parameters": params,
             "query_string": q_str,
@@ -271,6 +297,8 @@ def run_benchmark(
                 "plan_mean": round(avg_plan, 4),
                 "execution_mean": round(avg_exec, 4),
             },
+            "sqlite_baseline_ms": round(ora_lat, 4),
+            "notes": item.get("notes"),
         })
 
     # System and environment specifications
@@ -296,8 +324,15 @@ def run_benchmark(
         "metadata": {
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "benchmark_suite": "LDBC SNB Interactive v1 Read-Only",
-            "scale_factor": "SF0.1 / initial snapshot (34,735 nodes, 71,667 edges)",
+            "dataset": {k: str(v) if isinstance(v, Path) else v for k, v in DATASET_CATALOG.get(dataset, {"dataset_name": dataset}).items()},
             "all_verified_correct": all_passed_correctness,
+            "official_evaluation_summary": {
+                "official_operations_evaluated": official_evals,
+                "official_operations_passed": official_passes,
+                "official_pass_rate_pct": round((official_passes / official_evals * 100.0), 2) if official_evals else 0.0,
+                "category_c_studies_evaluated": len(results) - official_evals,
+                "category_c_status": "Reported separately as simplified adaptations; NOT counted as official passes.",
+            },
             "system": system_metadata,
             "dataset_loading": load_stats,
             "inventory_summary": get_inventory_summary(),
@@ -310,6 +345,7 @@ def run_benchmark(
 
     print("------------------------------------------------------------")
     print(f"  Benchmark complete. Wrote full report to: {output_json}")
+    print(f"  Official operations (Cat A & B): {official_passes}/{official_evals} passed exact match.")
     print(f"  All tested queries verified exact match against Oracle: {all_passed_correctness}")
     print("============================================================")
 
@@ -318,12 +354,18 @@ def run_benchmark(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run LDBC SNB Interactive v1 Benchmark")
+    parser.add_argument("--dataset", default="official_sf01", choices=["official_sf01", "reference_vanilla"], help="Dataset to benchmark")
     parser.add_argument("--output", default=str(DEFAULT_OUTPUT_JSON), help="Output JSON path")
-    parser.add_argument("--warmup", type=int, default=3, help="Warm-up runs")
-    parser.add_argument("--samples", type=int, default=10, help="Sample measured runs")
+    parser.add_argument("--warmup", type=int, default=2, help="Warm-up runs")
+    parser.add_argument("--samples", type=int, default=5, help="Sample measured runs")
     args = parser.parse_args()
 
-    data = run_benchmark(output_json=args.output, warmup_runs=args.warmup, sample_runs=args.samples)
+    data = run_benchmark(
+        dataset=args.dataset,
+        output_json=args.output,
+        warmup_runs=args.warmup,
+        sample_runs=args.samples,
+    )
     if not data["metadata"]["all_verified_correct"]:
         sys.exit(1)
     sys.exit(0)

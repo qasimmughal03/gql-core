@@ -1,25 +1,36 @@
 """Reference Answer Oracle for LDBC SNB Interactive v1 Queries.
 
-Provides an independent, relational baseline (SQLite) loaded with the identical static
-initial CSV snapshot to produce ground-truth results and verify 100% answer correctness
-of GQL-Core execution before measuring speed.
+Provides an independent, relational baseline (SQLite) loaded with the identical static/dynamic
+initial CSV snapshot to produce ground-truth results, verify 100% answer correctness,
+and provide baseline relational execution latency on the same machine.
+Supports both official full-semantic operations (Categories A & B) and adapted studies (Category C).
 """
 
 from __future__ import annotations
 
 import csv
 import sqlite3
+import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Tuple
 
-DEFAULT_DATASET_DIR = Path("benchmark/cache/ldbc_snb_impls/cypher/test-data/vanilla")
+from benchmark.snb.loader import OFFICIAL_SF01_DIR, REFERENCE_VANILLA_DIR, DATASET_CATALOG
 
 
 class SNBAnswerOracle:
     """Relational SQL Answer Oracle for LDBC SNB benchmark queries."""
 
-    def __init__(self, dataset_dir: Path | str = DEFAULT_DATASET_DIR):
-        self.dataset_dir = Path(dataset_dir)
+    def __init__(self, dataset: str | Path = "official_sf01"):
+        if isinstance(dataset, str) and dataset in DATASET_CATALOG:
+            self.dataset_dir = Path(DATASET_CATALOG[dataset]["directory"])
+            self.dataset_key = dataset
+        else:
+            self.dataset_dir = Path(dataset)
+            self.dataset_key = "custom"
+
+        if not self.dataset_dir.exists():
+            raise FileNotFoundError(f"Oracle dataset dir not found at {self.dataset_dir}")
+
         self.conn = sqlite3.connect(":memory:")
         self.conn.row_factory = sqlite3.Row
         self._init_db()
@@ -27,7 +38,7 @@ class SNBAnswerOracle:
     def _init_db(self):
         cur = self.conn.cursor()
 
-        # Tables
+        # Schema definition
         cur.execute("""
             CREATE TABLE Person (
                 id INTEGER PRIMARY KEY,
@@ -100,8 +111,14 @@ class SNBAnswerOracle:
                 Post_id INTEGER
             );
         """)
+        cur.execute("""
+            CREATE TABLE comment_replyOf_comment (
+                Comment1_id INTEGER,
+                Comment2_id INTEGER
+            );
+        """)
 
-        # Load data
+        # Data ingestion
         # Person
         p_csv = self.dataset_dir / "dynamic" / "person_0_0.csv"
         if p_csv.exists():
@@ -122,7 +139,7 @@ class SNBAnswerOracle:
                 ]
                 cur.executemany("INSERT INTO Person VALUES (?, ?, ?, ?, ?, ?, ?, ?)", rows)
 
-        # Place (City)
+        # City
         pl_csv = self.dataset_dir / "static" / "place_0_0.csv"
         if pl_csv.exists():
             with open(pl_csv, "r", encoding="utf-8") as fp:
@@ -178,15 +195,18 @@ class SNBAnswerOracle:
         self._load_rel("dynamic/post_hasCreator_person_0_0.csv", "post_hasCreator_person", 2)
         self._load_rel("dynamic/comment_hasCreator_person_0_0.csv", "comment_hasCreator_person", 2)
         self._load_rel("dynamic/comment_replyOf_post_0_0.csv", "comment_replyOf_post", 2)
+        self._load_rel("dynamic/comment_replyOf_comment_0_0.csv", "comment_replyOf_comment", 2)
 
-        # Create indices for fast joins
+        # Indexes for fast join performance
         cur.execute("CREATE INDEX idx_p_loc ON person_isLocatedIn_place(Person_id);")
         cur.execute("CREATE INDEX idx_k1 ON person_knows_person(Person1_id);")
         cur.execute("CREATE INDEX idx_k2 ON person_knows_person(Person2_id);")
         cur.execute("CREATE INDEX idx_post_hc ON post_hasCreator_person(Post_id);")
         cur.execute("CREATE INDEX idx_post_hc_p ON post_hasCreator_person(Person_id);")
         cur.execute("CREATE INDEX idx_com_hc ON comment_hasCreator_person(Comment_id);")
+        cur.execute("CREATE INDEX idx_com_hc_p ON comment_hasCreator_person(Person_id);")
         cur.execute("CREATE INDEX idx_com_rop ON comment_replyOf_post(Post_id);")
+        cur.execute("CREATE INDEX idx_com_roc ON comment_replyOf_comment(Comment2_id);")
         self.conn.commit()
 
     def _load_rel(self, rel_subpath: str, table_name: str, cols_count: int):
@@ -204,7 +224,9 @@ class SNBAnswerOracle:
                     rows.append(tuple(int(x) if x.isdigit() else x for x in row[:cols_count]))
             cur.executemany(f"INSERT INTO {table_name} VALUES ({placeholders})", rows)
 
-    def execute_is1(self, person_id: int) -> list[dict[str, Any]]:
+    # ── Category A: Exact Official Query ─────────────────────────
+    def execute_is1(self, person_id: int) -> Tuple[list[dict[str, Any]], float]:
+        """Execute IS1 (Profile of a person) and return (results, latency_ms)."""
         sql = """
             SELECT n.firstName AS firstName,
                    n.lastName AS lastName,
@@ -220,10 +242,15 @@ class SNBAnswerOracle:
             WHERE n.id = ?;
         """
         cur = self.conn.cursor()
+        t0 = time.perf_counter()
         cur.execute(sql, (person_id,))
-        return [dict(r) for r in cur.fetchall()]
+        res = [dict(r) for r in cur.fetchall()]
+        ms = (time.perf_counter() - t0) * 1000.0
+        return res, ms
 
-    def execute_is3(self, person_id: int) -> list[dict[str, Any]]:
+    # ── Category B: Semantically Equivalent Translation ──────────
+    def execute_is3(self, person_id: int) -> Tuple[list[dict[str, Any]], float]:
+        """Execute IS3 (Friends of a person) and return (results, latency_ms)."""
         sql = """
             SELECT friend.id AS personId,
                    friend.firstName AS firstName,
@@ -238,10 +265,36 @@ class SNBAnswerOracle:
             ORDER BY friendshipCreationDate DESC, personId ASC;
         """
         cur = self.conn.cursor()
+        t0 = time.perf_counter()
         cur.execute(sql, (person_id, person_id))
-        return [dict(r) for r in cur.fetchall()]
+        res = [dict(r) for r in cur.fetchall()]
+        ms = (time.perf_counter() - t0) * 1000.0
+        return res, ms
 
-    def execute_is5(self, message_id: int) -> list[dict[str, Any]]:
+    # ── Category C: Simplified / Adapted Queries ──────────────────
+    def execute_is5_official(self, message_id: int) -> Tuple[list[dict[str, Any]], float]:
+        """Official IS5: creator of Message (covers BOTH Post and Comment)."""
+        sql = """
+            SELECT p.id AS personId,
+                   p.firstName AS firstName,
+                   p.lastName AS lastName
+            FROM (
+                SELECT Post_id AS message_id, Person_id FROM post_hasCreator_person
+                UNION ALL
+                SELECT Comment_id AS message_id, Person_id FROM comment_hasCreator_person
+            ) m
+            JOIN Person p ON m.Person_id = p.id
+            WHERE m.message_id = ?;
+        """
+        cur = self.conn.cursor()
+        t0 = time.perf_counter()
+        cur.execute(sql, (message_id,))
+        res = [dict(r) for r in cur.fetchall()]
+        ms = (time.perf_counter() - t0) * 1000.0
+        return res, ms
+
+    def execute_is5_adapted_post(self, message_id: int) -> Tuple[list[dict[str, Any]], float]:
+        """Category C Adapted IS5: Restricts Message to Post only."""
         sql = """
             SELECT p.id AS personId,
                    p.firstName AS firstName,
@@ -252,10 +305,14 @@ class SNBAnswerOracle:
             WHERE m.id = ?;
         """
         cur = self.conn.cursor()
+        t0 = time.perf_counter()
         cur.execute(sql, (message_id,))
-        return [dict(r) for r in cur.fetchall()]
+        res = [dict(r) for r in cur.fetchall()]
+        ms = (time.perf_counter() - t0) * 1000.0
+        return res, ms
 
-    def execute_ic2(self, person_id: int, max_date: int) -> list[dict[str, Any]]:
+    def execute_ic2_adapted_post(self, person_id: int, max_date: int) -> Tuple[list[dict[str, Any]], float]:
+        """Category C Adapted IC2: Restricts Message to Post only."""
         sql = """
             SELECT friend.id AS personId,
                    friend.firstName AS personFirstName,
@@ -276,10 +333,14 @@ class SNBAnswerOracle:
             LIMIT 20;
         """
         cur = self.conn.cursor()
+        t0 = time.perf_counter()
         cur.execute(sql, (person_id, person_id, max_date))
-        return [dict(r) for r in cur.fetchall()]
+        res = [dict(r) for r in cur.fetchall()]
+        ms = (time.perf_counter() - t0) * 1000.0
+        return res, ms
 
-    def execute_ic8(self, person_id: int) -> list[dict[str, Any]]:
+    def execute_ic8_adapted_post(self, person_id: int) -> Tuple[list[dict[str, Any]], float]:
+        """Category C Adapted IC8: Restricts replies to Post only (omitting threaded comment replies)."""
         sql = """
             SELECT person.id AS personId,
                    person.firstName AS personFirstName,
@@ -298,5 +359,8 @@ class SNBAnswerOracle:
             LIMIT 20;
         """
         cur = self.conn.cursor()
+        t0 = time.perf_counter()
         cur.execute(sql, (person_id,))
-        return [dict(r) for r in cur.fetchall()]
+        res = [dict(r) for r in cur.fetchall()]
+        ms = (time.perf_counter() - t0) * 1000.0
+        return res, ms

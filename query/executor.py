@@ -97,12 +97,20 @@ def _scan(op: ScanOp, rows: Iterable[dict], graph: PropertyGraph) -> Iterator[di
             yield new_row
 
 
+def _base_edge_id(eid: str) -> str:
+    return eid[:-4] if eid.endswith("_rev") else eid
+
+
 def _expand(op: ExpandOp, rows: Iterable[dict], graph: PropertyGraph) -> Iterator[dict]:
     for row in rows:
         src_node = row.get(op.from_var)
         if src_node is None:
             continue
+        used_edges = row.get("__used_edges__", frozenset())
         for edge_path, target in _walk(graph, src_node, op):
+            path_edge_ids = frozenset(_base_edge_id(e.id) for e in edge_path)
+            if used_edges and (used_edges & path_edge_ids):
+                continue
             if op.to_label is not None and target.label != op.to_label:
                 continue
             if not _matches_inline_filters(target, op.to_inline_filters):
@@ -111,6 +119,7 @@ def _expand(op: ExpandOp, rows: Iterable[dict], graph: PropertyGraph) -> Iterato
             if op.to_var in new_row and new_row[op.to_var] != target:
                 continue
             new_row[op.to_var] = target
+            new_row["__used_edges__"] = used_edges | path_edge_ids
             if op.edge_var:
                 if not edge_path:
                     continue

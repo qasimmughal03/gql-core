@@ -18,20 +18,29 @@ import re
 from benchmark.tck.fixture_loader import _parse_props
 
 
+from lark.exceptions import LarkError
+from gql_core.query.semantic import SemanticError
+
+
 def _normalize_cell_for_cmp(actual: Any, expected: Any) -> bool:
     """Compare an actual GQL-Core binding value with expected TCK table cell value."""
     if expected is None:
         return actual is None
     if isinstance(expected, bool):
-        return actual is expected
-    if isinstance(expected, (int, float)):
+        return isinstance(actual, bool) and actual is expected
+    if isinstance(expected, int):
+        if isinstance(actual, bool):
+            return False
+        if isinstance(actual, int):
+            return actual == expected
+        if isinstance(actual, float) and actual.is_integer():
+            return int(actual) == expected
+        return False
+    if isinstance(expected, float):
+        if isinstance(actual, bool):
+            return False
         if isinstance(actual, (int, float)):
             return abs(float(actual) - float(expected)) < 1e-6
-        if isinstance(actual, str):
-            try:
-                return abs(float(actual) - float(expected)) < 1e-6
-            except ValueError:
-                return False
         return False
 
     # Relationship comparison
@@ -65,39 +74,41 @@ def _normalize_cell_for_cmp(actual: Any, expected: Any) -> bool:
         return False
 
     if isinstance(expected, str):
-        return str(actual) == expected
+        return isinstance(actual, str) and actual == expected
 
     return actual == expected
 
 
 def _match_row(actual_row: dict[str, Any], expected_row: dict[str, Any], col_names: list[str]) -> bool:
-    """Check if actual_row matches expected_row across expected columns."""
-    act_values = list(actual_row.values())
-    exp_values = list(expected_row.values())
+    """Strict key-based column matching between actual and expected row."""
+    # Length of projected row must match expected row
+    if len(actual_row) != len(expected_row):
+        return False
 
-    # Try key-based matching first
-    key_match = True
-    for k, exp_val in expected_row.items():
-        # Match k directly, or k without prefix ('a.id' -> 'id')
-        matched = False
-        candidates = [k, k.split(".")[-1], k.replace(".", "_")]
+    used_actual_keys: set[str] = set()
+
+    for exp_col, exp_val in expected_row.items():
+        candidates = [exp_col]
+        if "." in exp_col:
+            candidates.append(exp_col.split(".")[-1])
+            candidates.append(exp_col.replace(".", "_"))
+        if "(" in exp_col:
+            clean_agg = exp_col.replace("(", "_").replace(")", "").replace("*", "")
+            candidates.append(clean_agg)
+            candidates.append(exp_col.split("(")[0])
+
+        matched_key = None
         for c in candidates:
-            if c in actual_row:
+            if c in actual_row and c not in used_actual_keys:
                 if _normalize_cell_for_cmp(actual_row[c], exp_val):
-                    matched = True
+                    matched_key = c
                     break
-        if not matched:
-            key_match = False
-            break
-    if key_match:
-        return True
 
-    # Fall back to positional matching if row lengths match
-    if len(act_values) == len(exp_values):
-        if all(_normalize_cell_for_cmp(a, e) for a, e in zip(act_values, exp_values)):
-            return True
+        if matched_key is None:
+            return False
+        used_actual_keys.add(matched_key)
 
-    return False
+    return len(used_actual_keys) == len(expected_row)
 
 
 def run_scenario(scenario: TCKScenario) -> dict[str, Any]:
@@ -125,7 +136,7 @@ def run_scenario(scenario: TCKScenario) -> dict[str, Any]:
         }
 
     # 2. Check for expected syntax or semantic errors
-    if scenario.expected_kind in ("syntax_error", "semantic_error"):
+    if scenario.expected_kind == "syntax_error":
         try:
             graph = PropertyGraph()
             run_query(scenario.query, graph)
@@ -134,7 +145,16 @@ def run_scenario(scenario: TCKScenario) -> dict[str, Any]:
                 "feature": scenario.feature,
                 "name": scenario.name,
                 "status": "failed",
-                "reason": f"Expected {scenario.expected_kind} but query succeeded",
+                "reason": "Expected syntax_error but query succeeded without error",
+                "query": scenario.query,
+            }
+        except (LarkError, SemanticError) as e:
+            return {
+                "scenario_id": scenario.scenario_id,
+                "feature": scenario.feature,
+                "name": scenario.name,
+                "status": "passed",
+                "reason": f"Correctly raised compile-time validation error: {type(e).__name__} ({e})",
                 "query": scenario.query,
             }
         except Exception as e:
@@ -142,8 +162,41 @@ def run_scenario(scenario: TCKScenario) -> dict[str, Any]:
                 "scenario_id": scenario.scenario_id,
                 "feature": scenario.feature,
                 "name": scenario.name,
+                "status": "failed",
+                "reason": f"Expected syntax/compile-time error, but unhandled runtime exception occurred: {type(e).__name__}: {e}",
+                "query": scenario.query,
+            }
+
+    if scenario.expected_kind == "semantic_error":
+        try:
+            graph = PropertyGraph()
+            for create_stmt in scenario.background_create + scenario.scenario_create:
+                load_cypher_create_fixture(create_stmt, graph)
+            run_query(scenario.query, graph)
+            return {
+                "scenario_id": scenario.scenario_id,
+                "feature": scenario.feature,
+                "name": scenario.name,
+                "status": "failed",
+                "reason": "Expected semantic_error but query succeeded without error",
+                "query": scenario.query,
+            }
+        except SemanticError as e:
+            return {
+                "scenario_id": scenario.scenario_id,
+                "feature": scenario.feature,
+                "name": scenario.name,
                 "status": "passed",
-                "reason": f"Correctly raised {type(e).__name__}: {str(e)[:100]}",
+                "reason": f"Correctly raised semantic validation error: {e}",
+                "query": scenario.query,
+            }
+        except Exception as e:
+            return {
+                "scenario_id": scenario.scenario_id,
+                "feature": scenario.feature,
+                "name": scenario.name,
+                "status": "failed",
+                "reason": f"Expected semantic error, but got {type(e).__name__}: {e}",
                 "query": scenario.query,
             }
 

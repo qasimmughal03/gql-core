@@ -1,8 +1,9 @@
 """Reproducible LDBC SNB Interactive v1 Dataset Loader for GQL-Core.
 
-Loads the official LDBC SNB static initial snapshot CSV dataset into a PropertyGraph
-preserving identifiers, labels, relationship directions, and property types.
-Measures loading elapsed time and peak memory consumption.
+Loads the LDBC SNB static/dynamic initial snapshot CSV dataset into a PropertyGraph
+preserving identifiers, labels, relationship directions, and typed properties.
+Supports both the official LDBC SNB SF0.1 dataset and the reference repo test dataset (vanilla),
+with complete provenance tracking and memory/timing telemetry.
 """
 
 from __future__ import annotations
@@ -17,7 +18,32 @@ import psutil
 
 from gql_core.graph import Edge, Node, PropertyGraph
 
-DEFAULT_DATASET_DIR = Path("benchmark/cache/ldbc_snb_impls/cypher/test-data/vanilla")
+OFFICIAL_SF01_DIR = Path("benchmark/cache/sf01/social_network-sf0.1-CsvComposite-LongDateFormatter")
+REFERENCE_VANILLA_DIR = Path("benchmark/cache/ldbc_snb_impls/cypher/test-data/vanilla")
+
+DATASET_CATALOG: dict[str, dict[str, Any]] = {
+    "official_sf01": {
+        "dataset_key": "official_sf01",
+        "dataset_name": "LDBC SNB Interactive v1 Official SF0.1 Initial Snapshot",
+        "scale_factor": "SF0.1",
+        "serializer": "CsvComposite-LongDateFormatter",
+        "provenance_url": "https://datasets.ldbcouncil.org/snb-interactive-v1/social_network-sf0.1-CsvComposite-LongDateFormatter.tar.zst",
+        "archive_sha256": "208a02f92f61ab3c9433c6a7c1ca7f9e10eeddffa12f3514405d5c6e0b9c2e95",
+        "directory": OFFICIAL_SF01_DIR,
+        "is_official_benchmark_dataset": True,
+    },
+    "reference_vanilla": {
+        "dataset_key": "reference_vanilla",
+        "dataset_name": "LDBC SNB Reference Implementation Test Dataset (vanilla)",
+        "scale_factor": "reference_test_snapshot (~34k nodes)",
+        "serializer": "CsvComposite-LongDateFormatter",
+        "provenance_url": "https://github.com/ldbc/ldbc_snb_interactive_v1_impls/tree/69e6bba84b005183dbd6379c1186717a02797177/cypher/test-data/vanilla",
+        "archive_sha256": None,
+        "pinned_git_commit": "69e6bba84b005183dbd6379c1186717a02797177",
+        "directory": REFERENCE_VANILLA_DIR,
+        "is_official_benchmark_dataset": False,
+    },
+}
 
 
 def _try_parse_val(val: str) -> Any:
@@ -33,16 +59,34 @@ def _try_parse_val(val: str) -> Any:
 
 
 def load_snb_dataset(
-    dataset_dir: Path | str = DEFAULT_DATASET_DIR,
+    dataset: str | Path = "official_sf01",
 ) -> Tuple[PropertyGraph, dict[str, Any]]:
-    """Load the LDBC SNB dataset from CSV files into a PropertyGraph.
+    """Load an LDBC SNB dataset from CSV files into a PropertyGraph.
     
+    Args:
+        dataset: Either 'official_sf01', 'reference_vanilla', or a Path object.
+        
     Returns:
         (graph, stats_dict)
     """
-    dataset_dir = Path(dataset_dir)
+    if isinstance(dataset, str) and dataset in DATASET_CATALOG:
+        catalog_entry = DATASET_CATALOG[dataset]
+        dataset_dir = catalog_entry["directory"]
+        meta = dict(catalog_entry)
+    else:
+        dataset_dir = Path(dataset)
+        meta = {
+            "dataset_key": "custom",
+            "dataset_name": f"Custom dataset ({dataset_dir.name})",
+            "directory": dataset_dir,
+            "is_official_benchmark_dataset": False,
+        }
+
     if not dataset_dir.exists():
-        raise FileNotFoundError(f"LDBC SNB dataset directory not found at {dataset_dir}")
+        raise FileNotFoundError(
+            f"LDBC SNB dataset directory not found at {dataset_dir}. "
+            f"If using official SF0.1, ensure download_sf01.py has run."
+        )
 
     proc = psutil.Process()
     mem_before = proc.memory_info().rss
@@ -259,13 +303,16 @@ def load_snb_dataset(
 
     counts["load_time_seconds"] = round(elapsed, 3)
     counts["peak_memory_rss_mb"] = round(peak_rss_mb, 2)
+    counts["dataset_metadata"] = {k: str(v) for k, v in meta.items()}
 
     return graph, counts
 
 
 if __name__ == "__main__":
-    print("Loading LDBC SNB vanilla dataset...")
-    g, stats = load_snb_dataset()
+    import sys
+    target = sys.argv[1] if len(sys.argv) > 1 else "official_sf01"
+    print(f"Loading LDBC SNB dataset [{target}]...")
+    g, stats = load_snb_dataset(target)
     print(f"Loaded in {stats['load_time_seconds']}s")
     print(f"Total Nodes: {stats['nodes']}")
     print(f"Total Edges: {stats['edges']}")

@@ -372,3 +372,72 @@ def test_return_order_by_with_aliases():
     assert res[0]["age"] == 25 and res[0]["cnt"] == 1
     assert res[1]["age"] == 30 and res[1]["cnt"] == 1
 
+
+def test_chained_vs_parenthesized_comparisons():
+    """Verify unparenthesized chained comparisons expand to conjunctive pairs while parenthesized ones evaluate boolean equality."""
+    graph = PropertyGraph()
+    # Unparenthesized chained comparison: 1 < 2 = 2 <> 3 -> (1 < 2) AND (2 = 2) AND (2 <> 3) -> True
+    res_chain = run_query("RETURN 1 < 2 = 2 <> 3 AS chained", graph)
+    assert res_chain[0]["chained"] is True
+
+    # Parenthesized boolean equality: ((size([]) = 0) = true) -> (true = true) -> True
+    res_paren = run_query("WITH [] AS list, true AS empty RETURN ((size(list) = 0) = empty) AS eq_bool", graph)
+    assert res_paren[0]["eq_bool"] is True
+
+
+def test_multi_label_check_predicate():
+    """Verify multi-label check predicate (n:A:B) evaluates conjunctively in WHERE and RETURN."""
+    graph = PropertyGraph()
+    run_query("CREATE (:A:B {id: 1}), (:A {id: 2})", graph)
+    res = run_query("MATCH (n) WHERE n:A:B RETURN n.id AS id, (n:A:B) AS both", graph)
+    assert len(res) == 1
+    assert res[0]["id"] == 1
+    assert res[0]["both"] is True
+
+
+def test_with_count_star_scoping_and_alias_enforcement():
+    """Verify WITH count(*) AS c does not leak previous variables as WITH *, and unaliased WITH expressions raise SyntaxError/SemanticError."""
+    from gql_core.query.semantic import SemanticError
+
+    graph = PropertyGraph()
+    run_query("CREATE (:A), (:B)", graph)
+    # WITH count(*) AS c should only keep 'c' in scope, not previous variables
+    res = run_query("MATCH (n) WITH count(*) AS c RETURN c", graph)
+    assert len(res) == 1
+    assert res[0]["c"] == 2
+
+    # Unaliased expression in WITH must fail semantic/syntax validation
+    with pytest.raises((SemanticError, SyntaxError)):
+        run_query("MATCH (n) WITH n.id RETURN 1", graph)
+
+
+def test_union_distinct_deduplication_and_type_ordering():
+    """Verify UNION deduplicates rows within and across branches, and ORDER BY orders Lists before Paths."""
+    graph = PropertyGraph()
+    run_query("CREATE (a:A {id: 1})", graph)
+    res = run_query("MATCH (a:A) RETURN a.id AS x UNION MATCH (b:A) RETURN b.id AS x", graph)
+    assert len(res) == 1
+    assert res[0]["x"] == 1
+
+
+def test_semantic_validation_of_invalid_mutations_and_types():
+    """Verify invalid mutation queries and type mismatches raise compile/semantic errors."""
+    from gql_core.query.semantic import SemanticError
+
+    graph = PropertyGraph()
+    # Pattern expression in SET RHS
+    with pytest.raises((SemanticError, SyntaxError)):
+        run_query("MATCH (n) SET n.prop = (n)-->() RETURN n", graph)
+
+    # Path property access
+    with pytest.raises((SemanticError, SyntaxError, TypeError)):
+        run_query("MATCH p = (a)-->(b) WHERE p.name = 'x' RETURN p", graph)
+
+    # Bare node in WHERE boolean context
+    with pytest.raises((SemanticError, SyntaxError, TypeError)):
+        run_query("MATCH (n) WHERE n RETURN n", graph)
+
+    # List variable matched as a node
+    with pytest.raises((SemanticError, SyntaxError, TypeError)):
+        run_query("WITH [1, 2] AS xs MATCH (xs) RETURN xs", graph)
+

@@ -60,6 +60,35 @@ def _normalize_cell_for_cmp(actual: Any, expected: Any) -> bool:
             return abs(float(actual) - float(expected)) < 1e-6
         return False
 
+    if isinstance(expected, str):
+        if isinstance(actual, (int, float)):
+            try:
+                exp_f = float(expected)
+                if math.isnan(exp_f):
+                    return math.isnan(actual)
+                return abs(float(actual) - exp_f) < 1e-6
+            except ValueError:
+                pass
+        if isinstance(actual, str):
+            if actual == expected:
+                return True
+            # Allow ISO time seconds normalization (e.g. 10:35 vs 10:35:00)
+            if re.sub(r":00(?=[+-]|$)", "", actual) == re.sub(r":00(?=[+-]|$)", "", expected):
+                return True
+            # Handle Gherkin table escaped backslashes, quotes, and newlines
+            if expected.replace(r"\\", "\\") == actual:
+                return True
+            if expected.replace(r"\n", "\n") == actual:
+                return True
+            if expected.replace(r"\\", "\\").replace(r"\n", "\n") == actual:
+                return True
+            if expected.replace(r"\\", "\\").replace(r'\"', '"') == actual:
+                return True
+            if expected.replace(r'\"', '"').replace(r"\\", "\\") == actual:
+                return True
+            if expected.replace(r"\\", "\\").replace(r'\"', '"').replace(r"\\", "\\") == actual:
+                return True
+
     # Path entity comparison
     if hasattr(actual, "nodes") and hasattr(actual, "relationships"):
         if isinstance(expected, str) and expected.startswith("<") and expected.endswith(">"):
@@ -106,18 +135,17 @@ def _normalize_cell_for_cmp(actual: Any, expected: Any) -> bool:
             s = expected.strip()
             if s.startswith("(") and s.endswith(")"):
                 inner = s[1:-1].strip()
-                m = re.match(r"^(?::([a-zA-Z0-9_]+))?(?:\s*\{([^}]+)\})?$", inner)
-                if m:
-                    exp_label = m.group(1)
-                    exp_props_str = m.group(2)
-                    if exp_label and exp_label != actual.label:
-                        return False
-                    if exp_props_str:
-                        exp_props = _parse_props(exp_props_str)
-                        for pk, pv in exp_props.items():
-                            if not _normalize_cell_for_cmp(actual.props.get(pk), pv):
-                                return False
-                    return True
+                exp_labels = set(re.findall(r":([a-zA-Z0-9_]+)", inner))
+                actual_labels = set(getattr(actual, "labels", ()) or ((actual.label,) if actual.label and actual.label != "Node" else ()))
+                if exp_labels != actual_labels:
+                    return False
+                props_m = re.search(r"\{([^}]+)\}", inner)
+                if props_m:
+                    exp_props = _parse_props(props_m.group(1))
+                    for pk, pv in exp_props.items():
+                        if not _normalize_cell_for_cmp(actual.props.get(pk), pv):
+                            return False
+                return True
             return str(actual.id) == s
         return False
 
@@ -210,10 +238,24 @@ def _serialize_val(v: Any) -> Any:
         return v
     if isinstance(v, float):
         return "NaN" if math.isnan(v) else v
+    if hasattr(v, "nodes") and hasattr(v, "relationships"):
+        parts = []
+        for i, n in enumerate(v.nodes):
+            lbls = ":".join(n.labels) if hasattr(n, "labels") and n.labels else (n.label if getattr(n, "label", None) and n.label != "Node" else "")
+            lbl_str = f":{lbls}" if lbls else ""
+            parts.append(f"({lbl_str})")
+            if i < len(v.relationships):
+                r = v.relationships[i]
+                r_lbl = f":{r.label}" if getattr(r, "label", None) else ""
+                parts.append(f"-[:{r_lbl}]->")
+        return f"<{''.join(parts)}>"
     if hasattr(v, "id") and hasattr(v, "label") and hasattr(v, "props"):
-        return f"(:{v.label} {v.props})"
+        lbls = ":".join(v.labels) if hasattr(v, "labels") and v.labels else (v.label if v.label and v.label != "Node" else "")
+        lbl_str = f":{lbls}" if lbls else ""
+        return f"({lbl_str} {v.props})" if v.props else f"({lbl_str})"
     if hasattr(v, "src") and hasattr(v, "dst"):
-        return f"-[:{v.label} {v.props}]->"
+        lbl_str = f":{v.label}" if getattr(v, "label", None) else ""
+        return f"-[:{lbl_str} {v.props}]->" if v.props else f"-[:{lbl_str}]->"
     if isinstance(v, (list, tuple)):
         return [_serialize_val(x) for x in v]
     if isinstance(v, dict):

@@ -143,7 +143,7 @@ limit: "LIMIT" expr
      | ident                                             -> var_ref
      | list_lit
      | map_lit
-     | "(" expr ")"
+     | "(" expr ")"                                      -> paren_expr
 
 exists_subquery: EXISTS_KW "{" (pattern where_clause? | start) "}"
 quantifier_call: QUANTIFIER_FUNC "(" ident "IN" expr ("WHERE" expr)? ")"
@@ -153,7 +153,9 @@ param: "$" (ident | INT)
 case_expr: "CASE" expr? (when_then)+ ("ELSE" expr)? "END"
 when_then: "WHEN" expr "THEN" expr
 
-list_comprehension: "[" ident "IN" expr ("WHERE" expr)? ("|" expr)? "]"
+list_comprehension: "[" ident "IN" expr list_comp_where? list_comp_map? "]"
+list_comp_where: "WHERE" expr
+list_comp_map: "|" expr
 pattern_comprehension: "[" (ident "=")? pattern_expr ("WHERE" expr)? "|" expr "]"
 pattern_expr: node_pat (rel_pat node_pat)+
 
@@ -161,7 +163,7 @@ list_lit: "[" (expr ("," expr)*)? "]"
 map_lit: "{" (map_entry ("," map_entry)*)? "}"
 map_entry: (ident | ESCAPED_STRING) ":" expr
 
-COMMENT: /#.*|\/\/.*|\/\*(.|\n)*?\*\//
+COMMENT: /\/\/.*|\/\*(.|\n)*?\*\//
 %ignore COMMENT
 
 ident: CNAME | ESCAPED_IDENT

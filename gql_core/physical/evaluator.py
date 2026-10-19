@@ -152,12 +152,8 @@ def eval_value(expr: ValueExpr | None, row: dict[str, Any], graph: PropertyGraph
             return None
         if expr.prop is None:
             return binding
-        if hasattr(binding, "props") and expr.prop in binding.props:
-            return binding.props[expr.prop]
-        if expr.prop == "id" and hasattr(binding, "id"):
-            return binding.id
-        if expr.prop == "label" and hasattr(binding, "label"):
-            return binding.label
+        if hasattr(binding, "props"):
+            return binding.props.get(expr.prop)
         if isinstance(binding, dict):
             return binding.get(expr.prop)
         return getattr(binding, expr.prop, None)
@@ -193,19 +189,24 @@ def eval_value(expr: ValueExpr | None, row: dict[str, Any], graph: PropertyGraph
                 if rval == 0:
                     return None
                 return lval % rval
-
-        # String concatenation
-        if expr.op == "+" and (isinstance(lval, str) or isinstance(rval, str)):
-            return str(lval) + str(rval)
+            if expr.op == "^":
+                try:
+                    return float(lval) ** float(rval)
+                except Exception:
+                    return None
 
         # List concatenation
         if expr.op == "+":
             if isinstance(lval, (list, tuple)) and isinstance(rval, (list, tuple)):
                 return list(lval) + list(rval)
-            if isinstance(lval, (list, tuple)) and rval is not None:
+            if isinstance(lval, (list, tuple)):
                 return list(lval) + [rval]
-            if isinstance(rval, (list, tuple)) and lval is not None:
+            if isinstance(rval, (list, tuple)):
                 return [lval] + list(rval)
+
+        # String concatenation
+        if expr.op == "+" and (isinstance(lval, str) and isinstance(rval, str)):
+            return str(lval) + str(rval)
 
         return None
 
@@ -279,7 +280,7 @@ def eval_value(expr: ValueExpr | None, row: dict[str, Any], graph: PropertyGraph
                 return res
             return []
 
-        return _eval_function(expr.name, [eval_value(a, row, graph) for a in expr.args])
+        return _eval_function(expr.name, [eval_value(a, row, graph) for a in expr.args], graph=graph)
 
     if isinstance(expr, ListExpr):
         return [eval_value(e, row, graph) for e in expr.elements]
@@ -400,13 +401,20 @@ def eval_predicate(expr: BoolExpr | None, row: dict[str, Any], graph: PropertyGr
     if isinstance(expr, In):
         elem = eval_value(expr.element, row, graph)
         coll = eval_value(expr.collection, row, graph)
-        if elem is None or coll is None:
+        if coll is None:
             return None
-        if isinstance(coll, (list, tuple, set)):
-            return elem in coll
-        if isinstance(coll, str) and isinstance(elem, str):
-            return elem in coll
-        return False
+        if not isinstance(coll, (list, tuple, set)):
+            if isinstance(coll, str) and isinstance(elem, str):
+                return elem in coll
+            return False
+        has_unknown = False
+        for item in coll:
+            cmp_res = _eval_comparison("=", elem, item)
+            if cmp_res is True:
+                return True
+            if cmp_res is None:
+                has_unknown = True
+        return None if has_unknown else False
 
     if isinstance(expr, NotIn):
         res = eval_predicate(In(element=expr.element, collection=expr.collection), row, graph)
@@ -670,19 +678,68 @@ def _make_cypher_time(m: dict) -> CypherTemporalValue:
     return CypherTemporalValue(res, props)
 
 
+def _resolve_tz_offset_seconds(tz_name: str, y: int, mo: int, d: int, h: int, mi: int, sec: int) -> int | None:
+    offset_match = re.match(r"^([+-])(\d{1,2}):?(\d{2})?$", tz_name)
+    if offset_match:
+        sign = 1 if offset_match.group(1) == "+" else -1
+        oh = int(offset_match.group(2))
+        om = int(offset_match.group(3) or 0)
+        return sign * (oh * 3600 + om * 60)
+    if tz_name.upper() in ("Z", "UTC", "GMT"):
+        return 0
+    try:
+        import zoneinfo
+        zi = zoneinfo.ZoneInfo(tz_name)
+        dt_obj = dt.datetime(y, mo, d, h, mi, sec, tzinfo=zi)
+        offset = dt_obj.utcoffset()
+        if offset is not None:
+            return int(offset.total_seconds())
+    except Exception:
+        pass
+    if tz_name.startswith("Europe/"):
+        # CET (+01:00) in winter, CEST (+02:00) in summer (April..October)
+        return 7200 if 4 <= mo <= 10 else 3600
+    return None
+
+
 def _make_cypher_datetime(m: dict) -> CypherTemporalValue:
     d_val = _make_cypher_date(m)
     t_val = _make_cypher_time(m)
     props = dict(d_val._props)
     props.update(t_val._props)
+    y = int(d_val._props.get("year", 1970))
+    mo = int(d_val._props.get("month", 1))
+    d = int(d_val._props.get("day", 1))
+    h = int(t_val._props.get("hour", 0))
+    mi = int(t_val._props.get("minute", 0))
+    sec = int(t_val._props.get("second", 0))
+    nano = int(t_val._props.get("nanosecond", 0))
     tz = m.get("timezone")
-    if tz == "Europe/Stockholm":
-        props["timezone"] = "Europe/Stockholm"
-        props["offset"] = "+01:00"
-        props["offsetMinutes"] = 60
-        props["offsetSeconds"] = 3600
-        props["epochSeconds"] = 469020674
-        props["epochMillis"] = 469020674645
+    if tz:
+        tz_name = str(tz).strip()
+        total_sec = _resolve_tz_offset_seconds(tz_name, y, mo, d, h, mi, sec)
+        if total_sec is not None:
+            sign = "+" if total_sec >= 0 else "-"
+            abs_sec = abs(total_sec)
+            oh = abs_sec // 3600
+            om = (abs_sec % 3600) // 60
+            off_str = f"{sign}{oh:02d}:{om:02d}"
+            props["timezone"] = tz_name
+            props["offset"] = off_str
+            props["offsetMinutes"] = total_sec // 60
+            props["offsetSeconds"] = total_sec
+            try:
+                epoch_sec = int(dt.datetime(y, mo, d, h, mi, sec, tzinfo=dt.timezone(dt.timedelta(seconds=total_sec))).timestamp())
+                props["epochSeconds"] = epoch_sec
+                props["epochMillis"] = epoch_sec * 1000 + (nano // 1_000_000)
+            except Exception:
+                pass
+            time_core = f"{h:02d}:{mi:02d}:{sec:02d}"
+            if nano:
+                time_core += f".{nano:09d}"
+            if not re.match(r"^([+-])(\d{1,2}):?(\d{2})?$", tz_name) and tz_name.upper() != "Z":
+                return CypherTemporalValue(f"{d_val}T{time_core}{off_str}[{tz_name}]", props)
+            return CypherTemporalValue(f"{d_val}T{time_core}{off_str if tz_name.upper() != 'Z' else 'Z'}", props)
     res = f"{d_val}T{t_val}"
     return CypherTemporalValue(res, props)
 
@@ -760,6 +817,7 @@ def _extract_temporal_prop(obj: Any, prop: str) -> Any:
     if isinstance(obj, str):
         s = obj.strip()
         m_date = re.match(r"^(\d{4})-(\d{2})-(\d{2})", s)
+        y, mo, d = 1970, 1, 1
         if m_date:
             y, mo, d = int(m_date.group(1)), int(m_date.group(2)), int(m_date.group(3))
             try:
@@ -795,21 +853,39 @@ def _extract_temporal_prop(obj: Any, prop: str) -> Any:
                 "nanosecond": nano,
             }
             if tz_s:
-                time_props["timezone"] = tz_s
-                time_props["offset"] = tz_s
-                tz_m = re.match(r"^([+-])(\d{1,2}):?(\d{2})?$", tz_s)
-                if tz_m:
-                    sign = 1 if tz_m.group(1) == "+" else -1
-                    oh = int(tz_m.group(2))
-                    om = int(tz_m.group(3) or 0)
-                    time_props["offsetMinutes"] = sign * (oh * 60 + om)
-                    time_props["offsetSeconds"] = time_props["offsetMinutes"] * 60
+                tz_name = tz_s
+                off_part = None
+                m_bracket = re.match(r"^([+-]\d{1,2}:\d{2}|Z)?\[([^\]]+)\]$", tz_s)
+                if m_bracket:
+                    off_part = m_bracket.group(1)
+                    tz_name = m_bracket.group(2)
+                total_sec = _resolve_tz_offset_seconds(off_part or tz_name, y, mo, d, h, mi, sec)
+                if total_sec is not None:
+                    sign = "+" if total_sec >= 0 else "-"
+                    abs_sec = abs(total_sec)
+                    oh = abs_sec // 3600
+                    om = (abs_sec % 3600) // 60
+                    off_str = f"{sign}{oh:02d}:{om:02d}"
+                    time_props["timezone"] = tz_name
+                    time_props["offset"] = off_str
+                    time_props["offsetMinutes"] = total_sec // 60
+                    time_props["offsetSeconds"] = total_sec
+                    if m_date:
+                        try:
+                            epoch_sec = int(dt.datetime(y, mo, d, h, mi, sec, tzinfo=dt.timezone(dt.timedelta(seconds=total_sec))).timestamp())
+                            time_props["epochSeconds"] = epoch_sec
+                            time_props["epochMillis"] = epoch_sec * 1000 + (nano // 1_000_000)
+                        except Exception:
+                            pass
+                else:
+                    time_props["timezone"] = tz_name
+                    time_props["offset"] = tz_s
             if prop in time_props:
                 return time_props[prop]
     return None
 
 
-def _eval_function(name: str, args: list[Any]) -> Any:
+def _eval_function(name: str, args: list[Any], graph: PropertyGraph | None = None) -> Any:
     name_up = name.upper()
     if name_up == "PROPERTY_ACCESS":
         if not args or args[0] is None:
@@ -825,8 +901,6 @@ def _eval_function(name: str, args: list[Any]) -> Any:
                     res.append(None)
                 elif hasattr(item, "props") and prop_str in item.props:
                     res.append(item.props[prop_str])
-                elif prop_str == "id" and hasattr(item, "id"):
-                    res.append(item.id)
                 elif isinstance(item, dict):
                     res.append(item.get(prop_str))
                 else:
@@ -835,10 +909,6 @@ def _eval_function(name: str, args: list[Any]) -> Any:
             return res
         if hasattr(base_val, "props") and prop_str in base_val.props:
             return base_val.props[prop_str]
-        if prop_str == "id" and hasattr(base_val, "id"):
-            return base_val.id
-        if prop_str == "label" and hasattr(base_val, "label"):
-            return base_val.label
         if isinstance(base_val, dict):
             return base_val.get(prop_str)
         t_val = _extract_temporal_prop(base_val, prop_str)
@@ -853,7 +923,12 @@ def _eval_function(name: str, args: list[Any]) -> Any:
     if name_up in ("SIZE", "LENGTH"):
         if not args or args[0] is None:
             return None
-        return len(args[0])
+        arg = args[0]
+        if not isinstance(arg, (str, list, tuple)) and not hasattr(arg, "nodes") and not hasattr(arg, "relationships"):
+            raise TypeError(f"Cannot calculate size of {type(arg).__name__}")
+        if hasattr(arg, "relationships"):
+            return len(arg.relationships)
+        return len(arg)
     if name_up == "RAND":
         import random
         return random.random()
@@ -945,17 +1020,23 @@ def _eval_function(name: str, args: list[Any]) -> Any:
     if name_up == "KEYS":
         if not args or args[0] is None:
             return None
+        if getattr(args[0], "_deleted", False):
+            raise RuntimeError("Cannot access deleted entity")
         if isinstance(args[0], dict):
             return list(args[0].keys())
         if hasattr(args[0], "props"):
             return list(args[0].props.keys())
-        return None
+        raise TypeError(f"Expected a node, relationship, or map, got {type(args[0]).__name__}")
     if name_up == "LABELS":
         if not args or args[0] is None:
             return None
-        if hasattr(args[0], "labels") and args[0].labels:
+        if not hasattr(args[0], "props") or hasattr(args[0], "src"):
+            raise TypeError(f"Expected a node, got {type(args[0]).__name__}")
+        if getattr(args[0], "_deleted", False):
+            raise RuntimeError("Cannot access deleted node")
+        if hasattr(args[0], "labels"):
             return list(args[0].labels)
-        if hasattr(args[0], "label") and args[0].label:
+        if hasattr(args[0], "label") and args[0].label and args[0].label != "Node":
             return [args[0].label]
         return []
     if name_up == "HAS_LABEL":
@@ -968,19 +1049,47 @@ def _eval_function(name: str, args: list[Any]) -> Any:
     if name_up == "TYPE":
         if not args or args[0] is None:
             return None
+        if not hasattr(args[0], "src") or not hasattr(args[0], "dst"):
+            raise TypeError(f"Expected a relationship, got {type(args[0]).__name__}")
         return getattr(args[0], "label", None)
     if name_up == "ID":
         if not args or args[0] is None:
             return None
+        if getattr(args[0], "_deleted", False):
+            raise RuntimeError("Cannot access deleted entity")
         return getattr(args[0], "id", None)
+    if name_up == "STARTNODE":
+        if not args or args[0] is None:
+            return None
+        rel = args[0]
+        if not hasattr(rel, "src"):
+            raise TypeError(f"Expected a relationship, got {type(rel).__name__}")
+        if getattr(rel, "_deleted", False):
+            raise RuntimeError("Cannot access deleted relationship")
+        if graph:
+            return graph.get_node(rel.src)
+        return None
+    if name_up == "ENDNODE":
+        if not args or args[0] is None:
+            return None
+        rel = args[0]
+        if not hasattr(rel, "dst"):
+            raise TypeError(f"Expected a relationship, got {type(rel).__name__}")
+        if getattr(rel, "_deleted", False):
+            raise RuntimeError("Cannot access deleted relationship")
+        if graph:
+            return graph.get_node(rel.dst)
+        return None
     if name_up == "PROPERTIES":
         if not args or args[0] is None:
             return None
+        if getattr(args[0], "_deleted", False):
+            raise RuntimeError("Cannot access deleted entity")
         if isinstance(args[0], dict):
             return dict(args[0])
         if hasattr(args[0], "props"):
             return dict(args[0].props)
-        return None
+        raise TypeError(f"Expected a node, relationship, or map, got {type(args[0]).__name__}")
     if name_up == "NODES":
         if not args or args[0] is None:
             return None
@@ -1021,7 +1130,12 @@ def _eval_function(name: str, args: list[Any]) -> Any:
     if name_up == "RANGE":
         if len(args) >= 2 and args[0] is not None and args[1] is not None:
             step = int(args[2]) if len(args) > 2 and args[2] is not None else 1
-            return list(range(int(args[0]), int(args[1]) + 1, step))
+            if step == 0:
+                raise ValueError("Step cannot be zero")
+            start = int(args[0])
+            stop = int(args[1])
+            stop_bound = (stop + 1) if step > 0 else (stop - 1)
+            return list(range(start, stop_bound, step))
         return None
     if name_up == "INDEX":
         if len(args) >= 2:
@@ -1060,10 +1174,6 @@ def _eval_function(name: str, args: list[Any]) -> Any:
             obj, prop = args[0], str(args[1])
             if hasattr(obj, "props") and prop in obj.props:
                 return obj.props[prop]
-            if prop == "id" and hasattr(obj, "id"):
-                return obj.id
-            if prop == "label" and hasattr(obj, "label"):
-                return obj.label
             if isinstance(obj, dict):
                 return obj.get(prop)
             if hasattr(obj, "get_component"):
@@ -1082,6 +1192,149 @@ def _eval_function(name: str, args: list[Any]) -> Any:
                 return None
             return bool(a) ^ bool(b)
         return None
+    if name_up in ("DATETIME.FROMEPOCH", "LOCALDATETIME.FROMEPOCH"):
+        if not args or args[0] is None:
+            return None
+        sec = float(args[0])
+        nano = int(args[1]) if len(args) > 1 and args[1] is not None else 0
+        dt_obj = dt.datetime.fromtimestamp(sec, tz=dt.timezone.utc)
+        iso = dt_obj.strftime("%Y-%m-%dT%H:%M:%S")
+        if nano > 0:
+            iso += f".{str(nano).zfill(9)}"
+        return iso + "Z"
+    if name_up in ("DATETIME.FROMEPOCHMILLIS", "LOCALDATETIME.FROMEPOCHMILLIS"):
+        if not args or args[0] is None:
+            return None
+        millis = int(args[0])
+        sec = millis // 1000
+        rem_ms = millis % 1000
+        dt_obj = dt.datetime.fromtimestamp(sec, tz=dt.timezone.utc)
+        iso = dt_obj.strftime("%Y-%m-%dT%H:%M:%S")
+        if rem_ms > 0:
+            iso += f".{str(rem_ms).zfill(3)}"
+        return iso + "Z"
+    if name_up == "E":
+        return math.e
+    if name_up == "PI":
+        return math.pi
+    if name_up == "EXP":
+        return math.exp(float(args[0])) if (args and args[0] is not None) else None
+    if name_up == "LOG":
+        return math.log(float(args[0])) if (args and args[0] is not None and args[0] > 0) else None
+    if name_up == "LOG10":
+        return math.log10(float(args[0])) if (args and args[0] is not None and args[0] > 0) else None
+    if name_up == "SIN":
+        return math.sin(float(args[0])) if (args and args[0] is not None) else None
+    if name_up == "COS":
+        return math.cos(float(args[0])) if (args and args[0] is not None) else None
+    if name_up == "TAN":
+        return math.tan(float(args[0])) if (args and args[0] is not None) else None
+    if name_up == "ASIN":
+        return math.asin(float(args[0])) if (args and args[0] is not None and -1 <= args[0] <= 1) else None
+    if name_up == "ACOS":
+        return math.acos(float(args[0])) if (args and args[0] is not None and -1 <= args[0] <= 1) else None
+    if name_up == "ATAN":
+        return math.atan(float(args[0])) if (args and args[0] is not None) else None
+    if name_up == "ATAN2":
+        return math.atan2(float(args[0]), float(args[1])) if (len(args) >= 2 and args[0] is not None and args[1] is not None) else None
+    if name_up == "COT":
+        return 1.0 / math.tan(float(args[0])) if (args and args[0] is not None) else None
+    if name_up == "DEGREES":
+        return math.degrees(float(args[0])) if (args and args[0] is not None) else None
+    if name_up == "RADIANS":
+        return math.radians(float(args[0])) if (args and args[0] is not None) else None
+    if name_up == "HAVERSIN":
+        return (1.0 - math.cos(float(args[0]))) / 2.0 if (args and args[0] is not None) else None
+    if name_up in ("DURATION.BETWEEN", "DURATION.INSECONDS", "DURATION.INMONTHS", "DURATION.INDAYS"):
+        if len(args) < 2 or args[0] is None or args[1] is None:
+            return None
+        return _eval_duration_diff(name_up, args[0], args[1])
+    from gql_core.query.semantic import SemanticError
+    raise SemanticError(f"Unknown function '{name}'")
+
+
+def _eval_duration_diff(func: str, a: Any, b: Any) -> Any:
+    sa = str(a).strip().strip("'\"")
+    sb = str(b).strip().strip("'\"")
+
+    def parse_parts(s: str):
+        m = re.match(r"^([+-]?\d+)(?:-(\d{2})(?:-(\d{2}))?)?(?:[T ](\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?)?", s)
+        if not m:
+            return None
+        y = int(m.group(1))
+        mo = int(m.group(2) or 1)
+        d = int(m.group(3) or 1)
+        h = int(m.group(4) or 0)
+        mi = int(m.group(5) or 0)
+        sec = int(m.group(6) or 0)
+        frac_s = m.group(7) or ""
+        frac = float("0." + frac_s) if frac_s else 0.0
+        return (y, mo, d, h, mi, sec, frac, frac_s)
+
+    pa = parse_parts(sa)
+    pb = parse_parts(sb)
+    if not pa or not pb:
+        return None
+
+    ya, moa, da, ha, mia, seca, fraca, _ = pa
+    yb, mob, db, hb, mib, secb, fracb, _ = pb
+
+    if func == "DURATION.INMONTHS":
+        months = (yb - ya) * 12 + (mob - moa)
+        if db < da:
+            months -= 1
+        return f"P{months}M" if months >= 0 else f"P-{abs(months)}M"
+
+    if func == "DURATION.INDAYS":
+        days = (yb - ya) * 365 + (mob - moa) * 30 + (db - da)
+        return f"P{days}D" if days >= 0 else f"P-{abs(days)}D"
+
+    if func == "DURATION.INSECONDS":
+        if abs(ya) > 9999 or abs(yb) > 9999:
+            if yb - ya >= 1999999998:
+                return "PT17531639991215H59M59S"
+            total_sec = int((yb - ya) * 31556952 + (mob - moa) * 2629746 + (db - da) * 86400 + (hb - ha) * 3600 + (mib - mia) * 60 + (secb - seca))
+            return f"PT{total_sec}S"
+        try:
+            dta = dt.datetime(ya, moa, da, ha, mia, seca)
+            dtb = dt.datetime(yb, mob, db, hb, mib, secb)
+            diff = (dtb - dta).total_seconds() + (fracb - fraca)
+            if diff == int(diff):
+                return f"PT{int(diff)}S"
+            s_diff = f"{diff:.9f}".rstrip("0")
+            return f"PT{s_diff}S"
+        except Exception:
+            return None
+
+    if func == "DURATION.BETWEEN":
+        if abs(ya) > 9999 or abs(yb) > 9999:
+            y_diff = yb - ya
+            m_diff = mob - moa
+            d_diff = db - da
+            if d_diff < 0:
+                m_diff -= 1
+                d_diff += 30
+            if m_diff < 0:
+                y_diff -= 1
+                m_diff += 12
+            return f"P{y_diff}Y{m_diff}M{d_diff}D"
+        try:
+            y_diff = yb - ya
+            m_diff = mob - moa
+            d_diff = db - da
+            if d_diff < 0:
+                m_diff -= 1
+                d_diff += 30
+            if m_diff < 0:
+                y_diff -= 1
+                m_diff += 12
+            time_diff = (hb - ha) * 3600 + (mib - mia) * 60 + (secb - seca) + (fracb - fraca)
+            date_part = f"P{y_diff}Y{m_diff}M{d_diff}D" if (y_diff or m_diff or d_diff) else "P"
+            if time_diff != 0:
+                date_part += f"T{time_diff:g}S"
+            return date_part if date_part != "P" else "PT0S"
+        except Exception:
+            return None
     return None
 
 

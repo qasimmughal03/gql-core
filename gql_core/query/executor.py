@@ -83,7 +83,29 @@ def _is_pipeline_query(query: Query) -> bool:
                 return True
             if len(cl.patterns) > 1:
                 return True
+            for pat in cl.patterns:
+                for node in pat.nodes:
+                    if len(node.labels) > 1:
+                        return True
+                for rel in pat.rels:
+                    if rel.filters:
+                        return True
             if cl.where is not None:
+                def _has_param(e: Any) -> bool:
+                    from gql_core.ir import Parameter
+                    if isinstance(e, Parameter):
+                        return True
+                    if isinstance(e, Ref) and e.var.startswith("$"):
+                        return True
+                    if hasattr(e, "name") and str(e.name).startswith("$"):
+                        return True
+                    if hasattr(e, "args"):
+                        return any(_has_param(a) for a in e.args)
+                    if hasattr(e, "lhs") and hasattr(e, "rhs"):
+                        return _has_param(e.lhs) or _has_param(e.rhs)
+                    return False
+                if _has_param(cl.where):
+                    return True
                 if not isinstance(cl.where, Comparison):
                     return True
                 if isinstance(cl.where.rhs, Ref) or hasattr(cl.where.rhs, "var"):
@@ -175,12 +197,15 @@ def _union(op: UnionOp, rows: Iterable[dict], graph: PropertyGraph) -> list[dict
         if "ALL" in u_type.upper():
             out.extend(sub_rows)
         else:
-            seen = {_hashable_val(tuple(sorted(r.items()))) for r in out}
-            for r in sub_rows:
+            combined = out + sub_rows
+            seen = set()
+            dedup = []
+            for r in combined:
                 k = _hashable_val(tuple(sorted(r.items())))
                 if k not in seen:
                     seen.add(k)
-                    out.append(r)
+                    dedup.append(r)
+            out = dedup
     return out
 
 
@@ -467,11 +492,9 @@ def _read_ref(ref: Any, row: dict) -> Any:
             return binding
         if hasattr(binding, "props") and ref.prop in binding.props:
             return binding.props[ref.prop]
-        if ref.prop == "id" and hasattr(binding, "id"):
-            return binding.id
-        if ref.prop == "label" and hasattr(binding, "label"):
-            return binding.label
-        return None
+        if isinstance(binding, dict):
+            return binding.get(ref.prop)
+        return getattr(binding, ref.prop, None)
 
     from gql_core.ir import (
         ValueExpr, BoolExpr,
@@ -568,7 +591,7 @@ def _project(op: ProjectOp, rows: Iterable[dict], graph: PropertyGraph | None = 
     else:
         if op.order_by is not None:
             materialized = _sort_rows(materialized, op.order_by, alias_map)
-        out = [_project_row(op.projections, row) for row in materialized]
+        out = [_project_row(op.projections, row, graph) for row in materialized]
     if getattr(op, "distinct", False):
         seen: set = set()
         deduped: list[dict] = []
@@ -629,7 +652,7 @@ class Row(dict):
         return True
 
 
-def _project_row(projections: tuple[Projection, ...], row: dict) -> Row:
+def _project_row(projections: tuple[Projection, ...], row: dict, graph: PropertyGraph | None = None) -> Row:
     out: dict = {}
     for proj in projections:
         if (isinstance(proj.expr, Ref) and proj.expr.var == "*") or proj.raw_expr == "*":
@@ -638,7 +661,7 @@ def _project_row(projections: tuple[Projection, ...], row: dict) -> Row:
                     out[k] = v
         else:
             key = proj.alias or proj.raw_expr or _default_key(proj)
-            out[key] = _read_ref(proj.expr, row)
+            out[key] = _read_ref_full(proj.expr, row, graph)
     return Row(out)
 
 
@@ -784,8 +807,66 @@ def _eval_expr_with_aggs(
     graph: PropertyGraph | None = None,
     group_row: dict | None = None,
 ) -> Any:
-    from gql_core.ir import AggregateExpr, FunctionCall, Arithmetic
-    from gql_core.physical.evaluator import _eval_function
+    from gql_core.ir import (
+        AggregateExpr,
+        FunctionCall,
+        Arithmetic,
+        Comparison as IRComparison,
+        And as IRAnd,
+        Or as IROr,
+        Not as IRNot,
+        ListExpr,
+        MapExpr,
+        CaseExpr,
+    )
+    from gql_core.query.ast import Comparison, And, Or, Not
+    from gql_core.physical.evaluator import _eval_function, _eval_comparison
+
+    if isinstance(expr, (Comparison, IRComparison)):
+        lval = _eval_expr_with_aggs(expr.lhs, rows, graph, group_row)
+        rval = _eval_expr_with_aggs(expr.rhs, rows, graph, group_row)
+        return _eval_comparison(expr.op, lval, rval)
+
+    if isinstance(expr, (And, IRAnd)):
+        children = expr.children if hasattr(expr, "children") else getattr(expr, "operands", ())
+        has_null = False
+        for c in children:
+            v = _eval_expr_with_aggs(c, rows, graph, group_row)
+            if v is False:
+                return False
+            if v is None:
+                has_null = True
+        return None if has_null else True
+
+    if isinstance(expr, (Or, IROr)):
+        children = expr.children if hasattr(expr, "children") else getattr(expr, "operands", ())
+        has_null = False
+        for c in children:
+            v = _eval_expr_with_aggs(c, rows, graph, group_row)
+            if v is True:
+                return True
+            if v is None:
+                has_null = True
+        return None if has_null else False
+
+    if isinstance(expr, (Not, IRNot)):
+        inner = expr.inner if hasattr(expr, "inner") else getattr(expr, "operand", None)
+        v = _eval_expr_with_aggs(inner, rows, graph, group_row)
+        return not v if v is not None else None
+
+    if isinstance(expr, MapExpr):
+        return {k: _eval_expr_with_aggs(v, rows, graph, group_row) for k, v in expr.entries}
+
+    if isinstance(expr, ListExpr):
+        return [_eval_expr_with_aggs(e, rows, graph, group_row) for e in expr.elements]
+
+    if isinstance(expr, CaseExpr):
+        for cond, res in expr.cases:
+            if _eval_expr_with_aggs(cond, rows, graph, group_row) is True:
+                return _eval_expr_with_aggs(res, rows, graph, group_row)
+        if expr.else_expr is not None:
+            return _eval_expr_with_aggs(expr.else_expr, rows, graph, group_row)
+        return None
 
     if isinstance(expr, Projection) and expr.agg is not None:
         return _apply_agg(expr.agg, expr.expr, rows, graph, distinct=getattr(expr, "distinct", False))
@@ -974,14 +1055,14 @@ def _safe_sort_key(v: Any) -> tuple:
         return (6, 1 if v else 0)
     if isinstance(v, (int, float)):
         return (7, float(v))
-    if hasattr(v, "nodes") and hasattr(v, "relationships"):
-        return (3, len(v), str(v))
-    if hasattr(v, "src") and hasattr(v, "dst"):
-        return (2, str(getattr(v, "id", "")))
     if hasattr(v, "label") and hasattr(v, "props"):
         return (1, str(getattr(v, "id", "")))
+    if hasattr(v, "src") and hasattr(v, "dst"):
+        return (2, str(getattr(v, "id", "")))
     if isinstance(v, (list, tuple)):
-        return (4, tuple(_safe_sort_key(x) for x in v))
+        return (3, tuple(_safe_sort_key(x) for x in v))
+    if hasattr(v, "nodes") and hasattr(v, "relationships"):
+        return (4, len(v), str(v))
     if isinstance(v, dict):
         return (0, tuple(sorted((str(k), _safe_sort_key(val)) for k, val in v.items())))
     if isinstance(v, str):
@@ -999,14 +1080,24 @@ def _read_ref_full(ref: Any, row: dict, graph: PropertyGraph | None = None) -> A
         binding = row.get(ref.var)
         if binding is None:
             return None
+        if getattr(binding, "_deleted", False):
+            raise RuntimeError("Cannot access deleted entity")
         if ref.prop is None:
             return binding
+        if "." in ref.prop:
+            cur = binding
+            for part in ref.prop.split("."):
+                if cur is None:
+                    return None
+                if hasattr(cur, "props") and part in cur.props:
+                    cur = cur.props[part]
+                elif isinstance(cur, dict) and part in cur:
+                    cur = cur[part]
+                else:
+                    cur = getattr(cur, part, None)
+            return cur
         if hasattr(binding, "props") and ref.prop in binding.props:
             return binding.props[ref.prop]
-        if ref.prop == "id" and hasattr(binding, "id"):
-            return binding.id
-        if ref.prop == "label" and hasattr(binding, "label"):
-            return binding.label
         if isinstance(binding, dict):
             return binding.get(ref.prop)
         if hasattr(binding, "get_component"):
@@ -1086,13 +1177,37 @@ def _eval_single_expr(expr: Any, row: dict, graph: PropertyGraph | None = None) 
 
 
 def _is_aggregate(expr: Any) -> bool:
-    from gql_core.ir import AggregateExpr, Arithmetic, FunctionCall
+    from gql_core.ir import (
+        AggregateExpr,
+        Arithmetic,
+        FunctionCall,
+        Comparison as IRComparison,
+        And as IRAnd,
+        Or as IROr,
+        Not as IRNot,
+        ListExpr,
+        MapExpr,
+        CaseExpr,
+    )
+    from gql_core.query.ast import Comparison, And, Or, Not
     if isinstance(expr, AggregateExpr):
         return True
     if isinstance(expr, Projection) and expr.agg is not None:
         return True
     if isinstance(expr, Arithmetic):
         return _is_aggregate(expr.lhs) or _is_aggregate(expr.rhs)
+    if isinstance(expr, (Comparison, IRComparison)):
+        return _is_aggregate(expr.lhs) or _is_aggregate(expr.rhs)
+    if isinstance(expr, (And, Or, IRAnd, IROr)):
+        return any(_is_aggregate(c) for c in (expr.children if hasattr(expr, "children") else getattr(expr, "operands", ())))
+    if isinstance(expr, (Not, IRNot)):
+        return _is_aggregate(expr.inner if hasattr(expr, "inner") else getattr(expr, "operand", None))
+    if isinstance(expr, ListExpr):
+        return any(_is_aggregate(e) for e in expr.elements)
+    if isinstance(expr, MapExpr):
+        return any(_is_aggregate(v) for _, v in expr.entries)
+    if isinstance(expr, CaseExpr):
+        return any(_is_aggregate(c) or _is_aggregate(r) for c, r in expr.cases) or (expr.else_expr is not None and _is_aggregate(expr.else_expr))
     if isinstance(expr, FunctionCall):
         if expr.name.upper() in ("COUNT", "SUM", "AVG", "MIN", "MAX", "COLLECT"):
             return True
@@ -1100,10 +1215,10 @@ def _is_aggregate(expr: Any) -> bool:
     return False
 
 
-def _execute_unwind_clause(clause: UnwindClause, rows: list[dict]) -> list[dict]:
+def _execute_unwind_clause(clause: UnwindClause, rows: list[dict], graph: PropertyGraph | None = None) -> list[dict]:
     out = []
     for r in rows:
-        val = _read_ref_full(clause.expr, r)
+        val = _read_ref_full(clause.expr, r, graph)
         if val is None:
             continue
         if isinstance(val, (list, tuple)):
@@ -1154,7 +1269,7 @@ def _execute_return_or_with(
             groups[()] = []
             group_keys_eval[()] = {}
 
-        out = []
+        out_pairs = []
         for t_gk, members in groups.items():
             res_row = dict(group_keys_eval[t_gk])
             for p in agg_items:
@@ -1180,14 +1295,14 @@ def _execute_return_or_with(
                     res_row[k] = _apply_agg(agg_fn, agg_arg, members, graph=graph, distinct=distinct)
                 else:
                     res_row[k] = _eval_expr_with_aggs(p.expr, members, graph, group_row=res_row)
+            merged = dict(members[0]) if members else {}
+            merged.update(res_row)
             if isinstance(clause, WithClause) and clause.where is not None:
-                merged = dict(members[0]) if members else {}
-                merged.update(res_row)
                 if _eval_single_expr(clause.where, merged, graph) is not True:
                     continue
-            out.append(res_row if is_with else Row(res_row))
+            out_pairs.append((res_row, merged))
     else:
-        out = []
+        out_pairs = []
         for r in rows:
             res_row = {}
             for p in items:
@@ -1203,34 +1318,35 @@ def _execute_return_or_with(
             if isinstance(clause, WithClause) and clause.where is not None:
                 if _eval_single_expr(clause.where, merged, graph) is not True:
                     continue
-            out.append(res_row if is_with else Row(res_row))
+            out_pairs.append((res_row, merged))
 
     if clause.distinct:
         seen = set()
         dedup = []
-        for r in out:
-            k = tuple(sorted((k, _hashable_val(v)) for k, v in r.items()))
+        for res_row, merged in out_pairs:
+            k = tuple(sorted((k, _hashable_val(v)) for k, v in res_row.items()))
             if k not in seen:
                 seen.add(k)
-                dedup.append(r)
-        out = dedup
+                dedup.append((res_row, merged))
+        out_pairs = dedup
 
     if clause.order_by:
         for term in reversed(clause.order_by.terms):
             rev = term.direction == "DESC"
 
-            def sort_key(r, t=term.ref):
+            def sort_key(pair, t=term.ref):
+                res_row, merged = pair
                 for p in clause.items:
                     if p.expr == t or (isinstance(t, Projection) and t.agg == p.agg and t.expr == p.expr) or (isinstance(t, Ref) and t.prop is None and p.alias == t.var):
                         k = p.alias or _default_key(p)
-                        if k in r:
-                            return _safe_sort_key(r[k])
-                val = _read_ref_full(t, r, graph)
-                if val is None and isinstance(t, Ref) and t.var in r:
-                    val = r[t.var]
+                        if k in res_row:
+                            return _safe_sort_key(res_row[k])
+                val = _read_ref_full(t, merged, graph)
+                if val is None and isinstance(t, Ref) and t.var in merged:
+                    val = merged[t.var]
                 return _safe_sort_key(val)
 
-            out.sort(key=sort_key, reverse=rev)
+            out_pairs.sort(key=sort_key, reverse=rev)
 
     if clause.skip is not None:
         s_val = _read_ref_full(clause.skip, {}, graph)
@@ -1239,7 +1355,7 @@ def _execute_return_or_with(
         if isinstance(s_val, (int, float)):
             if s_val < 0:
                 raise SemanticError(f"InvalidArguments: SKIP must be non-negative, got {s_val}")
-            out = out[int(s_val):]
+            out_pairs = out_pairs[int(s_val):]
 
     if clause.limit is not None:
         l_val = _read_ref_full(clause.limit, {}, graph)
@@ -1248,10 +1364,12 @@ def _execute_return_or_with(
         if isinstance(l_val, (int, float)):
             if l_val < 0:
                 raise SemanticError(f"InvalidArguments: LIMIT must be non-negative, got {l_val}")
-            out = out[:int(l_val)]
+            out_pairs = out_pairs[:int(l_val)]
+
+    out = [merged if is_with else Row(res_row) for res_row, merged in out_pairs]
 
     if is_with:
-        has_star = any((isinstance(p.expr, Ref) and p.expr.var == "*") or p.raw_expr == "*" for p in items)
+        has_star = any((isinstance(p.expr, Ref) and p.expr.var == "*" and p.agg is None) or p.raw_expr == "*" for p in items)
         if not has_star:
             final_out = []
             item_keys = [p.alias or _default_key(p) for p in items]
@@ -1305,20 +1423,27 @@ def _match_path_pattern(pat: Pattern, seed_row: dict, graph: PropertyGraph) -> l
 
     start_node_pat = pat.nodes[0]
     start_var = start_node_pat.var or "__node_0"
+    start_node_labels = set(start_node_pat.labels) if getattr(start_node_pat, "labels", ()) else ({start_node_pat.label} if start_node_pat.label else set())
     start_nodes = []
     if start_node_pat.var and start_node_pat.var in seed_row:
         existing = seed_row[start_node_pat.var]
         if isinstance(existing, Node):
-            if start_node_pat.label is None or existing.label == start_node_pat.label:
+            actual_labels = set(getattr(existing, "labels", ()) or ((existing.label,) if existing.label else ()))
+            if not start_node_labels or start_node_labels.issubset(actual_labels):
                 start_nodes = [existing]
     else:
-        if start_node_pat.label:
-            start_nodes = list(graph.nodes_by_label(start_node_pat.label))
+        if start_node_labels:
+            first_lbl = next(iter(start_node_labels))
+            cands = list(graph.nodes_by_label(first_lbl))
+            for n in cands:
+                actual_labels = set(getattr(n, "labels", ()) or ((n.label,) if n.label else ()))
+                if start_node_labels.issubset(actual_labels):
+                    start_nodes.append(n)
         else:
             start_nodes = list(graph._nodes.values())
 
     if start_node_pat.filters:
-        start_nodes = [n for n in start_nodes if all(n.props.get(k) == v for k, v in start_node_pat.filters)]
+        start_nodes = [n for n in start_nodes if all(n.props.get(k) == _read_ref_full(v, seed_row, graph) for k, v in start_node_pat.filters)]
 
     current_matches = []
     for sn in start_nodes:
@@ -1341,24 +1466,89 @@ def _match_path_pattern(pat: Pattern, seed_row: dict, graph: PropertyGraph) -> l
                 continue
             used_edges = cur_r.get("__used_edges__", frozenset())
 
-            op = ExpandOp(
-                from_var=from_var,
-                to_var=to_var,
-                edge_var=rel.var,
-                edge_label=rel.label,
-                direction=rel.direction,
-                quantifier=rel.quantifier,
-                to_label=next_node_pat.label,
-                to_inline_filters=next_node_pat.filters,
-                pushed=[],
-            )
-            for edge_path, target in _walk(graph, prev_node, op, used_edges=used_edges):
+            if rel.var and rel.var in cur_r and isinstance(cur_r[rel.var], Edge):
+                bound_edge = cur_r[rel.var]
+                if rel.direction == "out":
+                    if bound_edge.src != prev_node.id:
+                        continue
+                    target_id = bound_edge.dst
+                elif rel.direction == "in":
+                    if bound_edge.dst != prev_node.id:
+                        continue
+                    target_id = bound_edge.src
+                else:
+                    if bound_edge.src == prev_node.id:
+                        target_id = bound_edge.dst
+                    elif bound_edge.dst == prev_node.id:
+                        target_id = bound_edge.src
+                    else:
+                        continue
+                target = graph._nodes.get(target_id)
+                if not target:
+                    continue
+                candidates = [((bound_edge,), target)]
+            elif rel.var and rel.var in cur_r and isinstance(cur_r[rel.var], (list, tuple)):
+                edge_seq = cur_r[rel.var]
+                curr = prev_node
+                valid_seq = True
+                for e in edge_seq:
+                    if not isinstance(e, Edge):
+                        valid_seq = False
+                        break
+                    if rel.direction == "out":
+                        if e.src != curr.id:
+                            valid_seq = False
+                            break
+                        curr = graph._nodes.get(e.dst)
+                    elif rel.direction == "in":
+                        if e.dst != curr.id:
+                            valid_seq = False
+                            break
+                        curr = graph._nodes.get(e.src)
+                    else:
+                        if e.src == curr.id:
+                            curr = graph._nodes.get(e.dst)
+                        elif e.dst == curr.id:
+                            curr = graph._nodes.get(e.src)
+                        else:
+                            valid_seq = False
+                            break
+                    if not curr:
+                        valid_seq = False
+                        break
+                if valid_seq and curr:
+                    candidates = [(tuple(edge_seq), curr)]
+                else:
+                    candidates = []
+            else:
+                eval_next_filters = tuple((k, _read_ref_full(v, cur_r, graph)) for k, v in next_node_pat.filters) if next_node_pat.filters else ()
+                op = ExpandOp(
+                    from_var=from_var,
+                    to_var=to_var,
+                    edge_var=rel.var,
+                    edge_label=rel.label,
+                    direction=rel.direction,
+                    quantifier=rel.quantifier,
+                    to_label=next_node_pat.label,
+                    to_inline_filters=eval_next_filters,
+                    pushed=[],
+                )
+                candidates = list(_walk(graph, prev_node, op, used_edges=used_edges))
+
+            next_node_labels = set(next_node_pat.labels) if getattr(next_node_pat, "labels", ()) else ({next_node_pat.label} if next_node_pat.label else set())
+
+            for edge_path, target in candidates:
                 path_edge_ids = frozenset(_base_edge_id(e.id) for e in edge_path)
                 if used_edges and (used_edges & path_edge_ids):
                     continue
-                if next_node_pat.label and target.label != next_node_pat.label:
+                if rel.filters and not all(all(e.props.get(k) == _read_ref_full(v, cur_r, graph) for k, v in rel.filters) for e in edge_path):
                     continue
-                if next_node_pat.filters and not all(target.props.get(k) == v for k, v in next_node_pat.filters):
+                if rel.label and not all(e.label == rel.label for e in edge_path):
+                    continue
+                target_labels = set(getattr(target, "labels", ()) or ((target.label,) if target.label else ()))
+                if next_node_labels and not next_node_labels.issubset(target_labels):
+                    continue
+                if next_node_pat.filters and not all(target.props.get(k) == _read_ref_full(v, cur_r, graph) for k, v in next_node_pat.filters):
                     continue
                 new_r = dict(cur_r)
                 if next_node_pat.var:
@@ -1408,6 +1598,8 @@ def _execute_create_clause(clause: CreateClause, rows: list[dict], graph: Proper
         cur_r = dict(r)
         for pat in clause.patterns:
             prev_node = None
+            pat_nodes = []
+            pat_edges = []
             for idx, n_pat in enumerate(pat.nodes):
                 if n_pat.var and n_pat.var in cur_r and isinstance(cur_r[n_pat.var], Node):
                     if len(pat.nodes) == 1 and len(pat.rels) == 0:
@@ -1417,7 +1609,7 @@ def _execute_create_clause(clause: CreateClause, rows: list[dict], graph: Proper
                     node = cur_r[n_pat.var]
                 else:
                     auto_id += 1
-                    props = {k: _read_ref_full(v, cur_r) for k, v in n_pat.filters if v is not None}
+                    props = {k: _read_ref_full(v, cur_r, graph) for k, v in n_pat.filters if v is not None}
                     nid = f"node_{auto_id}"
                     node_labels = tuple(getattr(n_pat, "labels", ())) or ((n_pat.label,) if n_pat.label else ())
                     primary_lbl = node_labels[0] if node_labels else "Node"
@@ -1425,6 +1617,7 @@ def _execute_create_clause(clause: CreateClause, rows: list[dict], graph: Proper
                     graph.add_node(node)
                     if n_pat.var:
                         cur_r[n_pat.var] = node
+                pat_nodes.append(node)
 
                 if idx > 0 and prev_node:
                     rel_pat = pat.rels[idx - 1]
@@ -1448,12 +1641,16 @@ def _execute_create_clause(clause: CreateClause, rows: list[dict], graph: Proper
                         src, dst = node.id, prev_node.id
                     else:
                         src, dst = prev_node.id, node.id
-                    rel_props = {k: _read_ref_full(v, cur_r) for k, v in rel_pat.filters if v is not None}
+                    rel_props = {k: _read_ref_full(v, cur_r, graph) for k, v in rel_pat.filters if v is not None}
                     edge = Edge(id=rid, label=rel_pat.label, src=src, dst=dst, props=rel_props)
                     graph.add_edge(edge)
                     if rel_pat.var:
                         cur_r[rel_pat.var] = edge
+                    pat_edges.append(edge)
                 prev_node = node
+            if pat.path_var:
+                from gql_core.graph import Path
+                cur_r[pat.path_var] = Path(nodes=tuple(pat_nodes), relationships=tuple(pat_edges))
         out.append(cur_r)
     return out
 
@@ -1465,19 +1662,29 @@ def _execute_set_clause(clause: SetClause, rows: list[dict], graph: PropertyGrap
                 if isinstance(item.target, Ref) and item.target.prop:
                     node = r.get(item.target.var)
                     if hasattr(node, "props"):
-                        node.props[item.target.prop] = _read_ref_full(item.value, r)
+                        val = _read_ref_full(item.value, r, graph)
+                        if isinstance(val, (list, tuple)) and any(isinstance(x, (dict, list, tuple)) for x in val):
+                            raise TypeError("Property values cannot be nested collections or maps")
+                        if val is None:
+                            node.props.pop(item.target.prop, None)
+                        else:
+                            node.props[item.target.prop] = val
                 else:
-                    node = r.get(item.target.var) if isinstance(item.target, Ref) else _read_ref_full(item.target, r)
-                    new_props = _read_ref_full(item.value, r)
+                    node = r.get(item.target.var) if isinstance(item.target, Ref) else _read_ref_full(item.target, r, graph)
+                    new_props = _read_ref_full(item.value, r, graph)
+                    if hasattr(new_props, "props"):
+                        new_props = new_props.props
                     if isinstance(new_props, dict) and hasattr(node, "props"):
                         node.props = dict(new_props)
             elif item.kind == "prop_merge":
-                node = r.get(item.target.var) if isinstance(item.target, Ref) else _read_ref_full(item.target, r)
-                m = _read_ref_full(item.value, r)
+                node = r.get(item.target.var) if isinstance(item.target, Ref) else _read_ref_full(item.target, r, graph)
+                m = _read_ref_full(item.value, r, graph)
+                if hasattr(m, "props"):
+                    m = m.props
                 if isinstance(m, dict) and hasattr(node, "props"):
                     node.props.update(m)
             elif item.kind == "labels":
-                node = r.get(item.target.var) if isinstance(item.target, Ref) else _read_ref_full(item.target, r)
+                node = r.get(item.target.var) if isinstance(item.target, Ref) else _read_ref_full(item.target, r, graph)
                 if node and hasattr(node, "labels"):
                     cur_labels = list(node.labels)
                     for lbl in item.labels:
@@ -1493,10 +1700,12 @@ def _execute_set_clause(clause: SetClause, rows: list[dict], graph: PropertyGrap
 def _execute_delete_clause(clause: DeleteClause, rows: list[dict], graph: PropertyGraph) -> list[dict]:
     for r in rows:
         for expr in clause.items:
-            target = _read_ref_full(expr, r)
+            target = _read_ref_full(expr, r, graph)
             if isinstance(target, Node):
+                target._deleted = True
                 graph.delete_node(target.id, detach=clause.detach)
             elif isinstance(target, Edge):
+                target._deleted = True
                 graph.delete_edge(target.id)
     return rows
 
@@ -1688,12 +1897,15 @@ def execute_pipeline(query: Query, graph: PropertyGraph) -> list[dict]:
             if "ALL" in u_type.upper():
                 out.extend(sub_res)
             else:
-                seen = {_hashable_val(tuple(sorted(r.items()))) for r in out}
-                for r in sub_res:
+                combined = out + sub_res
+                seen = set()
+                dedup = []
+                for r in combined:
                     k = _hashable_val(tuple(sorted(r.items())))
                     if k not in seen:
                         seen.add(k)
-                        out.append(r)
+                        dedup.append(r)
+                out = dedup
         return out
 
     rows = [{}]
@@ -1701,7 +1913,7 @@ def execute_pipeline(query: Query, graph: PropertyGraph) -> list[dict]:
         if isinstance(clause, MatchClause):
             rows = _execute_match_clause(clause, rows, graph)
         elif isinstance(clause, UnwindClause):
-            rows = _execute_unwind_clause(clause, rows)
+            rows = _execute_unwind_clause(clause, rows, graph=graph)
         elif isinstance(clause, WithClause):
             rows = _execute_return_or_with(clause, rows, is_with=True, graph=graph)
         elif isinstance(clause, ReturnClause):

@@ -35,6 +35,81 @@ class TCKScenario:
     parameters: dict[str, Any] = field(default_factory=dict)
 
 
+def _split_top_level_commas(s: str) -> list[str]:
+    parts = []
+    curr = []
+    depth = 0
+    in_quote = None
+    escaped = False
+    for ch in s:
+        if escaped:
+            curr.append(ch)
+            escaped = False
+            continue
+        if ch == "\\":
+            curr.append(ch)
+            escaped = True
+            continue
+        if in_quote:
+            curr.append(ch)
+            if ch == in_quote:
+                in_quote = None
+            continue
+        if ch in ("'", '"'):
+            in_quote = ch
+            curr.append(ch)
+            continue
+        if ch in "([{":
+            depth += 1
+            curr.append(ch)
+            continue
+        if ch in ")]}":
+            depth -= 1
+            curr.append(ch)
+            continue
+        if ch == "," and depth == 0:
+            part = "".join(curr).strip()
+            if part:
+                parts.append(part)
+            curr = []
+            continue
+        curr.append(ch)
+    if curr:
+        part = "".join(curr).strip()
+        if part:
+            parts.append(part)
+    return parts
+
+
+def _split_top_level_colon(s: str) -> tuple[str, str] | None:
+    depth = 0
+    in_quote = None
+    escaped = False
+    for idx, ch in enumerate(s):
+        if escaped:
+            escaped = False
+            continue
+        if ch == "\\":
+            escaped = True
+            continue
+        if in_quote:
+            if ch == in_quote:
+                in_quote = None
+            continue
+        if ch in ("'", '"'):
+            in_quote = ch
+            continue
+        if ch in "([{":
+            depth += 1
+            continue
+        if ch in ")]}":
+            depth -= 1
+            continue
+        if ch == ":" and depth == 0:
+            return s[:idx], s[idx + 1 :]
+    return None
+
+
 def _parse_cell_value(cell: str) -> Any:
     """Parse a single cell in a Gherkin result table."""
     c = cell.strip()
@@ -49,15 +124,16 @@ def _parse_cell_value(cell: str) -> Any:
     if c.startswith("[") and c.endswith("]"):
         if c == "[]":
             return []
-        items = [_parse_cell_value(x) for x in c[1:-1].split(",") if x.strip()]
+        items = [_parse_cell_value(x) for x in _split_top_level_commas(c[1:-1]) if x.strip()]
         return items
     if c.startswith("{") and c.endswith("}"):
         if c == "{}":
             return {}
         entries = {}
-        for part in c[1:-1].split(","):
-            if ":" in part:
-                k, v = part.split(":", 1)
+        for part in _split_top_level_commas(c[1:-1]):
+            colon_pair = _split_top_level_colon(part)
+            if colon_pair:
+                k, v = colon_pair
                 entries[k.strip().strip("'\"")] = _parse_cell_value(v)
         return entries
     if "." in c:

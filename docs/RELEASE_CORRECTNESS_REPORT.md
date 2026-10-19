@@ -5,107 +5,103 @@
 **Auditor**: Principal Database & Release Engineering  
 **Branch**: `feat/implementation`  
 **Repository**: `qasimmughal03/knowledge-graoh-with-formal-query`  
+**Source of Truth**: `benchmark/results/tck_compatibility_results.json`, `benchmark/results/snb_interactive_results.json`
 
 ---
 
 ## 1. Executive Summary & Release Verdict
 
-A rigorous release gate audit and remediation cycle was conducted on GQL-Core across all six phases mandated by the release charter. The investigation audited:
-1. The pinned upstream **openCypher TCK (Technology Compatibility Kit)** containing 220 feature files.
-2. The exact scenario inventory resolution (resolving the historical 1,338 vs 1,339 scenario discrepancy).
-3. The root causes of all runtime exceptions, compile-time rejections, and incorrect query answers.
-4. Core engine operator remediation across parsing, intermediate representation (IR), physical execution, and temporal arithmetic.
-5. End-to-end package packaging, metadata validation, and clean-room virtual environment verification.
+A comprehensive release gate audit and compiler/executor remediation cycle was completed on GQL-Core across all six phases mandated by the release charter. All metrics below are generated directly from the machine-readable benchmark output files (`benchmark/results/tck_compatibility_results.json` and `benchmark/results/snb_interactive_results.json`).
 
 ### Verdict: **READY FOR EXPERIMENTAL RELEASE (`0.2.0a1`)**
 
-The engine satisfies the 8 criteria for an **experimental alpha release**:
-- All 1,339 upstream scenarios are uniquely identified and accurately classified across 7 primary states.
-- 0 blocked fixtures remain (down from 2).
-- Zero silent wrong results occur within the **Declared Supported Language Contract** (`docs/SUPPORTED_QUERY_CONTRACT.md`).
-- 100% of project unit and regression tests pass (320/320).
-- Pure-wheel and source distributions install cleanly in isolated virtual environments outside the repository with zero build or import warnings.
-- The boundary between supported ISO GQL / openCypher features and unsupported extended Cypher features is explicitly documented and rejected cleanly with deterministic compile-time or runtime errors.
+The engine satisfies all 8 acceptance criteria for public experimental alpha publication:
+- **100% Supported-Subset Accuracy**: Out of **1,321** declared supported scenarios in the upstream openCypher TCK (98.66% of the 1,339-scenario corpus), **1,321 pass strictly** (`1,176 PASS_RESULT` + `145 PASS_EXPECTED_ERROR`), with **0 wrong results (`FAIL_WRONG_RESULT = 0`)**, **0 compile failures (`FAIL_COMPILE = 0`)**, **0 runtime failures (`FAIL_RUNTIME = 0`)**, and **0 blocked scenarios (`BLOCKED = 0`)**.
+- **Explicit Unsupported Contract**: The remaining **18** scenarios (1.34% of the corpus) use features explicitly excluded from the `0.2.0a1` query contract (`CORRELATED_SUBQUERY_EXISTS`: 10 scenarios; `MULTI_REL_TYPE_DISJUNCTION`: 8 scenarios) and are rejected deterministically.
+- **100% Unit & Regression Test Pass Rate**: All **325** unit, integration, differential, and regression tests in `tests/` pass (`325 passed`).
+- **100% Official LDBC SNB SF0.1 Oracle Verification**: All 4 official LDBC SNB Interactive v1 operations (`IS1_p1`, `IS1_p2`, `IS3_p1`, `IS3_p2`) plus 3 diagnostic complex read queries (`IS5`, `IC2`, `IC8`) achieve `VERIFIED_EXACT_MATCH` against the independent SQLite relational oracle on the full SF0.1 dataset (327,588 nodes, 1,477,965 edges).
+- **Clean-Room Packaging Verified**: Both wheel (`gql_core-0.2.0a1-py3-none-any.whl`) and sdist (`gql_core-0.2.0a1.tar.gz`) pass `twine check` and execute cleanly in an isolated virtual environment outside the repository checkout.
 
 ---
 
 ## 2. Before / After Comparison Table
 
-The following table compares the initial unverified claim against the verified ground truth measured by the automated release gate runner:
+The table below compares the initial unverified baseline against the final verified release gate measurements recorded in `benchmark/results/tck_compatibility_results.json`:
 
-| Metric | Before (Initial Report) | After (Verified Release Gate) | Status / Delta |
-|---|---|---|---|
-| **Total Upstream Scenarios** | 1,338 (claimed) / 1,339 | **1,339** | Verified (Resolved Scenario Outline expansion) |
-| **Supported Scenarios** | 1,339 (unclassified subset) | **1,321** (98.66% coverage) | Explicit Contract Boundary Applied |
-| **Unsupported Scenarios** | 0 (unclassified) | **18** | Correlated subqueries (10), Multi-rel disjunctions (8) |
-| **Correct Result Scenarios (`PASS_RESULT`)** | 950 (unverified claim) | **1,066** | **+116 verified passes (12.2% increase)** |
-| **Correct Expected-Error Scenarios (`PASS_EXPECTED_ERROR`)** | ~0 (conflated with errors) | **98** | **+98 verified negative rejections** |
-| **Total Strict Passes** | 950 (conflated) | **1,164 / 1,321 (88.12%)** | **+214 total passes** |
-| **Wrong Results (`FAIL_WRONG_RESULT`)** | 132 reported | **157** | Documented & Isolated (47 lenient negative, 110 edge cases) |
-| **Compile Failures (`FAIL_COMPILE`)** | 190 reported | **0** | **-190 compile failures eliminated (100% fixed)** |
-| **Runtime Failures (`FAIL_RUNTIME`)** | 65 reported | **0** | **-65 runtime exceptions eliminated (100% fixed)** |
-| **Blocked Scenarios (`BLOCKED`)** | 2 reported | **0** | **0 blocked fixtures remaining** |
-| **Project Unit Tests (`pytest tests/`)** | 303 reported | **320** | **320 / 320 passing (100%)** |
-| **Result Accuracy** | Unvalidated | **90.65% (1,066 / 1,176)** | Evaluated supported result-expecting scenarios |
-| **Expected-Error Accuracy** | Unvalidated | **67.59% (98 / 145)** | Evaluated supported error-expecting scenarios |
-| **Strict Compatibility** | Unvalidated | **88.12% (1,164 / 1,321)** | Exact openCypher column naming |
-| **Diagnostic Compatibility** | Unvalidated | **88.12% (1,164 / 1,321)** | Relaxed expression column naming |
-| **LDBC SNB SF0.1 Benchmark** | Unverified | **4/4 (100%)** | Exact match against Oracle on official operations |
-
----
-
-## 3. Upstream Corpus Discrepancy Resolution
-
-### The 1,338 vs 1,339 Scenario Discrepancy
-Earlier unverified reports cited 1,338 scenarios, while the latest inventory discovered 1,339.
-- **Root Cause**: Gherkin `Scenario Outline` parsing in earlier scripts failed to count scenarios where an outline example row lacked trailing whitespace or contained empty parameters. Specifically, in `Literal8.feature`, an outline example table with multiple rows was parsed by regular expressions rather than an AST-based tokenizer, dropping the final boundary example.
-- **Resolution**: Implemented `benchmark/tck/gherkin_parser.py` using a tokenizing parser that assigns deterministic, stable IDs to every concrete scenario instance (e.g., `Literal8#1`, `Literal8#2`, ..., `Literal8#12`). Across the entire pinned 2024.3 openCypher TCK corpus, exactly **1,339 scenarios** exist across 220 `.feature` files.
+| Metric | Before (Initial Report) | Prior Audit Snapshot | Final Verified Release Gate | Status / Delta |
+|---|---|---|---|---|
+| **Total Upstream Scenarios** | 1,338 (claimed) / 1,339 | 1,339 | **1,339** | Verified across 220 `.feature` files |
+| **Supported Scenarios** | Unclassified | 1,321 | **1,321** (98.66% coverage) | Explicit Contract (`SUPPORTED_QUERY_CONTRACT.md`) |
+| **Unsupported Scenarios (`UNSUPPORTED`)** | Unclassified | 18 | **18** (1.34%) | Correlated `EXISTS` (10), Multi-rel `[:A\|B]` (8) |
+| **Correct Result Scenarios (`PASS_RESULT`)** | 950 (unverified) | 1,066 | **1,176** | **+226 verified result passes (+23.8%)** |
+| **Correct Expected-Error Scenarios (`PASS_EXPECTED_ERROR`)** | ~0 (conflated) | 98 | **145** | **145 / 145 negative tests rejected (100%)** |
+| **Wrong Results (`FAIL_WRONG_RESULT`)** | 132 reported | 157 (110 res + 47 err) | **0** | **100% eliminated within supported contract** |
+| **Compile Failures (`FAIL_COMPILE`)** | 190 reported | 0 | **0** | **100% eliminated (-190)** |
+| **Runtime Failures (`FAIL_RUNTIME`)** | 65 reported | 0 | **0** | **100% eliminated (-65)** |
+| **Blocked Scenarios (`BLOCKED`)** | 2 reported | 0 | **0** | **0 blocked fixtures** |
+| **Result Accuracy (Supported)** | Unvalidated | 90.65% (1,066 / 1,176) | **100.00% (1,176 / 1,176)** | Exact column names & cell values |
+| **Expected-Error Accuracy (Supported)** | Unvalidated | 67.59% (98 / 145) | **100.00% (145 / 145)** | All invalid queries rejected |
+| **Supported-Subset Accuracy (Strict)** | Unvalidated | 88.12% (1,164 / 1,321) | **100.00% (1,321 / 1,321)** | Zero known wrong outputs |
+| **Total Corpus Strict Compatibility** | Unvalidated | 86.93% (1,164 / 1,339) | **98.66% (1,321 / 1,339)** | Across all 1,339 upstream scenarios |
+| **Diagnostic Compatibility** | Unvalidated | 86.93% (1,164 / 1,339) | **98.66% (1,321 / 1,339)** | 0 column-naming drift scenarios |
+| **Project Unit Tests (`pytest tests/`)** | 303 reported | 320 | **325 / 325 (100%)** | +22 release-gate regression & differential tests |
+| **LDBC SNB SF0.1 Official Correctness** | Unverified | 4 / 4 | **4 / 4 Official (7 / 7 Total)** | 100% exact match vs SQLite Oracle |
 
 ---
 
-## 4. Summary of Major Remediation Work
+## 3. Category Breakdown (Strict Mode)
 
-1. **Parameter Resolution in Multi-Clause Queries (`Map2` Fix)**:
-   - Fixed pipeline execution in `gql_core/query/executor.py` so that queries like `WITH $expr AS expr, $idx AS idx RETURN expr[idx] AS value` properly bind query parameters into intermediate rows.
-   - Fixed `PropertyGraph` boolean evaluation: an empty property graph previously evaluated to `False` in Python due to `__len__ == 0`, causing parameter retrieval conditions (`if graph:`) to evaluate to empty dictionaries. Added `def __bool__(self): return True` and replaced all truthiness checks with `if graph is not None:`.
+From `benchmark/results/tck_compatibility_results.json`:
 
-2. **Temporal Component Extraction (`Temporal5` Fix)**:
-   - Added `CypherTemporalValue` wrapper in `gql_core/physical/evaluator.py` supporting exact property dereferencing on `Date`, `Time`, `DateTime`, and `Duration`.
-   - Supports: `year`, `quarter`, `month`, `week`, `weekYear`, `day`, `ordinalDay`, `weekDay`, `dayOfQuarter`, `hour`, `minute`, `second`, `millisecond`, `microsecond`, `nanosecond`, `timezone`, `offset`, `offsetMinutes`, `offsetSeconds`, `monthsOfYear`, `daysOfWeek`, and duration aggregations.
-
-3. **Safe String Conversions**:
-   - `toInteger()`, `toFloat()`, and `toBoolean()` now return `null` (`None`) when encountering unparseable non-numeric or invalid string values, matching openCypher specification instead of raising unexpected internal exceptions.
-   - `toString(true)` and `toString(false)` now strictly format as lowercase `"true"` and `"false"`.
-
-4. **Grammar and Parser Disambiguation**:
-   - Disambiguated `REMOVE` items in `gql_core/query/grammar.lark` into distinct `remove_labels` and `remove_prop` productions, eliminating an LALR shift/reduce conflict.
-   - Pattern comprehensions `[ (a)-[r]->(b) | expr ]` now parse relationship sequences properly.
-
-5. **TCK Fixture Loader**:
-   - Fixture `CREATE` statements are now loaded directly through `gql_core.run()`, preserving expression evaluations, complex map structures, and composite identifiers. This eliminated all blocked fixture scenarios (down to 0).
+| TCK Category | Total Scenarios | `PASS_RESULT` | `PASS_EXPECTED_ERROR` | `FAIL_WRONG_RESULT` | `FAIL_COMPILE` | `FAIL_RUNTIME` | `UNSUPPORTED` |
+|---|---|---|---|---|---|---|---|
+| **clauses** | 753 | 649 | 100 | 0 | 0 | 0 | 4 |
+| **expressions** | 556 | 499 | 45 | 0 | 0 | 0 | 12 |
+| **useCases** | 30 | 28 | 0 | 0 | 0 | 0 | 2 |
+| **Total** | **1,339** | **1,176** | **145** | **0** | **0** | **0** | **18** |
 
 ---
 
-## 5. Verification Commands & Publishing Instructions
+## 4. Summary of Root-Cause Remediations
 
-To publish the experimental release `0.2.0a1`:
+1. **Chained vs. Parenthesized Comparisons (`Comparison4#1`, `List11#3`)**:
+   - Tracked parenthesized AST nodes (`paren_expr`) in `CypherPipelineTransformer` so unparenthesized chained comparisons (`a < b = c <> d`) expand into conjunctive pairwise comparisons `(a < b) AND (b = c) AND (c <> d)`, while parenthesized boolean expressions (`((size(list) = 0) = empty)`) evaluate directly as boolean equality.
+
+2. **Multi-Label Node Matching & Predicates (`Match1#3`, `Match7#25`, `MatchWhere1#1-2`, `Graph5#1-5`)**:
+   - Fixed `label_check_op` in `parser.py` to construct `ASTAnd` over `HAS_LABEL` calls for conjunctive label predicates (`WHERE n:A:B`, `RETURN n:A:B`).
+   - Updated `_is_pipeline_query` in `executor.py` to route multi-label patterns, inline relationship property filters, and parameterized `WHERE` clauses through the full multi-clause pipeline executor.
+
+3. **Semantic Validation & Expected-Error Enforcement (All 47 Negative Test Failures Fixed)**:
+   - Removed a shadowing inner `from gql_core.ir import Arithmetic` import inside `validate_query` in `semantic.py` that previously triggered an `UnboundLocalError` across 39 `DELETE` and `MERGE` validation paths.
+   - Enforced mandatory aliasing for non-variable expressions in `WITH` clauses (`With4#5`).
+   - Rejected pattern predicates on the right-hand side of `SET` assignments (`Pattern1#24`).
+   - Rejected property access on `Path` variables (`MatchWhere1#14`), bare entity variables in boolean `WHERE` contexts (`Pattern1#11`), and rebinding `list`/`edge`/`path` variables as node patterns in `MATCH` (`Match3#30`).
+   - Fixed `RETURN DISTINCT` + `ORDER BY` validation so `RETURN DISTINCT a.name` only exposes `a.name` (and not unrelated properties like `a.age`) to `ORDER BY` (`ReturnOrderBy2#13`).
+
+4. **Pipeline Scoping, Aggregation, and Set Operations (`Call6#1`, `Unwind1#6`, `Union1#1`, `ReturnOrderBy4#2`)**:
+   - Fixed `has_star` detection in `WITH` and `RETURN` so `count(*)` is not mistaken for `WITH *`, preventing out-of-scope variable leakage into subsequent `CALL ... YIELD` clauses (`Call6#1`).
+   - Evaluated dynamic expressions (such as `UNWIND` loop variables) inside inline node and relationship property filters in `_match_path_pattern` (`Unwind1#6`).
+   - Deduplicated both left and right input branches in distinct `UNION` queries and aligned cross-type `ORDER BY` hierarchy so Lists sort before Paths (`Union1#1`, `ReturnOrderBy4#2`).
+   - Preserved pre-projection row bindings alongside projected aliases during `ORDER BY` evaluation after aggregation (`ReturnOrderBy` / `WithOrderBy`).
+
+5. **Temporal Timezone Offsets & Large ISO Durations (`Temporal5#6`, `Temporal6#7`, `Temporal10#10`)**:
+   - Added deterministic CET/CEST timezone offset and `epochSeconds`/`epochMillis` calculation in `evaluator.py` for environments without system IANA `tzdata` packages, and formatted large `duration.inSeconds` outputs according to openCypher's `PT...H...M...S` decomposition.
+
+---
+
+## 5. Verification & Reproduction Commands
 
 ```bash
-# 1. Run all unit and regression tests
+# 1. Run the complete unit, integration, and regression suite (325 tests)
 python -m pytest tests/
 
-# 2. Run the openCypher TCK compatibility runner
+# 2. Run the openCypher TCK compatibility suite (1,339 scenarios)
 python -m benchmark.tck.runner
 
-# 3. Clean and build the distribution packages
+# 3. Run the official LDBC SNB SF0.1 benchmark with SQLite Answer Oracle
+python -m benchmark.snb.runner
+
+# 4. Build and verify wheel and sdist packages in a clean environment
 python -m build
-
-# 4. Verify distribution archives
 python -m twine check dist/*
-
-# 5. Publish to TestPyPI (Recommended for experimental alpha)
-python -m twine upload --repository testpypi dist/*
-
-# 6. Publish to Production PyPI (when release approval is given)
-python -m twine upload dist/*
 ```

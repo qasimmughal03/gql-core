@@ -105,8 +105,14 @@ def cast_to_integer(val: Any) -> int:
     if isinstance(val, str):
         try:
             return int(val.strip())
-        except ValueError as e:
-            raise TypeErrorDiagnostic(f"Invalid string for INTEGER conversion: {val!r}") from e
+        except ValueError:
+            try:
+                f = float(val.strip())
+                if math.isnan(f) or math.isinf(f):
+                    raise TypeErrorDiagnostic(f"Cannot cast NaN or Infinity to INTEGER: {val}")
+                return int(f)
+            except ValueError as e:
+                raise TypeErrorDiagnostic(f"Invalid string for INTEGER conversion: {val!r}") from e
     raise TypeErrorDiagnostic(f"Cannot cast {type(val).__name__} to INTEGER")
 
 

@@ -67,6 +67,24 @@ class _Binding:
     label: str | None = None
 
 
+_KNOWN_FUNCTIONS = {
+    "COUNT", "SUM", "AVG", "MIN", "MAX", "COLLECT",
+    "SIZE", "LENGTH", "KEYS", "LABELS", "TYPE", "ID",
+    "STARTNODE", "ENDNODE", "NODES", "RELATIONSHIPS", "RELS",
+    "PROPERTIES", "HEAD", "LAST", "TAIL", "RANGE",
+    "REVERSE", "SPLIT", "SUBSTRING", "REPLACE", "TRIM", "LTRIM", "RTRIM",
+    "TOUPPER", "UPPER", "TOLOWER", "LOWER", "TOSTRING", "TO_STRING",
+    "TOINTEGER", "TO_INT", "TOFLOAT", "TO_FLOAT", "TOBOOLEAN", "TO_BOOL",
+    "COALESCE", "RAND", "ABS", "ROUND", "CEIL", "FLOOR", "SQRT", "SIGN",
+    "E", "PI", "EXP", "LOG", "LOG10", "SIN", "COS", "TAN", "ASIN", "ACOS", "ATAN", "ATAN2",
+    "COT", "DEGREES", "RADIANS", "HAVERSIN", "PROPERTY_ACCESS", "INDEX", "SLICE", "GET_PROP", "XOR", "HAS_LABEL",
+    "DATE", "LOCALTIME", "TIME", "LOCALDATETIME", "DATETIME", "DURATION",
+    "DATETIME.FROMEPOCH", "DATETIME.FROMEPOCHMILLIS", "LOCALDATETIME.FROMEPOCH", "LOCALDATETIME.FROMEPOCHMILLIS",
+    "DURATION.BETWEEN", "DURATION.INSECONDS", "DURATION.INMONTHS", "DURATION.INDAYS",
+    "ANY", "ALL", "NONE", "SINGLE", "LIST_COMPREHENSION", "PATTERN_COMPREHENSION", "EXISTS",
+}
+
+
 # Module-level default schema path. Set via set_schema_path() for
 # backward-compatible usage. When None, schema-aware checks are skipped.
 _default_schema_path: str | Path | None = None
@@ -191,6 +209,8 @@ def validate_query(query: Query, schema_path: str | Path | None = None) -> None:
                     if pattern.path_var:
                         bindings[pattern.path_var] = _Binding(kind="path")
                     for node in pattern.nodes:
+                        if node.var in bindings and bindings[node.var].kind in ("edge", "path", "list"):
+                            raise SyntaxError(f"TypeMismatch: Variable '{node.var}' is already bound to a {bindings[node.var].kind}, not a node")
                         _bind_node(bindings, node.var, node.label)
                         if schema is not None:
                             _validate_inline_filters(schema, bindings[node.var], node.filters, node.var)
@@ -203,10 +223,21 @@ def validate_query(query: Query, schema_path: str | Path | None = None) -> None:
                         if rel.var is not None:
                             _bind_edge(bindings, rel.var, rel.label)
                 if clause.where is not None:
+                    if _is_aggregate(clause.where):
+                        raise SyntaxError("Aggregations are not allowed in WHERE clauses")
+                    w_var = None
+                    if isinstance(clause.where, Ref) and clause.where.prop is None:
+                        w_var = clause.where.var
+                    elif isinstance(clause.where, Variable):
+                        w_var = clause.where.name
+                    if w_var and w_var in bindings and bindings[w_var].kind in ("node", "edge", "path"):
+                        raise SyntaxError(f"TypeMismatch: expected Boolean in WHERE, got {bindings[w_var].kind}")
                     _validate_expr(schema, clause.where, bindings)
 
             elif isinstance(clause, CreateClause):
                 for pat in clause.patterns:
+                    if pat.path_var:
+                        bindings[pat.path_var] = _Binding(kind="path")
                     if len(pat.nodes) == 1 and len(pat.rels) == 0:
                         if pat.nodes[0].var in bindings:
                             raise SemanticError(f"VariableAlreadyBound: Variable '{pat.nodes[0].var}' is already bound")
@@ -216,6 +247,8 @@ def validate_query(query: Query, schema_path: str | Path | None = None) -> None:
                                 raise SemanticError(f"VariableAlreadyBound: Variable '{node.var}' is already bound and cannot have labels or properties added in CREATE")
                         for k, v in node.filters:
                             _validate_expr(schema, v, bindings)
+                        if node.var and node.var not in bindings:
+                            _bind_node(bindings, node.var, node.label)
                     for rel in pat.rels:
                         if rel.var and rel.var in bindings:
                             raise SemanticError(f"VariableAlreadyBound: Relationship variable '{rel.var}' is already bound")
@@ -227,26 +260,49 @@ def validate_query(query: Query, schema_path: str | Path | None = None) -> None:
                             raise SemanticError("CreatingVarLength: Variable-length relationships cannot be created in CREATE")
                         for k, v in rel.filters:
                             _validate_expr(schema, v, bindings)
-
-                for pat in clause.patterns:
-                    if pat.path_var:
-                        bindings[pat.path_var] = _Binding(kind="path")
-                    for node in pat.nodes:
-                        if node.var not in bindings:
-                            _bind_node(bindings, node.var, node.label)
-                    for rel in pat.rels:
                         if rel.var and rel.var not in bindings:
                             _bind_edge(bindings, rel.var, rel.label)
 
             elif isinstance(clause, MergeClause):
+                if len(clause.pattern.nodes) == 1 and len(clause.pattern.rels) == 0:
+                    n0 = clause.pattern.nodes[0]
+                    if n0.var and n0.var in bindings:
+                        raise SyntaxError(f"Cannot merge node '{n0.var}' that is already bound")
+                for r in clause.pattern.rels:
+                    if r.var and r.var in bindings:
+                        raise SyntaxError(f"Cannot merge relationship '{r.var}' that is already bound")
+                    if not r.label:
+                        raise SyntaxError("Relationship pattern in MERGE must specify a relationship type")
+
+                for n in clause.pattern.nodes:
+                    for pk, pv in n.filters:
+                        if pv is None or (isinstance(pv, Literal) and pv.value is None):
+                            raise SemanticError(f"Property value for '{pk}' in MERGE cannot be null")
+                for r in clause.pattern.rels:
+                    for pk, pv in r.filters:
+                        if pv is None or (isinstance(pv, Literal) and pv.value is None):
+                            raise SemanticError(f"Property value for '{pk}' in MERGE cannot be null")
+
+                merge_scope = dict(bindings)
                 if clause.pattern.path_var:
                     bindings[clause.pattern.path_var] = _Binding(kind="path")
+                    merge_scope[clause.pattern.path_var] = _Binding(kind="path")
                 for node in clause.pattern.nodes:
                     if node.var not in bindings:
                         _bind_node(bindings, node.var, node.label)
+                    _bind_node(merge_scope, node.var, node.label)
                 for rel in clause.pattern.rels:
                     if rel.var and rel.var not in bindings:
                         _bind_edge(bindings, rel.var, rel.label)
+                    _bind_edge(merge_scope, rel.var, rel.label)
+
+                for act in clause.actions:
+                    for item in act.items:
+                        vname = item.target.var if isinstance(item.target, Ref) else getattr(item.target, "name", str(item.target))
+                        if vname not in merge_scope and not str(vname).startswith("$"):
+                            raise SyntaxError(f"UndefinedVariable: Variable '{vname}' in {act.on_event} is not defined")
+                        if item.value is not None:
+                            _validate_expr(schema, item.value, merge_scope)
 
             elif isinstance(clause, UnwindClause):
                 _validate_expr(schema, clause.expr, bindings)
@@ -263,45 +319,114 @@ def validate_query(query: Query, schema_path: str | Path | None = None) -> None:
                     bindings[col] = _Binding(kind="value")
 
             elif isinstance(clause, WithClause):
+                from gql_core.ir import ListExpr
                 _validate_projection_aggregations(clause.items)
                 for p in clause.items:
+                    if p.alias is None:
+                        if p.agg is not None or _is_aggregate(p.expr):
+                            raise SyntaxError("Aggregations and expressions in WITH must be aliased (e.g. WITH expr AS alias)")
+                        is_simple_var = (isinstance(p.expr, Ref) and p.expr.prop is None) or isinstance(p.expr, Variable) or getattr(p, "raw_expr", "") == "*"
+                        if not is_simple_var:
+                            raise SyntaxError(f"Expression in WITH must be aliased: {p.expr}")
                     _validate_ref(schema, p.expr, bindings, "WITH")
                 _validate_skip_limit(clause.skip, "SKIP")
                 _validate_skip_limit(clause.limit, "LIMIT")
                 _validate_with_order_by(clause)
-                has_star = any((isinstance(p.expr, Ref) and p.expr.var == "*") or p.raw_expr == "*" for p in clause.items)
+                has_star = any((isinstance(p.expr, Ref) and p.expr.var == "*" and p.agg is None) or getattr(p, "raw_expr", "") == "*" for p in clause.items)
                 if not has_star:
                     new_bindings = {}
                     for p in clause.items:
                         orig_var = None
                         if isinstance(p.expr, Ref) and p.expr.prop is None:
                             orig_var = p.expr.var
-                        elif hasattr(p.expr, "name") and not str(p.expr.name).startswith("$"):
+                        elif isinstance(p.expr, Variable) and not str(p.expr.name).startswith("$"):
                             orig_var = p.expr.name
 
                         orig_binding = bindings.get(orig_var) if orig_var else None
                         target_key = p.alias or orig_var
                         if target_key:
-                            new_bindings[target_key] = orig_binding if orig_binding else _Binding(kind="value")
+                            if isinstance(p.expr, ListExpr) or p.agg == "COLLECT":
+                                new_bindings[target_key] = _Binding(kind="list")
+                            else:
+                                new_bindings[target_key] = orig_binding if orig_binding else _Binding(kind="value")
                 else:
                     new_bindings = dict(bindings)
                     for p in clause.items:
                         if p.alias:
-                            new_bindings[p.alias] = _Binding(kind="value")
+                            if isinstance(p.expr, ListExpr) or p.agg == "COLLECT":
+                                new_bindings[p.alias] = _Binding(kind="list")
+                            else:
+                                new_bindings[p.alias] = _Binding(kind="value")
                 if clause.where is not None:
                     where_bindings = {**bindings, **new_bindings}
                     _validate_expr(schema, clause.where, where_bindings)
                 bindings = new_bindings
 
             elif isinstance(clause, ReturnClause):
+                has_star = any((isinstance(p.expr, Ref) and p.expr.var == "*" and p.agg is None) or getattr(p, "raw_expr", "") == "*" for p in clause.items)
+                if has_star and all(k.startswith("__") for k in bindings):
+                    raise SyntaxError("RETURN * is not allowed when there are no variables in scope")
                 _validate_projection_aggregations(clause.items)
                 for p in clause.items:
                     _validate_ref(schema, p.expr, bindings, "RETURN")
                 _validate_skip_limit(clause.skip, "SKIP")
                 _validate_skip_limit(clause.limit, "LIMIT")
+                if clause.distinct and clause.order_by is not None:
+                    ret_vars = set()
+                    for p in clause.items:
+                        if p.alias:
+                            ret_vars.add(p.alias)
+                        if isinstance(p.expr, Ref):
+                            if p.expr.prop is None:
+                                ret_vars.add(p.expr.var)
+                            else:
+                                ret_vars.add((p.expr.var, p.expr.prop))
+                        elif isinstance(p.expr, Variable):
+                            ret_vars.add(p.expr.name)
+                        elif isinstance(p.expr, Property):
+                            ret_vars.add((p.expr.var, p.expr.prop))
+                    for term in clause.order_by.terms:
+                        t = term.ref
+                        t_match = False
+                        if isinstance(t, Ref):
+                            if (t.var, t.prop) in ret_vars or t.var in ret_vars:
+                                t_match = True
+                        elif hasattr(t, "name") and t.name in ret_vars:
+                            t_match = True
+                        if not t_match:
+                            raise SyntaxError(f"When DISTINCT is used, ORDER BY can only reference expressions in RETURN: {t}")
                 if clause.order_by is not None:
+                    return_has_agg = any(_is_aggregate(p.expr) or p.agg is not None for p in clause.items)
+                    order_has_agg = any(_is_aggregate(term.ref) for term in clause.order_by.terms)
+                    if not return_has_agg and order_has_agg:
+                        raise SyntaxError("Aggregation in ORDER BY is not allowed when RETURN does not aggregate")
                     aliases = {_projection_key(p) for p in clause.items}
                     alias_names = {p.alias for p in clause.items if p.alias}
+                    standalone_ret_keys = set()
+                    for p in clause.items:
+                        if p.agg is None and not _is_aggregate(p.expr):
+                            if isinstance(p.expr, Ref):
+                                standalone_ret_keys.add((p.expr.var, p.expr.prop))
+                            elif hasattr(p.expr, "name"):
+                                standalone_ret_keys.add((p.expr.name, None))
+                            if p.alias:
+                                standalone_ret_keys.add((p.alias, None))
+
+                    for term in clause.order_by.terms:
+                        if isinstance(term.ref, Arithmetic) and _is_aggregate(term.ref):
+                            def _check_order_agg_part(e: Any):
+                                if _is_aggregate(e):
+                                    return
+                                if isinstance(e, Arithmetic):
+                                    raise SyntaxError("Complex expressions inside ORDER BY with aggregation are not allowed")
+                                if isinstance(e, Ref):
+                                    if (e.var, e.prop) not in standalone_ret_keys and (e.var, None) not in standalone_ret_keys:
+                                        raise SyntaxError(f"Unprojected variable '{e.var}' in ORDER BY expression containing aggregation")
+                                elif hasattr(e, "name"):
+                                    if (e.name, None) not in standalone_ret_keys:
+                                        raise SyntaxError(f"Unprojected variable '{e.name}' in ORDER BY expression containing aggregation")
+                            _check_order_agg_part(term.ref.lhs)
+                            _check_order_agg_part(term.ref.rhs)
                     order_bindings = {**bindings, **{a: _Binding(kind="value") for a in alias_names if a}}
                     for term in clause.order_by.terms:
                         if isinstance(term.ref, Ref) and (term.ref.var in alias_names or term.ref.var in aliases):
@@ -314,10 +439,26 @@ def validate_query(query: Query, schema_path: str | Path | None = None) -> None:
                     if var not in bindings and not str(var).startswith("$"):
                         raise SemanticError(f"UndefinedVariable: Cannot SET on unbound variable '{var}'")
                     if item.value is not None:
+                        def _has_pattern(e: Any) -> bool:
+                            if isinstance(e, PatternPredicate):
+                                return True
+                            if hasattr(e, "args"):
+                                return any(_has_pattern(a) for a in e.args)
+                            if hasattr(e, "lhs") and hasattr(e, "rhs"):
+                                return _has_pattern(e.lhs) or _has_pattern(e.rhs)
+                            if hasattr(e, "inner"):
+                                return _has_pattern(e.inner)
+                            return False
+                        if _has_pattern(item.value):
+                            raise SyntaxError("Pattern expressions are not allowed on the right-hand side of SET")
                         _validate_expr(schema, item.value, bindings)
 
             elif isinstance(clause, DeleteClause):
                 for item in clause.items:
+                    if isinstance(item, (Arithmetic, Literal)):
+                        raise SyntaxError(f"Cannot delete expression: {item}")
+                    if isinstance(item, FunctionCall) and item.name in ("HAS_LABEL", "PROPERTY_ACCESS"):
+                        raise SyntaxError(f"Cannot delete label or property in DELETE: {item}")
                     _validate_expr(schema, item, bindings)
 
             elif isinstance(clause, RemoveClause):
@@ -363,13 +504,41 @@ def validate_query(query: Query, schema_path: str | Path | None = None) -> None:
 
 
 def _is_aggregate(expr: Any) -> bool:
-    from gql_core.ir import AggregateExpr, Arithmetic, FunctionCall, StringMatch, RegexMatch
+    from gql_core.ir import (
+        AggregateExpr,
+        Arithmetic,
+        FunctionCall,
+        StringMatch,
+        RegexMatch,
+        Comparison as IRComparison,
+        And as IRAnd,
+        Or as IROr,
+        Not as IRNot,
+        ListExpr,
+        MapExpr,
+        CaseExpr,
+    )
+    from gql_core.query.ast import Comparison, And, Or, Not
     if isinstance(expr, AggregateExpr):
         return True
     if isinstance(expr, Projection) and expr.agg is not None:
         return True
     if isinstance(expr, Arithmetic):
         return _is_aggregate(expr.lhs) or _is_aggregate(expr.rhs)
+    if isinstance(expr, (Comparison, IRComparison)):
+        return _is_aggregate(expr.lhs) or _is_aggregate(expr.rhs)
+    if isinstance(expr, (And, Or, IRAnd, IROr)):
+        children = expr.children if hasattr(expr, "children") else getattr(expr, "operands", ())
+        return any(_is_aggregate(c) for c in children)
+    if isinstance(expr, (Not, IRNot)):
+        inner = expr.inner if hasattr(expr, "inner") else getattr(expr, "operand", None)
+        return _is_aggregate(inner)
+    if isinstance(expr, ListExpr):
+        return any(_is_aggregate(e) for e in expr.elements)
+    if isinstance(expr, MapExpr):
+        return any(_is_aggregate(v) for _, v in expr.entries)
+    if isinstance(expr, CaseExpr):
+        return any(_is_aggregate(c) or _is_aggregate(r) for c, r in expr.cases) or (expr.else_expr is not None and _is_aggregate(expr.else_expr))
     if isinstance(expr, StringMatch):
         return _is_aggregate(expr.string_expr) or _is_aggregate(expr.pattern_expr)
     if isinstance(expr, RegexMatch):
@@ -577,8 +746,15 @@ def _validate_expr(schema: dict | None, expr: Any, bindings: dict[str, _Binding]
     if isinstance(expr, Property):
         if expr.var not in bindings and not expr.var.startswith("$"):
             raise SemanticError(f"UndefinedVariable: WHERE references unbound variable {expr.var!r}")
+        if bindings.get(expr.var) and bindings[expr.var].kind == "path":
+            raise SyntaxError(f"Cannot access property on a path: {expr.var}.{expr.prop}")
         if schema is not None and expr.var in bindings:
             _validate_property(schema, bindings[expr.var], expr.prop, f"WHERE reference {expr.var}.{expr.prop}")
+        return
+    from gql_core.ir import MapExpr
+    if isinstance(expr, MapExpr):
+        for _, v in expr.entries:
+            _validate_expr(schema, v, bindings)
         return
     if isinstance(expr, (Comparison, IRComparison)):
         _validate_expr(schema, expr.lhs, bindings)
@@ -612,6 +788,24 @@ def _validate_expr(schema: dict | None, expr: Any, bindings: dict[str, _Binding]
         _validate_expr(schema, expr.rhs, bindings)
         return
     if isinstance(expr, FunctionCall):
+        fname_upper = expr.name.upper()
+        if fname_upper not in _KNOWN_FUNCTIONS and not fname_upper.startswith("__"):
+            raise SyntaxError(f"UnknownFunction: Unknown function {expr.name!r}")
+        if fname_upper == "TYPE" and expr.args:
+            arg0 = expr.args[0]
+            var_name = getattr(arg0, "var", getattr(arg0, "name", None))
+            if var_name and var_name in bindings and bindings[var_name].kind == "node":
+                raise SyntaxError(f"TypeMismatch: type() takes a relationship, got node '{var_name}'")
+        if fname_upper == "LENGTH" and expr.args:
+            arg0 = expr.args[0]
+            var_name = getattr(arg0, "var", getattr(arg0, "name", None))
+            if var_name and var_name in bindings and bindings[var_name].kind in ("node", "edge"):
+                raise SyntaxError(f"TypeMismatch: length() takes a path or string, got {bindings[var_name].kind} '{var_name}'")
+        if fname_upper == "SIZE" and expr.args:
+            arg0 = expr.args[0]
+            var_name = getattr(arg0, "var", getattr(arg0, "name", None))
+            if var_name and var_name in bindings and bindings[var_name].kind == "path":
+                raise SyntaxError(f"TypeMismatch: size() cannot be applied to a path '{var_name}', use length() instead")
         if expr.name == "PROPERTY_ACCESS" and len(expr.args) >= 1:
             _validate_expr(schema, expr.args[0], bindings)
             return
@@ -620,6 +814,8 @@ def _validate_expr(schema: dict | None, expr: Any, bindings: dict[str, _Binding]
             coll_expr = expr.args[1]
             where_cond = expr.args[2]
             map_expr = expr.args[3]
+            if map_expr is not None and _is_aggregate(map_expr):
+                raise SyntaxError("Aggregations are not allowed in list comprehension mapping expression")
             _validate_expr(schema, coll_expr, bindings)
             var_name = getattr(var_item, "name", str(var_item))
             inner_bindings = dict(bindings)
@@ -717,6 +913,8 @@ def _validate_ref(schema: dict | None, ref: Any, bindings: dict[str, _Binding], 
     if isinstance(ref, Property):
         if ref.var not in bindings and not ref.var.startswith("$"):
             raise SemanticError(f"UndefinedVariable: {context} references unbound variable {ref.var!r}")
+        if bindings.get(ref.var) and bindings[ref.var].kind == "path":
+            raise SyntaxError(f"Cannot access property on a path: {ref.var}.{ref.prop}")
         if schema is not None and ref.var in bindings:
             _validate_property(schema, bindings[ref.var], ref.prop, f"{context} reference {ref.var}.{ref.prop}")
         return
@@ -728,6 +926,8 @@ def _validate_ref(schema: dict | None, ref: Any, bindings: dict[str, _Binding], 
     binding = bindings.get(ref.var)
     if binding is None:
         raise SemanticError(f"{context} references unbound variable {ref.var!r}")
+    if binding.kind == "path" and ref.prop is not None:
+        raise SyntaxError(f"Cannot access property on a path: {ref.var}.{ref.prop}")
     if ref.prop is not None and schema is not None:
         _validate_property(schema, binding, ref.prop, f"{context} reference {ref.var}.{ref.prop}")
 

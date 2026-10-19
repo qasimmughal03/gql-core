@@ -65,12 +65,75 @@ from gql_core.ir import (
 )
 
 _GRAMMAR = Path(__file__).resolve().parent / "grammar.lark"
+from gql_core.ir import CaseExpr
+
+
+def _unescape_cypher_string(raw: str) -> str:
+    i = 0
+    res = []
+    n = len(raw)
+    while i < n:
+        if raw[i] == "\\":
+            if i + 1 >= n:
+                raise SyntaxError("Incomplete escape sequence at end of string")
+            nxt = raw[i + 1]
+            if nxt == "u":
+                hex_part = raw[i + 2 : i + 6]
+                if len(hex_part) < 4 or not all(c in "0123456789abcdefABCDEF" for c in hex_part):
+                    raise SyntaxError(f"Invalid unicode literal escape: \\u{hex_part}")
+                res.append(chr(int(hex_part, 16)))
+                i += 6
+                continue
+            elif nxt == "U":
+                hex_part = raw[i + 2 : i + 10]
+                if len(hex_part) < 8 or not all(c in "0123456789abcdefABCDEF" for c in hex_part):
+                    raise SyntaxError(f"Invalid unicode literal escape: \\U{hex_part}")
+                res.append(chr(int(hex_part, 16)))
+                i += 10
+                continue
+            elif nxt == "n":
+                res.append("\n")
+                i += 2
+                continue
+            elif nxt == "r":
+                res.append("\r")
+                i += 2
+                continue
+            elif nxt == "t":
+                res.append("\t")
+                i += 2
+                continue
+            elif nxt == "b":
+                res.append("\b")
+                i += 2
+                continue
+            elif nxt == "f":
+                res.append("\f")
+                i += 2
+                continue
+            elif nxt in ("'", '"', "\\", "/"):
+                res.append(nxt)
+                i += 2
+                continue
+            else:
+                res.append(nxt)
+                i += 2
+                continue
+        res.append(raw[i])
+        i += 1
+    return "".join(res)
 
 
 class CypherPipelineTransformer(Transformer):
     def __init__(self) -> None:
         super().__init__()
         self._anon_counter = 0
+        self._parenthesized_ids: set[int] = set()
+
+    def paren_expr(self, items):
+        val = items[0]
+        self._parenthesized_ids.add(id(val))
+        return val
 
     def ident(self, items):
         s = str(items[0])
@@ -99,11 +162,10 @@ class CypherPipelineTransformer(Transformer):
         return Literal(val)
 
     def str_val(self, items):
-        return Literal(items[0][1:-1])
+        return Literal(_unescape_cypher_string(items[0][1:-1]))
 
     def single_str_val(self, items):
-        raw = items[0][1:-1]
-        return Literal(raw.replace("\\'", "'").replace("\\\\", "\\"))
+        return Literal(_unescape_cypher_string(items[0][1:-1]))
 
     def num_val(self, items):
         text = str(items[0])
@@ -260,10 +322,16 @@ class CypherPipelineTransformer(Transformer):
                 rels.append(it)
             elif str(it) != "=" and path_var is None:
                 path_var = str(it)
+        rel_vars = [r.var for r in rels if r.var]
+        if len(rel_vars) != len(set(rel_vars)):
+            raise SyntaxError(f"Relationship variable cannot be repeated in the same pattern: {rel_vars}")
         return Pattern(nodes=tuple(nodes), rels=tuple(rels), path_var=path_var)
 
     def pattern_predicate(self, items):
-        return PatternPredicate(self.pattern(items))
+        pat = self.pattern(items)
+        if len(pat.nodes) <= 1 and len(pat.rels) == 0:
+            raise SyntaxError("InvalidPattern: Pattern predicate must contain at least one relationship pattern")
+        return PatternPredicate(pat)
 
     def pattern_expr(self, items):
         return self.pattern(items)
@@ -301,16 +369,21 @@ class CypherPipelineTransformer(Transformer):
         return item
 
     def _make_comparison(self, op: str, lhs_raw: Any, rhs_raw: Any):
-        if isinstance(lhs_raw, (ASTComparison, IRComparison)):
-            prev_comp = lhs_raw
-            middle = prev_comp.rhs
-            curr_comp = self._make_single_comparison(op, middle, rhs_raw)
-            return ASTAnd((prev_comp, curr_comp))
-        elif isinstance(lhs_raw, ASTAnd) and len(lhs_raw.children) > 0 and isinstance(lhs_raw.children[-1], (ASTComparison, IRComparison)):
-            prev_comp = lhs_raw.children[-1]
-            middle = prev_comp.rhs
-            curr_comp = self._make_single_comparison(op, middle, rhs_raw)
-            return ASTAnd(tuple(lhs_raw.children) + (curr_comp,))
+        if id(lhs_raw) not in self._parenthesized_ids:
+            if isinstance(lhs_raw, (ASTComparison, IRComparison)):
+                prev_comp = lhs_raw
+                middle = prev_comp.rhs
+                curr_comp = self._make_single_comparison(op, middle, rhs_raw)
+                return ASTAnd((prev_comp, curr_comp))
+            elif (
+                isinstance(lhs_raw, ASTAnd)
+                and len(lhs_raw.children) > 0
+                and isinstance(lhs_raw.children[-1], (ASTComparison, IRComparison))
+            ):
+                prev_comp = lhs_raw.children[-1]
+                middle = prev_comp.rhs
+                curr_comp = self._make_single_comparison(op, middle, rhs_raw)
+                return ASTAnd(tuple(lhs_raw.children) + (curr_comp,))
 
         return self._make_single_comparison(op, lhs_raw, rhs_raw)
 
@@ -386,7 +459,20 @@ class CypherPipelineTransformer(Transformer):
 
     def label_check_op(self, items):
         lbl = items[1][1] if isinstance(items[1], tuple) and items[1][0] == "label" else str(items[1])
-        return FunctionCall("HAS_LABEL", (items[0], Literal(lbl)))
+        base = items[0]
+        def _get_target(x):
+            if isinstance(x, FunctionCall) and x.name == "HAS_LABEL":
+                return _get_target(x.args[0])
+            if isinstance(x, ASTAnd) and x.children:
+                return _get_target(x.children[-1])
+            return x
+        real_base = _get_target(base)
+        this_check = FunctionCall("HAS_LABEL", (real_base, Literal(lbl)))
+        if real_base != base:
+            if isinstance(base, ASTAnd):
+                return ASTAnd(children=base.children + (this_check,))
+            return ASTAnd(children=(base, this_check))
+        return this_check
 
     def index_op(self, items):
         return FunctionCall("INDEX", (items[0], items[1]))
@@ -431,8 +517,29 @@ class CypherPipelineTransformer(Transformer):
             return Projection(expr=arg_ref, agg=fn_name_up, alias=None, distinct=distinct)
         return FunctionCall(target_name, tuple(args))
 
+    def when_then(self, items):
+        return (items[0], items[1])
+
     def case_expr(self, items):
-        return FunctionCall("CASE", tuple(items))
+        base_expr = None
+        idx = 0
+        if not (isinstance(items[0], tuple) and len(items[0]) == 2):
+            base_expr = items[0]
+            idx = 1
+
+        cases = []
+        else_expr = None
+        for it in items[idx:]:
+            if isinstance(it, tuple) and len(it) == 2:
+                w, t = it
+                if base_expr is not None:
+                    cond = self._make_comparison("=", base_expr, w)
+                else:
+                    cond = w
+                cases.append((cond, t))
+            else:
+                else_expr = it
+        return CaseExpr(cases=tuple(cases), else_expr=else_expr)
 
     def quantifier_call(self, items):
         fn_name = str(items[0]).upper()
@@ -441,11 +548,23 @@ class CypherPipelineTransformer(Transformer):
         where_cond = items[3] if len(items) > 3 else None
         return FunctionCall(fn_name, (Variable(ident_var), coll_expr, where_cond if where_cond is not None else Literal(True)))
 
+    def list_comp_where(self, items):
+        return ("__where__", items[0])
+
+    def list_comp_map(self, items):
+        return ("__map__", items[0])
+
     def list_comprehension(self, items):
         ident_var = str(items[0])
         coll_expr = items[1]
-        where_cond = items[2] if len(items) > 2 else None
-        map_expr = items[3] if len(items) > 3 else Variable(ident_var)
+        where_cond = None
+        map_expr = Variable(ident_var)
+        for it in items[2:]:
+            if isinstance(it, tuple) and len(it) == 2:
+                if it[0] == "__where__":
+                    where_cond = it[1]
+                elif it[0] == "__map__":
+                    map_expr = it[1]
         return FunctionCall("LIST_COMPREHENSION", (Variable(ident_var), coll_expr, where_cond, map_expr))
 
     def pattern_comprehension(self, items):
@@ -533,6 +652,9 @@ class CypherPipelineTransformer(Transformer):
                 skip_v = it[1]
             elif isinstance(it, tuple) and len(it) == 2 and it[0] == "limit":
                 limit_v = it[1]
+        aliases = [p.alias for p in projs if p.alias]
+        if len(aliases) != len(set(aliases)):
+            raise SyntaxError(f"Duplicate column name '{aliases}' in RETURN")
         return ReturnClause(items=tuple(projs), order_by=order, skip=skip_v, limit=limit_v, distinct=distinct)
 
     def with_clause(self, items):
@@ -559,6 +681,15 @@ class CypherPipelineTransformer(Transformer):
                 limit_v = it[1]
             elif not isinstance(it, (Token, Projection, OrderBy)):
                 where = it
+        aliases = [p.alias for p in projs if p.alias]
+        if len(aliases) != len(set(aliases)):
+            raise SyntaxError(f"Duplicate column name '{aliases}' in WITH")
+        for p in projs:
+            if (isinstance(p.expr, Ref) and p.expr.var == "*") or getattr(p, "raw_expr", "") == "*":
+                continue
+            is_simple_var = (isinstance(p.expr, Variable) and not p.expr.name.startswith("$")) or (isinstance(p.expr, Ref) and p.expr.prop is None and not p.expr.var.startswith("$"))
+            if not is_simple_var and not p.alias:
+                raise SyntaxError("Expression in WITH must be aliased (e.g. WITH expr AS alias)")
         return WithClause(items=tuple(projs), where=where, order_by=order, skip=skip_v, limit=limit_v, distinct=distinct)
 
     def unwind_clause(self, items):
@@ -691,13 +822,41 @@ class CypherPipelineTransformer(Transformer):
         )
 
     def union_query(self, items):
-        queries = [x for x in items if isinstance(x, Query)]
+        queries = []
+        union_types = []
+        for it in items:
+            if isinstance(it, Query):
+                queries.append(it)
+            elif isinstance(it, Token):
+                if it.type == "UNION_KW":
+                    union_types.append("UNION")
+                elif it.type == "ALL_KW" and union_types:
+                    union_types[-1] = "UNION ALL"
+
         if len(queries) == 1:
             return queries[0]
+
+        u_distinct = set(union_types)
+        if len(u_distinct) > 1:
+            raise SyntaxError("Mixing UNION and UNION ALL is not allowed without parentheses")
+
+        def _get_cols(q: Query):
+            ret = next((cl for cl in reversed(q.clauses) if isinstance(cl, ReturnClause)), None)
+            if ret:
+                return tuple(p.alias or (p.expr.var if isinstance(p.expr, Ref) and not p.expr.prop else str(p.expr)) for p in ret.items)
+            return ()
+
+        cols0 = _get_cols(queries[0])
+        for i, q in enumerate(queries[1:], 1):
+            colsi = _get_cols(q)
+            if cols0 and colsi and cols0 != colsi:
+                raise SyntaxError(f"All subqueries in an UNION must have the same column names, got {cols0} and {colsi}")
+
         main_q = queries[0]
         unions = []
-        for q in queries[1:]:
-            unions.append(("UNION", q))
+        for u_type, q in zip(union_types, queries[1:]):
+            unions.append((u_type, q))
+
         return Query(
             patterns=main_q.patterns,
             where=main_q.where,
@@ -717,7 +876,7 @@ class CypherPipelineTransformer(Transformer):
 
 
 def _extract_raw_projections(source: str) -> list[tuple[str, str | None]]:
-    m = re.search(r'\bRETURN\b\s+(.*?)(?:\bORDER\s+BY\b|\bLIMIT\b|\bSKIP\b|$)', source, re.I | re.DOTALL)
+    m = re.search(r'\bRETURN\b\s+(.*?)(?:\bORDER\s+BY\b|\bLIMIT\b|\bSKIP\b|\bUNION\b|$)', source, re.I | re.DOTALL)
     if not m:
         return []
     clause = m.group(1).strip()
@@ -796,6 +955,7 @@ def parse(source: str) -> Query:
                     agg=orig_p.agg,
                     alias=orig_p.alias,
                     raw_expr=raw_expr if not orig_p.alias else None,
+                    distinct=getattr(orig_p, "distinct", False),
                 )
             )
         new_clauses = []
@@ -809,6 +969,7 @@ def parse(source: str) -> Query:
                             agg=orig_p.agg,
                             alias=orig_p.alias,
                             raw_expr=raw_expr if not orig_p.alias else None,
+                            distinct=getattr(orig_p, "distinct", False),
                         )
                     )
                 new_clauses.append(

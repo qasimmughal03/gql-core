@@ -1,100 +1,66 @@
-# openCypher TCK Failure Analysis & Defect Remediation Inventory
+# openCypher TCK Failure Analysis & Harness Integrity Audit
 
-**Scope**: 1,339 Upstream Scenarios (openCypher TCK pinned to 2024.3)  
-**Final Verified Results**: **1,321 Supported Scenarios (100.0% Passing: 1,176 `PASS_RESULT` + 145 `PASS_EXPECTED_ERROR`)**, **0 `FAIL_WRONG_RESULT`**, **0 `FAIL_COMPILE`**, **0 `FAIL_RUNTIME`**, **0 `BLOCKED`**, **18 `UNSUPPORTED`**.  
+**Scope**: 3,897 Concrete Upstream Scenarios (1,339 Regular `Scenario:` + 2,558 `Scenario Outline:` expansions across 220 `.feature` files, openCypher TCK 2024.3)  
 **Source of Truth**: `benchmark/results/tck_compatibility_results.json`  
-**Author**: GQL-Core Database Compiler Engineering  
+**Base Commit Audited**: `94c57f219f085a997031baa5452bfe1a220cac94`
 
 ---
 
-## 1. Final Classification Matrix
+## 1. Before / After Classification Matrix
 
-Every scenario across all 220 `.feature` files in the upstream openCypher TCK has a deterministic, stable scenario ID and a single primary classification:
-
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│                      openCypher TCK Corpus (1,339)                   │
-├───────────────────────────────────┬──────────────────────────────────┤
-│ Supported Contract (1,321 / 98.7%)│ Unsupported Contract (18 / 1.3%) │
-│  • PASS_RESULT:         1,176     │  • CORRELATED_SUBQUERY_EXISTS: 10│
-│  • PASS_EXPECTED_ERROR:   145     │  • MULTI_REL_TYPE_DISJUNCTION:  8│
-│  • FAIL_WRONG_RESULT:       0     │                                  │
-│  • FAIL_COMPILE:            0     │                                  │
-│  • FAIL_RUNTIME:            0     │                                  │
-│  • BLOCKED:                 0     │                                  │
-└───────────────────────────────────┴──────────────────────────────────┘
-```
-
-| Metric | Value | Percentage |
-|---|---|---|
-| **Total Upstream Scenarios** | 1,339 | 100.00% |
-| **Declared Supported Scenarios** | 1,321 | 98.66% (Language Coverage) |
-| **Declared Unsupported Scenarios (`UNSUPPORTED`)** | 18 | 1.34% |
-| **Blocked Scenarios (`BLOCKED`)** | 0 | 0.00% |
-| **Supported Result-Expecting Scenarios (`PASS_RESULT`)** | 1,176 / 1,176 | **100.00% Result Accuracy** |
-| **Supported Error-Expecting Scenarios (`PASS_EXPECTED_ERROR`)** | 145 / 145 | **100.00% Expected-Error Accuracy** |
-| **Supported-Subset Strict Accuracy** | 1,321 / 1,321 | **100.00%** |
-| **Total Corpus Strict Compatibility** | 1,321 / 1,339 | **98.66%** |
+| Metric | Prior Report (`94c57f2` Permissive Harness) | Strict Harness — Non-Outline Corpus (1,339) | Strict Harness — Full Expanded Corpus (3,897) |
+|---|---|---|---|
+| **Total Scenarios** | 1,339 | **1,339** | **3,897** |
+| **Supported Scenarios** | 1,321 | **1,321** | **3,879** |
+| **Passed Result Checks (`PASS_RESULT`)** | 1,176 | **1,147** | **2,130** |
+| **Passed Expected-Error Checks (`PASS_EXPECTED_ERROR`)** | 145 | **112** | **315** |
+| **Passed Mutation Side-Effect Checks** | 0 (Unchecked) | **219** (1,147 total SE checks) | **222** (2,130 total SE checks) |
+| **Failed Results (`FAIL_WRONG_RESULT`)** | 0 | **19** (13 side-effect + 6 value/type) | **980** (13 side-effect + 967 value/type/no-err) |
+| **Failed Compile (`FAIL_COMPILE`)** | 0 | **3** | **408** |
+| **Failed Runtime (`FAIL_RUNTIME`)** | 0 | **40** | **46** |
+| **Wrong Error Categories / Phases** | 0 (Unchecked) | **33** | **45** |
+| **Blocked / Uninterpreted (`BLOCKED`)** | 0 | **0** | **0** |
+| **Unsupported (`UNSUPPORTED`)** | 18 | **18** | **18** |
+| **Supported Pass Rate** | 100.00% (claimed) | **95.31% (1,259 / 1,321)** | **63.03% (2,445 / 3,879)** |
 
 ---
 
-## 2. Documented Exclusions: The 18 Unsupported Scenarios
+## 2. Category Breakdown (Strict Harness — Full 3,897 Expanded Corpus)
 
-In accordance with `docs/SUPPORTED_QUERY_CONTRACT.md`, evaluated does not mean supported. Exactly 18 scenarios require Cypher syntax extensions outside the `0.2.0a1` textual query contract and are classified as `UNSUPPORTED` with explicit feature tags in `benchmark/tck/classifier.py`:
-
-### 2.1 `CORRELATED_SUBQUERY_EXISTS` (10 Scenarios)
-Full nested `EXISTS { MATCH ... WHERE ... }` and multi-hop pattern comprehensions with correlated inner `WHERE` clauses inside textual Cypher expressions (supported programmatically via `PlanBuilder`, excluded from the `0.2.0a1` textual Cypher parser):
-- `MatchWhere2#5`, `MatchWhere2#6`, `MatchWhere2#7`, `MatchWhere2#8`
-- `ExistentialSubquery1#1`, `ExistentialSubquery1#2`, `ExistentialSubquery1#3`
-- `PatternComprehension1#4`, `PatternComprehension1#8`, `TriadicSelection1#1`
-
-### 2.2 `MULTI_REL_TYPE_DISJUNCTION` (8 Scenarios)
-Pipe-separated relationship type disjunctions (`[:TYPE_A|TYPE_B]`) in textual `MATCH` patterns:
-- `Match2#7`, `Match2#8`, `Match2#12`, `Match4#6`, `Match4#7`, `Match6#9`, `Match7#10`, `TriadicSelection1#2`
-
-All 18 scenarios fail explicitly at parse/compile time and never produce silent wrong results.
+| TCK Category | Total Scenarios | `PASS_RESULT` | `PASS_EXPECTED_ERROR` | `FAIL_WRONG_RESULT` | `FAIL_COMPILE` | `FAIL_RUNTIME` | `BLOCKED` | `UNSUPPORTED` |
+|---|---|---|---|---|---|---|---|---|
+| **clauses** | 1,251 | 749 | 236 | 168 | 58 | 36 | 0 | 4 |
+| **expressions** | 2,616 | 1,353 | 79 | 812 | 350 | 10 | 0 | 12 |
+| **useCases** | 30 | 28 | 0 | 0 | 0 | 0 | 0 | 2 |
+| **Total** | **3,897** | **2,130** | **315** | **980** | **408** | **46** | **0** | **18** |
 
 ---
 
-## 3. Root-Cause Remediation of Prior 157 Failures (110 Wrong Results + 47 Negative Error Failures)
+## 3. Root-Cause Inventory of Failures Exposed by the Strict Harness
 
-All 110 previously reported wrong-result cases and all 47 previously failed expected-error cases within the supported contract were investigated, grouped by underlying architectural root cause, and fixed in the engine:
+### 3.1 Mutation Side-Effect Failures (13 Scenarios)
+1. **Stale Primary Label on Single-Label Removal (`Remove2#1`, `Remove3#8..14` — 8 scenarios)**:
+   - `_execute_remove_clause` removes the label from `node.labels` and `graph._by_label`, but leaves `node.label` populated with the removed label name.
+2. **Deleting Path Values and Nested Map/List Expressions (`Delete3#1`, `Delete5#6`, `Delete5#7` — 3 scenarios)**:
+   - `_execute_delete_clause` only deletes `Node` and `Edge` instances, failing to detach-delete `Path` objects (`Delete3#1`, `Delete5#7`) or resolve multi-level map/list indexing in `DELETE rels.key.key[0]` (`Delete5#6`).
+3. **`MERGE` Matching Deleted Nodes in the Same Query (`Merge1#14`, `Merge5#20` — 2 scenarios)**:
+   - `PropertyGraph.delete_node` removes the node from `self._nodes` but does not purge the node ID from `self._by_label`, causing `graph.nodes_by_label()` in a subsequent `MERGE` clause to match deleted nodes.
 
-### Group A — Semantic Validator Import Bug & Mutation/Scope Validation (47 Negative Scenarios Fixed)
-- **Root Cause**: An inner `from gql_core.ir import Arithmetic` statement inside `validate_query()` (`gql_core/query/semantic.py`) shadowed the module-level `Arithmetic` import, causing Python to raise `UnboundLocalError` whenever `Arithmetic` was checked before line 417. The executor caught `UnboundLocalError` and bypassed semantic validation for 39 `DELETE`, `MERGE`, and `RETURN` negative tests.
-- **Additional Semantic Rules Added**:
-  1. `WithClause`: Require explicit `AS alias` for all non-variable expressions and aggregations (`With4#5`).
-  2. `SetClause`: Reject `PatternPredicate` expressions on the right-hand side of `SET` (`Pattern1#24`).
-  3. `MatchWhere1#14` & `Pattern1#11`: Reject property access on `Path` variables (`p.name`) and reject bare `node`/`edge`/`path` variables in `WHERE` boolean contexts (`WHERE n`).
-  4. `Match3#30`: Track `kind="list"` for `ListExpr` and `COLLECT(...)` projections across `WITH` clauses, raising `SemanticError` when a list/edge/path variable is subsequently matched as a node `(xs)`.
-  5. `ReturnOrderBy2#13`: Enforce that `RETURN DISTINCT a.name` only permits ordering by `a.name` (not unprojected properties like `a.age`).
-  6. `FunctionCall` argument validation: Reject `TYPE(node)`, `LENGTH(node/edge)`, `SIZE(path)`, and undefined variables inside `MapExpr` values (`Literals8#22`).
+### 3.2 Wrong Error Categories and Phases (45 Scenarios: 33 Non-Outline + 12 Outline)
+1. **Compile-Time Errors Raised at Runtime**:
+   - Procedure signature/argument/yield validation (`Call1#7..10`, `Call1#15..16`, `Call2#4..6`, `Call5#5..6`) and `MERGE` bound-variable / var-length validation (`Merge5#22`, `Merge5#28`) are checked during `execute_pipeline` (`runtime`) instead of `validate_query` (`compile_time`).
+   - Function argument type checks (`Graph3#8`, `Graph9#5..7`) raise `TypeError` at runtime instead of `SyntaxError: InvalidArgumentType` at compile time.
+2. **Generic `RuntimeError` Instead of Domain Exception Classes**:
+   - `Delete1#7` (`DeleteConnectedNode`) raises `RuntimeError` instead of `ConstraintVerificationError`.
+   - `Return2#15..17` (`DeletedEntityAccess`) raise `RuntimeError` instead of `EntityNotFoundError`.
+3. **Runtime Errors Raised at Compile Time**:
+   - `Merge1#17` and `Merge5#29` (`MergeReadOwnWrites` on `MERGE ({num: null})`) raise `SemanticError` during `validate_query` (`compile_time`) instead of `runtime`.
 
-### Group B — Multi-Label Node Matching & Planner Routing (32 Scenarios Fixed)
-- **Root Cause**:
-  1. `label_check_op` in `gql_core/query/parser.py` referenced an unimported `And` symbol instead of `ASTAnd`, failing on multi-label predicates (`WHERE n:A:B`, `RETURN n:A:B`).
-  2. `_is_pipeline_query` in `gql_core/query/executor.py` routed single-clause `MATCH` queries with multiple node labels (`MATCH (a:A:B)`), relationship property filters, or parameterized `WHERE` predicates to the simple physical plan path instead of `execute_pipeline`.
-- **Fix**: Fixed `label_check_op` to construct `ASTAnd` over `HAS_LABEL` function calls and updated `_is_pipeline_query` to route multi-label patterns, inline relationship filters, and parameter predicates to `execute_pipeline`.
+### 3.3 Exact Result & Type Comparison Failures (6 Non-Outline Scenarios)
+1. **`Match4#1`**: Variable-length edge variable `r` in `MATCH (a)-[r*]->(b)` returns a single `Edge` instead of a list `[Edge]` when routed through the non-pipeline planner.
+2. **`Return6#16`**: Column projection naming mismatch.
+3. **`WithOrderBy1#13`, `WithOrderBy1#16`**: `localtime` / `time` formatting appends `:00` when seconds are zero (`'10:35:00'` vs `'10:35'`).
+4. **`Mathematical8#1`, `Mathematical8#2`**: Integer division inside arithmetic expressions produces `float` (`1.0`, `-15.0`) instead of `int` (`1`, `-15`).
 
-### Group C — Chained vs. Parenthesized Comparisons (`Comparison4#1`, `List11#3`)
-- **Root Cause**: Unparenthesized chained comparisons (`1 < 2 = 2 <> 3`) must be transformed into conjunctive pairwise comparisons (`1 < 2 AND 2 = 2 AND 2 <> 3`), whereas parenthesized comparisons (`((size(list) = 0) = empty)`) must compare the boolean result of the inner comparison against `empty`.
-- **Fix**: Added `-> paren_expr` rule alias in `grammar.lark`, recorded parenthesized expression object IDs in `CypherPipelineTransformer._parenthesized_ids`, and restricted comparison chaining in `_make_comparison` to unparenthesized comparison operands.
-
-### Group D — Aggregate Expression Evaluation & `ORDER BY` Scoping (28 Scenarios Fixed)
-- **Root Cause**:
-  1. `_eval_expr_with_aggs` in `executor.py` lacked handlers for `Comparison`, `MapExpr`, `ListExpr`, `And`, `Or`, `Not`, and `CaseExpr` wrapping aggregate expressions (e.g., `count(*) > 0`, `{c: count(*)}`, `[count(*)]`).
-  2. `_execute_return_or_with` discarded pre-projection variable bindings before evaluating `ORDER BY`, breaking `RETURN a.x AS x ORDER BY sum + x` when `sum` was a variable from `WITH`.
-  3. `has_star` in `WITH` treated `Ref('*')` inside `count(*)` as `WITH *`, leaking prior variables into subsequent `CALL` clauses (`Call6#1`).
-- **Fix**: Added full expression recursion in `_eval_expr_with_aggs`, preserved `(res_row, merged)` pairs through `ORDER BY`/`SKIP`/`LIMIT`, and required `p.agg is None` in `has_star`.
-
-### Group E — Dynamic Inline Filters, Bound Relationship Lists & `UNION` Deduplication (`Unwind1#6`, `Match2`, `Union1`, `ReturnOrderBy4#2`)
-- **Root Cause**:
-  1. `_match_path_pattern` compared inline node/edge property filter AST nodes directly against property values without evaluating `Ref`/`Variable` expressions against the current row (`Unwind1#6`).
-  2. Variable-length relationship lists bound in an earlier clause were not traversed when referenced in a subsequent `MATCH`.
-  3. Distinct `UNION` only deduplicated the second branch against the first rather than deduplicating within both branches.
-  4. `_safe_sort_key` ordered Paths before Lists instead of Lists before Paths.
-- **Fix**: Evaluated inline filters via `_read_ref_full(v, cur_r, graph)`, added bound relationship list traversal in `_match_path_pattern`, deduplicated both branches in `_union`, and swapped List/Path sort priority buckets in `_safe_sort_key`.
-
-### Group F — Temporal Timezone Offsets & Large ISO Durations (`Temporal5#6`, `Temporal6#7`, `Temporal10#10`)
-- **Root Cause**: On Windows environments without `tzdata`, `zoneinfo.ZoneInfo("Europe/Stockholm")` raised `ZoneInfoNotFoundError`, omitting timezone offsets and `epochSeconds`/`epochMillis` components. Additionally, `duration.inSeconds` formatted multi-billion-year durations as raw seconds instead of decomposing into `H`, `M`, `S`.
-- **Fix**: Added `_resolve_tz_offset_seconds` fallback for CET/CEST timezones with `epochSeconds`/`epochMillis` calculation in `evaluator.py`, and updated `DURATION.INSECONDS` formatting for large year spans.
+### 3.4 `Scenario Outline:` Expansion Failures (1,372 Scenarios Across 2,558 Expanded Rows)
+Previously skipped `Scenario Outline:` blocks in `Comparison1..2`, `Boolean1..4`, `List1..11`, `Null1..3`, `Quantifier1..8`, `Temporal1..10`, `WithOrderBy1..3`, and `Match1..6` are now fully expanded and evaluated, exposing 961 wrong-result/missing-error cases, 405 compile failures, and 6 runtime failures across parameterized expression and type-coercion edge cases.

@@ -1,0 +1,35 @@
+{
+  "nodes": [
+    {
+      "id": "alice",
+      "label": "Person",
+      "name": "Alice"
+    },
+    {
+      "id": "bob",
+      "label": "Person",
+      "name": "Bob"
+    },
+    {
+      "id": "charlie",
+      "label": "Person",
+      "name": "Charlie"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "src": "alice",
+      "dst": "bob",
+      "label": "KNOWS",
+      "since": 2024
+    },
+    {
+      "id": "e2",
+      "src": "bob",
+      "dst": "charlie",
+      "label": "KNOWS",
+      "since": 2025
+    }
+  ]
+}

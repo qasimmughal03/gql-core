@@ -479,8 +479,8 @@ class CypherPipelineTransformer(Transformer):
 
     def slice_op(self, items):
         base = items[0]
-        lo = Literal(None)
-        hi = Literal(None)
+        lo = Literal("__OPEN_SLICE__")
+        hi = Literal("__OPEN_SLICE__")
         for i, it in enumerate(items[1:], 1):
             if (isinstance(it, Token) and it.type == "DOTDOT") or str(it) == "..":
                 if i > 1:
@@ -611,7 +611,8 @@ class CypherPipelineTransformer(Transformer):
         return Projection(expr=expr, agg=None, alias=alias)
 
     def direction(self, items):
-        return str(items[0])
+        d = str(items[0]).upper()
+        return "DESC" if d.startswith("DESC") else "ASC"
 
     def order_term(self, items):
         expr = items[0]

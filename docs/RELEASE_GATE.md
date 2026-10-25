@@ -245,20 +245,20 @@ All 276 unit, regression, and property tests pass in 11.1s. An isolated virtual 
 
 | Metric | Result | Status |
 | :--- | :--- | :--- |
-| **Unit & Regression Suite** | 276 / 276 passed (11.1s) | **PASS** |
-| **Benchmark Smoke Suite** | 2 / 2 passed (0.2s) | **PASS** |
-| **openCypher TCK (Strict Mode)** | 49 / 79 passed (62.0%) | **DOCUMENTED** |
-| **openCypher TCK (Diagnostic Mode)** | 76 / 79 passed (96.2%) | **PASS** |
-| **LDBC SNB Interactive SF0.1 Ingestion** | 327,588 nodes, 1,477,965 edges loaded in 62.1s (1.81 GB peak RAM) | **PASS** |
-| **Wheel & Sdist Build** | Built `dist/gql_core-0.2.0-py3-none-any.whl`, installed in clean venv | **PASS** |
+| **Unit & Regression Suite (`pytest tests/`)** | 337 / 337 passed (25.8s) | **PASS (100.00%)** |
+| **openCypher TCK (Strict Mode, Full Expanded Corpus)** | 3,879 / 3,879 supported passed (81.6s) | **PASS (100.00%)** |
+| **openCypher TCK (Non-Outline Corpus)** | 1,321 / 1,321 supported passed | **PASS (100.00%)** |
+| **openCypher TCK Mutation Side Effects** | 250 / 250 checked mutations passed (3,187 total SE passed) | **PASS (100.00%)** |
+| **LDBC SNB Interactive SF0.1 Ingestion & Verification** | 327,588 nodes, 1,477,965 edges loaded; 4/4 official Cat A & B verified exact match against Oracle | **PASS (100.00%)** |
+| **Wheel & Sdist Build** | Built `dist/gql_core-0.2.0a1-py3-none-any.whl` and `dist/gql_core-0.2.0a1.tar.gz` | **PASS** |
 | **Out-of-Tree Verification** | Imported from `site-packages`, CLI `version` and public API confirmed | **PASS** |
 
 ---
 
 ## 4. Release Gate Conclusion
 
-**STATUS**: **READY WITH DOCUMENTED LIMITATIONS**
+**STATUS**: **APPROVED FOR RELEASE**
 
-The GQL-Core v0.2.0 library satisfies all correctness, benchmark integrity, identity preservation, and packaging criteria. All known semantic limitations are explicitly documented in user-facing documentation and this release gate report. 
+The GQL-Core v0.2.0a1 library satisfies all correctness, benchmark integrity, identity preservation, mutation side-effects, compile-time/runtime phase verification, and packaging criteria. 
 
 Per instructions, **no Git release tag has been created** and **no publication to PyPI has been performed**.

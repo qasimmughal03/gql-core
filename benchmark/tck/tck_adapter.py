@@ -37,24 +37,14 @@ from benchmark.tck.gherkin_parser import (
 _NAMED_GRAPHS_DIR = Path(__file__).resolve().parent.parent / "cache" / "openCypher" / "tck" / "graphs"
 
 
-class EntityNotFoundError(Exception):
-    """Explicit exception class for openCypher EntityNotFound runtime errors."""
-
-
-class ConstraintVerificationError(Exception):
-    """Explicit exception class for openCypher ConstraintVerificationFailed runtime errors."""
-
-
-class ProcedureError(Exception):
-    """Explicit exception class for openCypher ProcedureError compile/runtime errors."""
-
-
-class ParameterMissingError(Exception):
-    """Explicit exception class for openCypher ParameterMissing compile/runtime errors."""
-
-
-class ArgumentError(ValueError):
-    """Explicit exception class for openCypher ArgumentError runtime errors."""
+# Explicit openCypher error categories are raised by the engine itself.
+from gql_core.errors import (  # noqa: E402
+    ArgumentError,
+    ConstraintVerificationError,
+    EntityNotFoundError,
+    ParameterMissingError,
+    ProcedureError,
+)
 
 
 @dataclass
@@ -445,7 +435,7 @@ def _execute_query_with_phase(query_str: str, graph: PropertyGraph) -> list[dict
     """
     try:
         query_ast = parse(query_str)
-        validate_query(query_ast)
+        validate_query(query_ast, graph=graph)
     except Exception as exc:
         raise _PhasedQueryError(exc, "compile_time") from exc
 

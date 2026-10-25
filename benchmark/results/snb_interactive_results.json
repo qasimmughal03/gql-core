@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "timestamp": "2026-10-19T01:27:38Z",
+    "timestamp": "2026-10-25T21:10:56Z",
     "benchmark_suite": "LDBC SNB Interactive v1 Read-Only",
     "dataset": {
       "dataset_key": "official_sf01",
@@ -27,13 +27,13 @@
       "processor": "Intel64 Family 6 Model 186 Stepping 3, GenuineIntel",
       "cpu_count_logical": 12,
       "total_ram_gb": 15.64,
-      "available_ram_gb": 2.21,
+      "available_ram_gb": 2.46,
       "python_version": "3.14.7",
       "python_implementation": "CPython",
       "package_name": "gql-core",
       "package_version": "0.2.0a1",
       "package_location": "C:\\Users\\HP\\Documents\\Portfolio\\knowledge-graoh-with-formal-query\\gql_core",
-      "git_commit": "94c57f219f085a997031baa5452bfe1a220cac94",
+      "git_commit": "bc9ccb7049c550ccc5052f53b1e3942a912f956e",
       "workload_disclaimer": "Unaudited read-only performance study using LDBC SNB Interactive v1 queries"
     },
     "dataset_loading": {
@@ -69,8 +69,8 @@
         "HAS_TYPE": 16080,
         "IS_SUBCLASS_OF": 70
       },
-      "load_time_seconds": 9.455,
-      "peak_memory_rss_mb": 991.38,
+      "load_time_seconds": 43.619,
+      "peak_memory_rss_mb": 990.88,
       "dataset_metadata": {
         "dataset_key": "official_sf01",
         "dataset_name": "LDBC SNB Interactive v1 Official SF0.1 Initial Snapshot",
@@ -138,29 +138,25 @@
       "correctness_status": "VERIFIED_EXACT_MATCH",
       "result_row_count": 1,
       "expected_row_count": 1,
-      "sample_count": 5,
-      "warmup_count": 2,
+      "sample_count": 1,
+      "warmup_count": 0,
       "latency_ms": {
-        "median": 2.3458,
-        "mean": 2.4145,
-        "stddev": 0.5835,
-        "min": 1.8615,
-        "max": 3.2446,
-        "p95": 3.1402,
+        "median": 55.9964,
+        "mean": 55.9964,
+        "stddev": 0.0,
+        "min": 55.9964,
+        "max": 55.9964,
+        "p95": 55.9964,
         "samples": [
-          3.2446,
-          2.7228,
-          2.3458,
-          1.8615,
-          1.8976
+          55.9964
         ]
       },
       "phase_timings_ms": {
-        "parse_mean": 0.6508,
-        "plan_mean": 0.0098,
-        "execution_mean": 0.786
+        "parse_mean": 3.6413,
+        "plan_mean": 0.0601,
+        "execution_mean": 5.4304
       },
-      "sqlite_baseline_ms": 0.1358,
+      "sqlite_baseline_ms": 0.296,
       "notes": null
     },
     {
@@ -175,29 +171,25 @@
       "correctness_status": "VERIFIED_EXACT_MATCH",
       "result_row_count": 1,
       "expected_row_count": 1,
-      "sample_count": 5,
-      "warmup_count": 2,
+      "sample_count": 1,
+      "warmup_count": 0,
       "latency_ms": {
-        "median": 1.5074,
-        "mean": 1.9194,
-        "stddev": 0.6688,
-        "min": 1.3366,
-        "max": 2.7618,
-        "p95": 2.7143,
+        "median": 9.7355,
+        "mean": 9.7355,
+        "stddev": 0.0,
+        "min": 9.7355,
+        "max": 9.7355,
+        "p95": 9.7355,
         "samples": [
-          1.5074,
-          1.4673,
-          1.3366,
-          2.7618,
-          2.5241
+          9.7355
         ]
       },
       "phase_timings_ms": {
-        "parse_mean": 0.7129,
-        "plan_mean": 0.0118,
-        "execution_mean": 0.9079
+        "parse_mean": 3.4899,
+        "plan_mean": 0.055,
+        "execution_mean": 5.5601
       },
-      "sqlite_baseline_ms": 0.0392,
+      "sqlite_baseline_ms": 0.0895,
       "notes": null
     },
     {
@@ -212,29 +204,25 @@
       "correctness_status": "VERIFIED_EXACT_MATCH",
       "result_row_count": 269,
       "expected_row_count": 269,
-      "sample_count": 5,
-      "warmup_count": 2,
+      "sample_count": 1,
+      "warmup_count": 0,
       "latency_ms": {
-        "median": 5.4797,
-        "mean": 5.6837,
-        "stddev": 0.4578,
-        "min": 5.1589,
-        "max": 6.2391,
-        "p95": 6.2083,
+        "median": 21.1533,
+        "mean": 21.1533,
+        "stddev": 0.0,
+        "min": 21.1533,
+        "max": 21.1533,
+        "p95": 21.1533,
         "samples": [
-          6.2391,
-          6.085,
-          5.456,
-          5.1589,
-          5.4797
+          21.1533
         ]
       },
       "phase_timings_ms": {
-        "parse_mean": 0.7455,
-        "plan_mean": 0.0172,
-        "execution_mean": 4.3342
+        "parse_mean": 2.9598,
+        "plan_mean": 0.0575,
+        "execution_mean": 16.1254
       },
-      "sqlite_baseline_ms": 0.628,
+      "sqlite_baseline_ms": 3.6074,
       "notes": null
     },
     {
@@ -249,29 +237,25 @@
       "correctness_status": "VERIFIED_EXACT_MATCH",
       "result_row_count": 230,
       "expected_row_count": 230,
-      "sample_count": 5,
-      "warmup_count": 2,
+      "sample_count": 1,
+      "warmup_count": 0,
       "latency_ms": {
-        "median": 7.1438,
-        "mean": 7.0084,
-        "stddev": 1.6849,
-        "min": 5.021,
-        "max": 9.2963,
-        "p95": 8.998,
+        "median": 20.275,
+        "mean": 20.275,
+        "stddev": 0.0,
+        "min": 20.275,
+        "max": 20.275,
+        "p95": 20.275,
         "samples": [
-          7.8048,
-          9.2963,
-          5.776,
-          5.021,
-          7.1438
+          20.275
         ]
       },
       "phase_timings_ms": {
-        "parse_mean": 0.9722,
-        "plan_mean": 0.0205,
-        "execution_mean": 4.9297
+        "parse_mean": 3.1213,
+        "plan_mean": 0.0613,
+        "execution_mean": 15.9404
       },
-      "sqlite_baseline_ms": 0.4825,
+      "sqlite_baseline_ms": 1.9185,
       "notes": null
     },
     {
@@ -286,29 +270,25 @@
       "correctness_status": "VERIFIED_EXACT_MATCH",
       "result_row_count": 0,
       "expected_row_count": 0,
-      "sample_count": 5,
-      "warmup_count": 2,
+      "sample_count": 1,
+      "warmup_count": 0,
       "latency_ms": {
-        "median": 178.9777,
-        "mean": 180.4923,
-        "stddev": 6.6,
-        "min": 173.5427,
-        "max": 187.411,
-        "p95": 187.4032,
+        "median": 512.3766,
+        "mean": 512.3766,
+        "stddev": 0.0,
+        "min": 512.3766,
+        "max": 512.3766,
+        "p95": 512.3766,
         "samples": [
-          175.1583,
-          187.372,
-          178.9777,
-          187.411,
-          173.5427
+          512.3766
         ]
       },
       "phase_timings_ms": {
-        "parse_mean": 0.7535,
-        "plan_mean": 0.0216,
-        "execution_mean": 173.2005
+        "parse_mean": 2.2713,
+        "plan_mean": 0.0551,
+        "execution_mean": 484.2523
       },
-      "sqlite_baseline_ms": 0.1765,
+      "sqlite_baseline_ms": 0.2567,
       "notes": "Adapted from Message to Post. Only matches post authors; does not match comments."
     },
     {
@@ -324,29 +304,25 @@
       "correctness_status": "VERIFIED_EXACT_MATCH",
       "result_row_count": 20,
       "expected_row_count": 20,
-      "sample_count": 5,
-      "warmup_count": 2,
+      "sample_count": 1,
+      "warmup_count": 0,
       "latency_ms": {
-        "median": 270.3701,
-        "mean": 276.4203,
-        "stddev": 15.9189,
-        "min": 259.6725,
-        "max": 295.6009,
-        "p95": 294.6647,
+        "median": 1021.2385,
+        "mean": 1021.2385,
+        "stddev": 0.0,
+        "min": 1021.2385,
+        "max": 1021.2385,
+        "p95": 1021.2385,
         "samples": [
-          290.9198,
-          295.6009,
-          270.3701,
-          265.5381,
-          259.6725
+          1021.2385
         ]
       },
       "phase_timings_ms": {
-        "parse_mean": 1.0439,
-        "plan_mean": 0.0224,
-        "execution_mean": 436.0085
+        "parse_mean": 4.7153,
+        "plan_mean": 0.0882,
+        "execution_mean": 1043.8303
       },
-      "sqlite_baseline_ms": 7.0541,
+      "sqlite_baseline_ms": 26.4443,
       "notes": "Adapted from Message to Post, omitting comments and coalesce(content, imageFile)."
     },
     {
@@ -361,29 +337,25 @@
       "correctness_status": "VERIFIED_EXACT_MATCH",
       "result_row_count": 20,
       "expected_row_count": 20,
-      "sample_count": 5,
-      "warmup_count": 2,
+      "sample_count": 1,
+      "warmup_count": 0,
       "latency_ms": {
-        "median": 19.547,
-        "mean": 19.6771,
-        "stddev": 0.3609,
-        "min": 19.3748,
-        "max": 20.2199,
-        "p95": 20.1476,
+        "median": 88.2512,
+        "mean": 88.2512,
+        "stddev": 0.0,
+        "min": 88.2512,
+        "max": 88.2512,
+        "p95": 88.2512,
         "samples": [
-          19.3853,
-          20.2199,
-          19.547,
-          19.3748,
-          19.8586
+          88.2512
         ]
       },
       "phase_timings_ms": {
-        "parse_mean": 0.896,
-        "plan_mean": 0.0162,
-        "execution_mean": 18.5619
+        "parse_mean": 4.87,
+        "plan_mean": 0.0839,
+        "execution_mean": 84.1018
       },
-      "sqlite_baseline_ms": 1.3225,
+      "sqlite_baseline_ms": 6.1517,
       "notes": "Adapted from Message to Post. Only matches replies to Posts, not threaded replies to Comments."
     }
   ]

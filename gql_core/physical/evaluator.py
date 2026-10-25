@@ -131,6 +131,10 @@ def eval_value(expr: ValueExpr | None, row: dict[str, Any], graph: PropertyGraph
             return entity.props.get(expr.prop)
         if isinstance(entity, dict):
             return entity.get(expr.prop)
+        if hasattr(entity, "props"):
+            if expr.prop == "id" and not (getattr(entity, "_is_auto_id", False) or (isinstance(getattr(entity, "id", None), str) and entity.id.startswith("node_"))):
+                return getattr(entity, "id", None)
+            return entity.props.get(expr.prop)
         return getattr(entity, expr.prop, None)
 
     from gql_core.query.ast import Ref
@@ -152,17 +156,18 @@ def eval_value(expr: ValueExpr | None, row: dict[str, Any], graph: PropertyGraph
             return None
         if expr.prop is None:
             return binding
-        if hasattr(binding, "props"):
-            return binding.props.get(expr.prop)
-        if isinstance(binding, dict):
-            return binding.get(expr.prop)
-        return getattr(binding, expr.prop, None)
+        from gql_core.query.executor import _read_ref_full
+        return _read_ref_full(expr, row, graph)
 
     if isinstance(expr, Arithmetic):
         lval = eval_value(expr.lhs, row, graph)
         rval = eval_value(expr.rhs, row, graph)
         if lval is None or rval is None:
             return None
+
+        from gql_core.query.cypher_temporal import CypherTemporalValue, eval_temporal_arithmetic
+        if isinstance(lval, CypherTemporalValue) or isinstance(rval, CypherTemporalValue):
+            return eval_temporal_arithmetic(expr.op, lval, rval)
 
         # Temporal arithmetic
         if isinstance(lval, (Date, DateTime, Duration)) or isinstance(rval, Duration):
@@ -184,6 +189,8 @@ def eval_value(expr: ValueExpr | None, row: dict[str, Any], graph: PropertyGraph
                     if lval == 0:
                         return float("nan")
                     return None
+                if isinstance(lval, int) and isinstance(rval, int) and not isinstance(lval, bool) and not isinstance(rval, bool):
+                    return int(lval / rval) if abs(lval) < 2**52 else (abs(lval) // abs(rval)) * (1 if (lval >= 0) == (rval >= 0) else -1)
                 return lval / rval
             if expr.op == "%":
                 if rval == 0:
@@ -233,6 +240,7 @@ def eval_value(expr: ValueExpr | None, row: dict[str, Any], graph: PropertyGraph
                 return None
             matches = 0
             has_unknown = False
+            unknown_count = 0
             for item in coll_val:
                 local_row = dict(row)
                 local_row[var_name] = item
@@ -241,10 +249,11 @@ def eval_value(expr: ValueExpr | None, row: dict[str, Any], graph: PropertyGraph
                     matches += 1
                 elif ev is None:
                     has_unknown = True
+                    unknown_count += 1
             if expr.name == "ALL":
-                if has_unknown and matches + 1 == len(coll_val):
-                    return None
-                return matches == len(coll_val) and not has_unknown
+                if len(coll_val) - matches - unknown_count > 0:
+                    return False
+                return None if has_unknown else True
             elif expr.name == "ANY":
                 if matches > 0:
                     return True
@@ -258,6 +267,8 @@ def eval_value(expr: ValueExpr | None, row: dict[str, Any], graph: PropertyGraph
                     return None
                 return True
             elif expr.name == "SINGLE":
+                if matches > 1:
+                    return False
                 if has_unknown:
                     return None
                 return matches == 1
@@ -316,8 +327,12 @@ def eval_predicate(expr: BoolExpr | None, row: dict[str, Any], graph: PropertyGr
     if expr is None:
         return True
 
-    if isinstance(expr, ValueExpr):
-        v = eval_value(expr, row, graph)
+    if isinstance(expr, ValueExpr) or type(expr).__name__ == "Ref":
+        if isinstance(expr, ValueExpr):
+            v = eval_value(expr, row, graph)
+        else:
+            from gql_core.query.executor import _read_ref_full
+            v = _read_ref_full(expr, row, graph)
         if v is None:
             return None
         if isinstance(v, bool):
@@ -524,6 +539,41 @@ def _compare_maps_3vl(m1: dict, m2: dict) -> bool | None:
 def _eval_comparison(op: str, lval: Any, rval: Any) -> bool | None:
     """Compare two values under 3VL semantics."""
     if lval is None or rval is None:
+        return None
+
+    from gql_core.query.cypher_temporal import CypherTemporalValue
+    if isinstance(lval, CypherTemporalValue) or isinstance(rval, CypherTemporalValue):
+        lk = getattr(lval, "_kind", None) if isinstance(lval, CypherTemporalValue) else None
+        rk = getattr(rval, "_kind", None) if isinstance(rval, CypherTemporalValue) else None
+        if lk is not None and lk == rk:
+            def _tkey(v: Any) -> Any:
+                pr = v._props
+                if lk == "time":
+                    return (pr["hour"] * 3600 + pr["minute"] * 60 + pr["second"] - pr.get("offsetSeconds", 0), pr["nanosecond"])
+                if lk == "datetime" and "epochSeconds" in pr:
+                    return (pr["epochSeconds"], pr.get("nanosecond", 0))
+                return str(v)
+            if lk == "duration":
+                if op in ("=", "=="):
+                    return str(lval) == str(rval)
+                if op in ("!=", "<>"):
+                    return str(lval) != str(rval)
+                return None
+            a, b = _tkey(lval), _tkey(rval)
+            if op in ("=", "=="):
+                return a == b
+            if op in ("!=", "<>"):
+                return a != b
+            return {"<": a < b, "<=": a <= b, ">": a > b, ">=": a >= b}.get(op)
+        if lk != rk and lk is not None and rk is not None:
+            if op in ("=", "=="):
+                return False
+            if op in ("!=", "<>"):
+                return True
+            return None
+
+    _is_num = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool)
+    if op in ("<", "<=", ">", ">=") and (_is_num(lval) != _is_num(rval)):
         return None
 
     # Handle NaN
@@ -814,6 +864,9 @@ def _make_cypher_duration(m: dict | str) -> CypherTemporalValue:
 
 
 def _extract_temporal_prop(obj: Any, prop: str) -> Any:
+    from gql_core.query.cypher_temporal import CypherTemporalValue
+    if isinstance(obj, CypherTemporalValue):
+        return obj.get_component(prop)
     if isinstance(obj, str):
         s = obj.strip()
         m_date = re.match(r"^(\d{4})-(\d{2})-(\d{2})", s)
@@ -885,8 +938,52 @@ def _extract_temporal_prop(obj: Any, prop: str) -> Any:
     return None
 
 
+_NO_TEMPORAL = object()
+_TEMPORAL_CTORS = ("DATE", "LOCALTIME", "TIME", "LOCALDATETIME", "DATETIME")
+
+
+def _cypher_temporal_dispatch(name_up: str, args: list[Any]) -> Any:
+    """Route openCypher temporal/duration functions to the dedicated module."""
+    from gql_core.query import cypher_temporal as ct
+    ctors = {
+        "DATE": ct.construct_date,
+        "LOCALTIME": ct.construct_localtime,
+        "TIME": ct.construct_time,
+        "LOCALDATETIME": ct.construct_localdatetime,
+        "DATETIME": ct.construct_datetime,
+    }
+    if name_up in ctors or name_up == "DURATION":
+        fn = ctors.get(name_up, ct.construct_duration)
+        if not args:
+            if name_up == "DURATION":
+                return _NO_TEMPORAL
+            return fn({})
+        if args[0] is None:
+            return None
+        return fn(args[0])
+    base, _, sub = name_up.partition(".")
+    if base in ctors and sub == "TRUNCATE":
+        if len(args) < 2 or args[1] is None:
+            return None
+        return ct.truncate_temporal(base.lower() + ".truncate", args[0], args[1], args[2] if len(args) > 2 else None)
+    if base in ctors and sub in ("REALTIME", "STATEMENT", "TRANSACTION"):
+        if args and args[0] is None:
+            return None
+        if args and args[0] is not None:
+            return ctors[base]({"timezone": args[0]})
+        return ctors[base]({})
+    if base == "DURATION" and sub in ("BETWEEN", "INMONTHS", "INDAYS", "INSECONDS"):
+        if len(args) < 2 or args[0] is None or args[1] is None:
+            return None
+        return ct.compute_duration_between(name_up, args[0], args[1])
+    return _NO_TEMPORAL
+
+
 def _eval_function(name: str, args: list[Any], graph: PropertyGraph | None = None) -> Any:
     name_up = name.upper()
+    _ct = _cypher_temporal_dispatch(name_up, args)
+    if _ct is not _NO_TEMPORAL:
+        return _ct
     if name_up == "PROPERTY_ACCESS":
         if not args or args[0] is None:
             return None
@@ -914,6 +1011,8 @@ def _eval_function(name: str, args: list[Any], graph: PropertyGraph | None = Non
         t_val = _extract_temporal_prop(base_val, prop_str)
         if t_val is not None:
             return t_val
+        if hasattr(base_val, "props"):
+            return base_val.props.get(prop_str)
         return getattr(base_val, prop_str, None)
     if name_up == "COALESCE":
         for a in args:
@@ -932,6 +1031,15 @@ def _eval_function(name: str, args: list[Any], graph: PropertyGraph | None = Non
     if name_up == "RAND":
         import random
         return random.random()
+    if name_up in ("TO_INT", "TOINTEGER", "TO_FLOAT", "TOFLOAT", "TO_STRING", "TOSTRING", "TO_BOOL", "TOBOOLEAN") and args and args[0] is not None:
+        _v = args[0]
+        _bad = isinstance(_v, (list, tuple, dict, Node, Edge)) or (hasattr(_v, "nodes") and hasattr(_v, "relationships"))
+        if name_up in ("TO_FLOAT", "TOFLOAT") and isinstance(_v, bool):
+            _bad = True
+        if name_up in ("TO_BOOL", "TOBOOLEAN") and isinstance(_v, float):
+            _bad = True
+        if _bad:
+            raise TypeError(f"InvalidArgumentValue: {name}() cannot convert value of type {type(_v).__name__}")
     if name_up in ("TO_INT", "TOINTEGER"):
         if not args or args[0] is None:
             return None
@@ -1021,7 +1129,7 @@ def _eval_function(name: str, args: list[Any], graph: PropertyGraph | None = Non
         if not args or args[0] is None:
             return None
         if getattr(args[0], "_deleted", False):
-            raise RuntimeError("Cannot access deleted entity")
+            raise __import__("gql_core.errors", fromlist=["x"]).EntityNotFoundError("EntityNotFound: Cannot access deleted entity")
         if isinstance(args[0], dict):
             return list(args[0].keys())
         if hasattr(args[0], "props"):
@@ -1033,7 +1141,7 @@ def _eval_function(name: str, args: list[Any], graph: PropertyGraph | None = Non
         if not hasattr(args[0], "props") or hasattr(args[0], "src"):
             raise TypeError(f"Expected a node, got {type(args[0]).__name__}")
         if getattr(args[0], "_deleted", False):
-            raise RuntimeError("Cannot access deleted node")
+            raise __import__("gql_core.errors", fromlist=["x"]).EntityNotFoundError("EntityNotFound: Cannot access deleted node")
         if hasattr(args[0], "labels"):
             return list(args[0].labels)
         if hasattr(args[0], "label") and args[0].label and args[0].label != "Node":
@@ -1056,7 +1164,7 @@ def _eval_function(name: str, args: list[Any], graph: PropertyGraph | None = Non
         if not args or args[0] is None:
             return None
         if getattr(args[0], "_deleted", False):
-            raise RuntimeError("Cannot access deleted entity")
+            raise __import__("gql_core.errors", fromlist=["x"]).EntityNotFoundError("EntityNotFound: Cannot access deleted entity")
         return getattr(args[0], "id", None)
     if name_up == "STARTNODE":
         if not args or args[0] is None:
@@ -1065,7 +1173,7 @@ def _eval_function(name: str, args: list[Any], graph: PropertyGraph | None = Non
         if not hasattr(rel, "src"):
             raise TypeError(f"Expected a relationship, got {type(rel).__name__}")
         if getattr(rel, "_deleted", False):
-            raise RuntimeError("Cannot access deleted relationship")
+            raise __import__("gql_core.errors", fromlist=["x"]).EntityNotFoundError("EntityNotFound: Cannot access deleted relationship")
         if graph:
             return graph.get_node(rel.src)
         return None
@@ -1076,7 +1184,7 @@ def _eval_function(name: str, args: list[Any], graph: PropertyGraph | None = Non
         if not hasattr(rel, "dst"):
             raise TypeError(f"Expected a relationship, got {type(rel).__name__}")
         if getattr(rel, "_deleted", False):
-            raise RuntimeError("Cannot access deleted relationship")
+            raise __import__("gql_core.errors", fromlist=["x"]).EntityNotFoundError("EntityNotFound: Cannot access deleted relationship")
         if graph:
             return graph.get_node(rel.dst)
         return None
@@ -1084,7 +1192,7 @@ def _eval_function(name: str, args: list[Any], graph: PropertyGraph | None = Non
         if not args or args[0] is None:
             return None
         if getattr(args[0], "_deleted", False):
-            raise RuntimeError("Cannot access deleted entity")
+            raise __import__("gql_core.errors", fromlist=["x"]).EntityNotFoundError("EntityNotFound: Cannot access deleted entity")
         if isinstance(args[0], dict):
             return dict(args[0])
         if hasattr(args[0], "props"):
@@ -1128,10 +1236,17 @@ def _eval_function(name: str, args: list[Any], graph: PropertyGraph | None = Non
             return str(args[0]).replace(str(args[1]), str(args[2]))
         return None
     if name_up == "RANGE":
+        if any(_a is None for _a in args[:3]) or any(isinstance(_a, bool) or not isinstance(_a, int) for _a in args[:3]):
+            from gql_core.errors import ArgumentError
+            raise ArgumentError(f"InvalidArgumentType: range() requires integer arguments, got {args!r}")
         if len(args) >= 2 and args[0] is not None and args[1] is not None:
+            from gql_core.errors import ArgumentError
+            for _a in args[:3]:
+                if isinstance(_a, bool) or not isinstance(_a, int):
+                    raise ArgumentError(f"InvalidArgumentType: range() requires integer arguments, got {_a!r}")
             step = int(args[2]) if len(args) > 2 and args[2] is not None else 1
             if step == 0:
-                raise ValueError("Step cannot be zero")
+                raise ArgumentError("NumberOutOfRange: range() step cannot be zero")
             start = int(args[0])
             stop = int(args[1])
             stop_bound = (stop + 1) if step > 0 else (stop - 1)
@@ -1162,8 +1277,12 @@ def _eval_function(name: str, args: list[Any], graph: PropertyGraph | None = Non
     if name_up == "SLICE":
         if args and args[0] is not None:
             seq = args[0]
-            lo = int(args[1]) if len(args) > 1 and args[1] is not None else 0
-            hi = int(args[2]) if len(args) > 2 and args[2] is not None else len(seq)
+            a_lo = args[1] if len(args) > 1 else "__OPEN_SLICE__"
+            a_hi = args[2] if len(args) > 2 else "__OPEN_SLICE__"
+            if a_lo is None or a_hi is None:
+                return None
+            lo = 0 if a_lo == "__OPEN_SLICE__" else int(a_lo)
+            hi = len(seq) if a_hi == "__OPEN_SLICE__" else int(a_hi)
             try:
                 return seq[lo:hi]
             except Exception:

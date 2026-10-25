@@ -81,6 +81,13 @@ _KNOWN_FUNCTIONS = {
     "DATE", "LOCALTIME", "TIME", "LOCALDATETIME", "DATETIME", "DURATION",
     "DATETIME.FROMEPOCH", "DATETIME.FROMEPOCHMILLIS", "LOCALDATETIME.FROMEPOCH", "LOCALDATETIME.FROMEPOCHMILLIS",
     "DURATION.BETWEEN", "DURATION.INSECONDS", "DURATION.INMONTHS", "DURATION.INDAYS",
+    "DATE.TRUNCATE", "LOCALTIME.TRUNCATE", "TIME.TRUNCATE", "LOCALDATETIME.TRUNCATE", "DATETIME.TRUNCATE",
+    "DATE.REALTIME", "DATE.STATEMENT", "DATE.TRANSACTION",
+    "LOCALTIME.REALTIME", "LOCALTIME.STATEMENT", "LOCALTIME.TRANSACTION",
+    "TIME.REALTIME", "TIME.STATEMENT", "TIME.TRANSACTION",
+    "LOCALDATETIME.REALTIME", "LOCALDATETIME.STATEMENT", "LOCALDATETIME.TRANSACTION",
+    "DATETIME.REALTIME", "DATETIME.STATEMENT", "DATETIME.TRANSACTION",
+    "PERCENTILEDISC", "PERCENTILECONT",
     "ANY", "ALL", "NONE", "SINGLE", "LIST_COMPREHENSION", "PATTERN_COMPREHENSION", "EXISTS",
 }
 
@@ -188,7 +195,7 @@ def _validate_with_order_by(clause: WithClause) -> None:
         _check_term(term.ref)
 
 
-def validate_query(query: Query, schema_path: str | Path | None = None) -> None:
+def validate_query(query: Query, schema_path: str | Path | None = None, graph: Any = None) -> None:
     """Validate a parsed query against the graph ontology.
 
     When schema_path is provided (or set via set_schema_path), full
@@ -199,6 +206,8 @@ def validate_query(query: Query, schema_path: str | Path | None = None) -> None:
     conflicts, unbound references). This is the generic default — the engine
     carries no embedded domain ontology.
     """
+    from gql_core.query.static_types import check_static_types
+    check_static_types(query)
     schema = _resolve_schema(schema_path)
     bindings: dict[str, _Binding] = {}
 
@@ -274,14 +283,14 @@ def validate_query(query: Query, schema_path: str | Path | None = None) -> None:
                     if not r.label:
                         raise SyntaxError("Relationship pattern in MERGE must specify a relationship type")
 
-                for n in clause.pattern.nodes:
-                    for pk, pv in n.filters:
-                        if pv is None or (isinstance(pv, Literal) and pv.value is None):
-                            raise SemanticError(f"Property value for '{pk}' in MERGE cannot be null")
+                if clause.pattern.rels:
+                    for n in clause.pattern.nodes:
+                        if n.var and n.var in bindings and (n.label is not None or n.filters or len(getattr(n, "labels", ()) or ()) > 0):
+                            raise SyntaxError(f"VariableAlreadyBound: '{n.var}' cannot redeclare labels or properties in MERGE")
                 for r in clause.pattern.rels:
-                    for pk, pv in r.filters:
-                        if pv is None or (isinstance(pv, Literal) and pv.value is None):
-                            raise SemanticError(f"Property value for '{pk}' in MERGE cannot be null")
+                    if tuple(r.quantifier) != ("one",):
+                        raise SyntaxError("CreatingVarLength: variable-length relationships cannot be used in MERGE")
+                # Null property values in MERGE are a runtime SemanticError (see executor).
 
                 merge_scope = dict(bindings)
                 if clause.pattern.path_var:
@@ -312,6 +321,9 @@ def validate_query(query: Query, schema_path: str | Path | None = None) -> None:
                 if any(orig == "*" for orig, _ in clause.yield_items):
                     if len(query.clauses) > 1:
                         raise SemanticError("YIELD * is only allowed in standalone procedure calls")
+                if graph is not None:
+                    from gql_core.query.executor import validate_call_static
+                    validate_call_static(clause, graph, len(query.clauses) == 1, set(bindings))
                 for arg in clause.args:
                     _validate_expr(schema, arg, bindings)
                 for orig, alias in clause.yield_items:

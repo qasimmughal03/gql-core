@@ -133,8 +133,9 @@ class PropertyGraph:
         out_edges = list(self._out.get(node_id, ()))
         in_edges = list(self._in.get(node_id, ()))
         if (out_edges or in_edges) and not detach:
-            raise RuntimeError(
-                f"Cannot delete node {node_id!r} because it still has relationships. "
+            from gql_core.errors import ConstraintVerificationError
+            raise ConstraintVerificationError(
+                f"ConstraintVerificationFailed: Cannot delete node {node_id!r} because it still has relationships. "
                 "To delete this node, you must first delete its relationships or use DETACH DELETE."
             )
         for eid in out_edges + in_edges:
@@ -142,10 +143,8 @@ class PropertyGraph:
         self._nodes.pop(node_id, None)
         self._out.pop(node_id, None)
         self._in.pop(node_id, None)
-        all_labels = getattr(node, "labels", ()) or (node.label,)
-        for lbl in all_labels:
-            if lbl in self._by_label:
-                self._by_label[lbl].discard(node_id)
+        for ids in self._by_label.values():
+            ids.discard(node_id)
         return True
 
     # ── Reads ─────────────────────────────────────────────────────

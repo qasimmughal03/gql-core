@@ -186,8 +186,8 @@ SINGLE_QUOTED_STRING: /'([^'\\]|\\.)*'/
 HEX_INT.2: /-?0[xX][0-9a-fA-F]+/
 OCT_INT.2: /-?0[oO][0-7]+/
 
-ASC.2: /(?i:ASC)/
-DESC.2: /(?i:DESC)/
+ASC.2: /(?i:ASC(?:ENDING)?)/
+DESC.2: /(?i:DESC(?:ENDING)?)/
 DISTINCT.2: /(?i:DISTINCT)/
 UNION_KW.2: /(?i:UNION)/
 ALL_KW.2: /(?i:ALL)/

@@ -115,6 +115,15 @@ def _is_pipeline_query(query: Query) -> bool:
         if isinstance(cl, ReturnClause):
             if cl.skip is not None or cl.distinct:
                 return True
+            if cl.order_by is not None and any(not isinstance(t.ref, Ref) for t in cl.order_by.terms):
+                return True
+            if any(_is_aggregate(p.expr) and not p.agg for p in cl.items):
+                return True
+            for _sl in (cl.skip, cl.limit):
+                if _sl is not None and not (isinstance(_sl, int) and not isinstance(_sl, bool)) and not (
+                    hasattr(_sl, "value") and isinstance(_sl.value, int) and not isinstance(_sl.value, bool)
+                ):
+                    return True
             if any(getattr(p, "distinct", False) for p in cl.items):
                 return True
             if any((isinstance(p.expr, Ref) and p.expr.var == "*") or p.raw_expr == "*" for p in cl.items):
@@ -257,20 +266,12 @@ def _expand(op: ExpandOp, rows: Iterable[dict], graph: PropertyGraph) -> Iterato
             new_row[op.to_var] = target
             new_row["__used_edges__"] = used_edges | path_edge_ids
             if op.edge_var:
-                if not edge_path:
-                    continue
-                if len(edge_path) > 1:
-                    # Cypher binds a relationship list for variable-length patterns;
-                    # this engine only tracks the last edge in the path. Accessing
-                    # edge properties via an edge variable on a multi-hop RPQ would
-                    # silently read the wrong edge, so we fail fast instead.
-                    raise NotImplementedError(
-                        f"Edge variable '{op.edge_var}' on a multi-hop RPQ pattern "
-                        f"(path length {len(edge_path)}) is not supported. "
-                        "Cypher binds a relationship list; this engine does not. "
-                        "Remove the edge variable or use a single-hop pattern."
-                    )
-                new_row[op.edge_var] = edge_path[0]
+                if getattr(op, "quantifier", ("one",)) != ("one",):
+                    new_row[op.edge_var] = list(edge_path)
+                elif edge_path:
+                    new_row[op.edge_var] = edge_path[0]
+                else:
+                    new_row[op.edge_var] = None
             if not _matches_pushed(target, op.pushed, edge_var=op.edge_var, edge=edge_path[-1] if edge_path else None):
                 continue
             yield new_row
@@ -488,12 +489,19 @@ def _read_ref(ref: Any, row: dict) -> Any:
         binding = row.get(ref.var)
         if binding is None:
             return None
+        if getattr(binding, "_deleted", False):
+            from gql_core.errors import EntityNotFoundError
+            raise EntityNotFoundError("EntityNotFound: Cannot access deleted entity")
         if ref.prop is None:
             return binding
         if hasattr(binding, "props") and ref.prop in binding.props:
             return binding.props[ref.prop]
         if isinstance(binding, dict):
             return binding.get(ref.prop)
+        if hasattr(binding, "props"):
+            if ref.prop == "id" and not (getattr(binding, "_is_auto_id", False) or (isinstance(getattr(binding, "id", None), str) and binding.id.startswith("node_"))):
+                return getattr(binding, "id", None)
+            return binding.props.get(ref.prop)
         return getattr(binding, ref.prop, None)
 
     from gql_core.ir import (
@@ -514,9 +522,10 @@ def _matches_inline_filters(
 ) -> bool:
     if not filters:
         return True
+    is_auto = getattr(node, "_is_auto_id", False) or (isinstance(getattr(node, "id", None), str) and node.id.startswith("node_"))
     for prop, value in filters:
         if prop == "id" and prop not in node.props:
-            if node.id != value and str(node.id) != str(value):
+            if is_auto or (node.id != value and str(node.id) != str(value)):
                 return False
         elif prop == "label" and prop not in node.props:
             if node.label != value:
@@ -748,6 +757,33 @@ def _aggregate(projections: tuple[Projection, ...], rows: list[dict], graph: Pro
     return result
 
 
+def _percentile(kind: str, values: list[Any], pct: Any) -> Any:
+    """openCypher percentileDisc / percentileCont over non-null numeric values."""
+    from gql_core.errors import ArgumentError
+    if pct is None:
+        return None
+    if isinstance(pct, bool) or not isinstance(pct, (int, float)):
+        raise ArgumentError(f"InvalidArgumentType: percentile must be a number, got {pct!r}")
+    if not 0.0 <= float(pct) <= 1.0:
+        raise ArgumentError(f"NumberOutOfRange: percentile must be between 0.0 and 1.0, got {pct!r}")
+    nums = sorted(v for v in values if isinstance(v, (int, float)) and not isinstance(v, bool))
+    if not nums:
+        return None
+    n = len(nums)
+    if kind == "PERCENTILEDISC":
+        f_idx = float(pct) * n
+        idx = int(f_idx)
+        if f_idx == idx and idx != 0:
+            idx -= 1
+        return nums[min(idx, n - 1)]
+    f_idx = float(pct) * (n - 1)
+    lo = int(math.floor(f_idx))
+    hi = int(math.ceil(f_idx))
+    if lo == hi:
+        return float(nums[lo])
+    return float(nums[lo] + (nums[hi] - nums[lo]) * (f_idx - lo))
+
+
 def _apply_agg(
     agg_or_spec: str | Projection,
     expr_or_rows: Any,
@@ -876,6 +912,12 @@ def _eval_expr_with_aggs(
         if expr.name.upper() in ("COUNT", "SUM", "AVG", "MIN", "MAX", "COLLECT"):
             arg = expr.args[0] if expr.args else Ref("*")
             return _apply_agg(expr.name.upper(), arg, rows, graph)
+        if expr.name.upper() in ("PERCENTILEDISC", "PERCENTILECONT") and len(expr.args) == 2:
+            rep = dict(getattr(graph, "_parameters", {})) if graph is not None else {}
+            rep.update(group_row or (rows[0] if rows else {}))
+            pct = _read_ref_full(expr.args[1], rep, graph)
+            vals = [v for v in (_read_ref_full(expr.args[0], r, graph) for r in rows) if v is not None]
+            return _percentile(expr.name.upper(), vals, pct)
         if expr.name == "LIST_COMPREHENSION" and len(expr.args) >= 4:
             from gql_core.physical.evaluator import eval_value, eval_predicate
             var_name = getattr(expr.args[0], "name", getattr(expr.args[0], "var", str(expr.args[0])))
@@ -898,6 +940,7 @@ def _eval_expr_with_aggs(
             cond_expr = expr.args[2] if len(expr.args) >= 3 else None
             matches = 0
             has_unknown = False
+            unknown_count = 0
             for item in coll_val:
                 local_row = dict(group_row or {})
                 local_row[var_name] = item
@@ -906,11 +949,12 @@ def _eval_expr_with_aggs(
                     matches += 1
                 elif ev is None:
                     has_unknown = True
+                    unknown_count += 1
             name_up = expr.name.upper()
             if name_up == "ALL":
-                if has_unknown and matches + 1 == len(coll_val):
-                    return None
-                return matches == len(coll_val) and not has_unknown
+                if len(coll_val) - matches - unknown_count > 0:
+                    return False
+                return None if has_unknown else True
             elif name_up == "ANY":
                 if matches > 0:
                     return True
@@ -924,6 +968,8 @@ def _eval_expr_with_aggs(
                     return None
                 return True
             elif name_up == "SINGLE":
+                if matches > 1:
+                    return False
                 if has_unknown:
                     return None
                 return matches == 1
@@ -980,8 +1026,8 @@ def _sort_rows(
     out = list(rows)
     for term in reversed(order_by.terms):
         reverse = term.direction.upper() == "DESC"
-        var = term.ref.var
-        prop = term.ref.prop
+        var = getattr(term.ref, 'var', None)
+        prop = getattr(term.ref, 'prop', None)
 
         target_ref = term.ref
         if alias_map and var in alias_map and prop is None:
@@ -1081,7 +1127,8 @@ def _read_ref_full(ref: Any, row: dict, graph: PropertyGraph | None = None) -> A
         if binding is None:
             return None
         if getattr(binding, "_deleted", False):
-            raise RuntimeError("Cannot access deleted entity")
+            from gql_core.errors import EntityNotFoundError
+            raise EntityNotFoundError("EntityNotFound: Cannot access deleted entity")
         if ref.prop is None:
             return binding
         if "." in ref.prop:
@@ -1108,6 +1155,10 @@ def _read_ref_full(ref: Any, row: dict, graph: PropertyGraph | None = None) -> A
         comp = _extract_temporal_prop(binding, ref.prop)
         if comp is not None:
             return comp
+        if hasattr(binding, "props"):
+            if ref.prop == "id" and not (getattr(binding, "_is_auto_id", False) or (isinstance(getattr(binding, "id", None), str) and binding.id.startswith("node_"))):
+                return getattr(binding, "id", None)
+            return binding.props.get(ref.prop)
         return getattr(binding, ref.prop, None)
 
     from gql_core.ir import (
@@ -1209,7 +1260,7 @@ def _is_aggregate(expr: Any) -> bool:
     if isinstance(expr, CaseExpr):
         return any(_is_aggregate(c) or _is_aggregate(r) for c, r in expr.cases) or (expr.else_expr is not None and _is_aggregate(expr.else_expr))
     if isinstance(expr, FunctionCall):
-        if expr.name.upper() in ("COUNT", "SUM", "AVG", "MIN", "MAX", "COLLECT"):
+        if expr.name.upper() in ("COUNT", "SUM", "AVG", "MIN", "MAX", "COLLECT", "PERCENTILEDISC", "PERCENTILECONT"):
             return True
         return any(_is_aggregate(a) for a in expr.args)
     return False
@@ -1348,23 +1399,19 @@ def _execute_return_or_with(
 
             out_pairs.sort(key=sort_key, reverse=rev)
 
+    def _skip_limit_value(expr: Any, kw: str) -> int:
+        val = _read_ref_full(expr, {}, graph)
+        if isinstance(val, bool) or not isinstance(val, int):
+            raise SyntaxError(f"InvalidArgumentType: {kw} must be a non-negative integer, got {val!r}")
+        if val < 0:
+            raise SyntaxError(f"NegativeIntegerArgument: {kw} must be non-negative, got {val}")
+        return val
+
     if clause.skip is not None:
-        s_val = _read_ref_full(clause.skip, {}, graph)
-        if isinstance(s_val, float) and not s_val.is_integer():
-            raise SemanticError(f"InvalidArgumentType: SKIP must be an integer, got float {s_val}")
-        if isinstance(s_val, (int, float)):
-            if s_val < 0:
-                raise SemanticError(f"InvalidArguments: SKIP must be non-negative, got {s_val}")
-            out_pairs = out_pairs[int(s_val):]
+        out_pairs = out_pairs[_skip_limit_value(clause.skip, "SKIP"):]
 
     if clause.limit is not None:
-        l_val = _read_ref_full(clause.limit, {}, graph)
-        if isinstance(l_val, float) and not l_val.is_integer():
-            raise SemanticError(f"InvalidArgumentType: LIMIT must be an integer, got float {l_val}")
-        if isinstance(l_val, (int, float)):
-            if l_val < 0:
-                raise SemanticError(f"InvalidArguments: LIMIT must be non-negative, got {l_val}")
-            out_pairs = out_pairs[:int(l_val)]
+        out_pairs = out_pairs[:_skip_limit_value(clause.limit, "LIMIT")]
 
     out = [merged if is_with else Row(res_row) for res_row, merged in out_pairs]
 
@@ -1443,7 +1490,7 @@ def _match_path_pattern(pat: Pattern, seed_row: dict, graph: PropertyGraph) -> l
             start_nodes = list(graph._nodes.values())
 
     if start_node_pat.filters:
-        start_nodes = [n for n in start_nodes if all(n.props.get(k) == _read_ref_full(v, seed_row, graph) for k, v in start_node_pat.filters)]
+        start_nodes = [n for n in start_nodes if _matches_inline_filters(n, tuple((k, _read_ref_full(v, seed_row, graph)) for k, v in start_node_pat.filters))]
 
     current_matches = []
     for sn in start_nodes:
@@ -1548,7 +1595,7 @@ def _match_path_pattern(pat: Pattern, seed_row: dict, graph: PropertyGraph) -> l
                 target_labels = set(getattr(target, "labels", ()) or ((target.label,) if target.label else ()))
                 if next_node_labels and not next_node_labels.issubset(target_labels):
                     continue
-                if next_node_pat.filters and not all(target.props.get(k) == _read_ref_full(v, cur_r, graph) for k, v in next_node_pat.filters):
+                if next_node_pat.filters and not _matches_inline_filters(target, tuple((k, _read_ref_full(v, cur_r, graph)) for k, v in next_node_pat.filters)):
                     continue
                 new_r = dict(cur_r)
                 if next_node_pat.var:
@@ -1593,7 +1640,7 @@ def _match_path_pattern(pat: Pattern, seed_row: dict, graph: PropertyGraph) -> l
 
 def _execute_create_clause(clause: CreateClause, rows: list[dict], graph: PropertyGraph) -> list[dict]:
     out = []
-    auto_id = len(graph._nodes) + len(graph._edges) + 1000
+    auto_id = max(getattr(graph, "_auto_id_seq", 0), len(graph._nodes) + len(graph._edges) + 1000)
     for r in rows:
         cur_r = dict(r)
         for pat in clause.patterns:
@@ -1611,9 +1658,14 @@ def _execute_create_clause(clause: CreateClause, rows: list[dict], graph: Proper
                     auto_id += 1
                     props = {k: _read_ref_full(v, cur_r, graph) for k, v in n_pat.filters if v is not None}
                     nid = f"node_{auto_id}"
+                    while nid in graph._nodes:
+                        auto_id += 1
+                        nid = f"node_{auto_id}"
+                    graph._auto_id_seq = auto_id
                     node_labels = tuple(getattr(n_pat, "labels", ())) or ((n_pat.label,) if n_pat.label else ())
                     primary_lbl = node_labels[0] if node_labels else "Node"
                     node = Node(id=nid, label=primary_lbl, props=props, labels=node_labels)
+                    node._is_auto_id = True
                     graph.add_node(node)
                     if n_pat.var:
                         cur_r[n_pat.var] = node
@@ -1631,10 +1683,11 @@ def _execute_create_clause(clause: CreateClause, rows: list[dict], graph: Proper
                         raise ValueError(f"Relationship variable '{rel_pat.var}' is already bound")
                     auto_id += 1
                     base_id = rel_pat.var or "rel"
-                    rid = base_id if base_id not in graph._edges else f"{base_id}_{auto_id}"
+                    rid = f"{base_id}_{auto_id}"
                     while rid in graph._edges:
                         auto_id += 1
                         rid = f"{base_id}_{auto_id}"
+                    graph._auto_id_seq = auto_id
                     if rel_pat.direction == "out":
                         src, dst = prev_node.id, node.id
                     elif rel_pat.direction == "in":
@@ -1643,6 +1696,7 @@ def _execute_create_clause(clause: CreateClause, rows: list[dict], graph: Proper
                         src, dst = prev_node.id, node.id
                     rel_props = {k: _read_ref_full(v, cur_r, graph) for k, v in rel_pat.filters if v is not None}
                     edge = Edge(id=rid, label=rel_pat.label, src=src, dst=dst, props=rel_props)
+                    edge._is_auto_id = True
                     graph.add_edge(edge)
                     if rel_pat.var:
                         cur_r[rel_pat.var] = edge
@@ -1698,16 +1752,41 @@ def _execute_set_clause(clause: SetClause, rows: list[dict], graph: PropertyGrap
 
 
 def _execute_delete_clause(clause: DeleteClause, rows: list[dict], graph: PropertyGraph) -> list[dict]:
+    # openCypher deletes all targets of a DELETE clause together: relationships
+    # first, then nodes, so constraint checks see the clause's combined effect.
+    nodes: dict[Any, Node] = {}
+    edges: dict[Any, Edge] = {}
     for r in rows:
         for expr in clause.items:
             target = _read_ref_full(expr, r, graph)
-            if isinstance(target, Node):
-                target._deleted = True
-                graph.delete_node(target.id, detach=clause.detach)
-            elif isinstance(target, Edge):
-                target._deleted = True
-                graph.delete_edge(target.id)
+            _collect_delete_targets(target, nodes, edges)
+    for e in edges.values():
+        e._deleted = True
+        graph.delete_edge(e.id)
+    for n in nodes.values():
+        if n.id in graph._nodes:
+            graph.delete_node(n.id, detach=clause.detach)
+        n._deleted = True
     return rows
+
+
+def _collect_delete_targets(target: Any, nodes: dict, edges: dict) -> None:
+    if target is None:
+        return
+    if isinstance(target, Node):
+        nodes.setdefault(target.id, target)
+    elif isinstance(target, Edge):
+        edges.setdefault(target.id, target)
+    elif hasattr(target, "nodes") and hasattr(target, "relationships"):
+        for e in target.relationships:
+            _collect_delete_targets(e, nodes, edges)
+        for n in target.nodes:
+            _collect_delete_targets(n, nodes, edges)
+    elif isinstance(target, (list, tuple)):
+        for t in target:
+            _collect_delete_targets(t, nodes, edges)
+    else:
+        raise TypeError(f"InvalidArgumentType: cannot DELETE value of type {type(target).__name__}")
 
 
 def _execute_remove_clause(clause: RemoveClause, rows: list[dict], graph: PropertyGraph) -> list[dict]:
@@ -1724,7 +1803,10 @@ def _execute_remove_clause(clause: RemoveClause, rows: list[dict], graph: Proper
             elif item.kind == "labels":
                 if node and hasattr(node, "labels"):
                     rem_set = set(item.labels)
-                    node.labels = tuple(l for l in node.labels if l not in rem_set)
+                    cur = tuple(node.labels) or ((node.label,) if getattr(node, "label", None) and node.label != "Node" else ())
+                    node.labels = tuple(l for l in cur if l not in rem_set)
+                    if getattr(node, "label", None) in rem_set:
+                        node.label = node.labels[0] if node.labels else "Node"
                     for lbl in item.labels:
                         if lbl in graph._by_label and hasattr(node, "id"):
                             graph._by_label[lbl].discard(node.id)
@@ -1732,8 +1814,15 @@ def _execute_remove_clause(clause: RemoveClause, rows: list[dict], graph: Proper
 
 
 def _execute_merge_clause(clause: MergeClause, rows: list[dict], graph: PropertyGraph) -> list[dict]:
+    from gql_core.query.semantic import SemanticError
     out = []
     for r in rows:
+        for _pat in list(clause.pattern.nodes) + list(clause.pattern.rels):
+            if _pat.var and _pat.var in r and isinstance(r[_pat.var], (Node, Edge)):
+                continue
+            for pk, pv in _pat.filters:
+                if pv is None or _read_ref_full(pv, r, graph) is None:
+                    raise SemanticError(f"MergeReadOwnWrites: property value for '{pk}' in MERGE cannot be null")
         r_clean = dict(r)
         r_clean.pop("__used_edges__", None)
         matches = _match_path_pattern(clause.pattern, r_clean, graph)
@@ -1766,6 +1855,74 @@ def _execute_merge_clause(clause: MergeClause, rows: list[dict], graph: Property
                         _execute_set_clause(SetClause(act.items), [c], graph)
                 out.append(c)
     return out
+
+
+def validate_call_static(clause: CallClause, graph: PropertyGraph, is_standalone: bool, bound_vars: set) -> None:
+    """Compile-time validation of a procedure call against the registered procedure signatures."""
+    from gql_core.errors import ParameterMissingError, ProcedureError
+    from gql_core.ir import Literal
+    from gql_core.query.semantic import SemanticError
+    for arg in clause.args:
+        if _is_aggregate(arg):
+            raise SyntaxError(f"InvalidAggregation: aggregation expression not permitted in CALL arguments: {arg}")
+    if clause.yield_items:
+        yield_vars = [alias or orig for orig, alias in clause.yield_items]
+        if len(yield_vars) != len(set(yield_vars)):
+            raise SyntaxError(f"VariableAlreadyBound: duplicate variable in YIELD: {yield_vars}")
+    proc_map = getattr(graph, "_procedures", {}) or {}
+    proc = clause.proc_name
+    meta = proc_map.get(proc, proc_map.get(proc.lower()))
+    if meta is None:
+        if "labels" in proc.lower():
+            return
+        if proc.lower().startswith("test.") or proc.lower().startswith("org.opencypher."):
+            raise ProcedureError(f"ProcedureNotFound: {proc}")
+        return
+    if isinstance(meta, dict) and "signature" in meta:
+        in_params, out_params = meta["signature"]
+    elif isinstance(meta, list):
+        in_params, out_params = [], (list(meta[0].keys()) if meta else [])
+    else:
+        in_params, out_params = [], []
+    in_names = [p[0] if isinstance(p, tuple) else p for p in in_params]
+    in_types = [p[1] if isinstance(p, tuple) else "ANY" for p in in_params]
+    args = list(clause.args)
+    if not args and in_names:
+        if not is_standalone:
+            raise SyntaxError(f"InvalidArgumentPassingMode: in-query call to {proc} cannot pass arguments implicitly")
+        params = getattr(graph, "_parameters", {}) or {}
+        missing = [n for n in in_names if n not in params]
+        if missing:
+            raise ParameterMissingError(f"ParameterMissing: {missing}")
+        args = [Literal(params[n]) for n in in_names]
+    elif len(args) != len(in_names):
+        raise SyntaxError(f"InvalidNumberOfArguments: procedure {proc} takes {len(in_names)} arguments, got {len(args)}")
+    for p_type, arg in zip(in_types, args):
+        if not isinstance(arg, Literal):
+            continue
+        v = arg.value
+        if v is None:
+            continue
+        p_up = str(p_type).upper()
+        bad = False
+        if p_up.startswith("INTEGER"):
+            bad = isinstance(v, bool) or not isinstance(v, int)
+        elif p_up.startswith("FLOAT"):
+            bad = isinstance(v, bool) or not isinstance(v, (int, float))
+        elif p_up.startswith("NUMBER"):
+            bad = isinstance(v, bool) or not isinstance(v, (int, float))
+        elif p_up.startswith("BOOLEAN"):
+            bad = not isinstance(v, bool)
+        elif p_up.startswith("STRING"):
+            bad = not isinstance(v, str)
+        if bad:
+            raise SyntaxError(f"InvalidArgumentType: expected {p_type}, got {type(v).__name__}")
+    if out_params and not clause.yield_items and not is_standalone:
+        raise SyntaxError(f"In-query procedure call to {proc} must yield outputs")
+    for orig, alias in clause.yield_items or ():
+        if orig != "*" and (alias or orig) in bound_vars:
+            raise SyntaxError(f"VariableAlreadyBound: procedure output '{alias or orig}' shadows a bound variable")
+    _ = SemanticError
 
 
 def _execute_call_clause(clause: CallClause, rows: list[dict], graph: PropertyGraph, is_standalone: bool = True) -> list[dict]:

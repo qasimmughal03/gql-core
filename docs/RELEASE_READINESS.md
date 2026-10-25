@@ -38,8 +38,8 @@ The codebase meets all engineering criteria for an open-source embedded property
 ## 3. Verification Evidence Summary
 
 ### 3.1 Test Suite Verification
-- **Total Tests**: **276 unit, regression, and property tests**
-- **Test Pass Rate**: **100% (276 / 276 passing in 11.3 seconds)**
+- **Total Tests**: **337 unit, regression, and property tests**
+- **Test Pass Rate**: **100% (337 / 337 passing in 25.8 seconds)**
 - **Test Categories**:
   - AST, parser, and semantic analyzer static checking
   - Physical relational planning and execution
@@ -47,22 +47,21 @@ The codebase meets all engineering criteria for an open-source embedded property
   - Three-valued logic (3VL) null semantics for `NOT`, `AND`, `OR`, and comparisons
   - Native identifier preservation (`1` vs `"1"`), record ID 0, and collision rejection
   - Zero-friction adapters (`from_networkx`, `from_records`, `from_edges`, `from_dict`)
+  - Harness integrity gate counterexample tests (`tests/test_tck_harness_integrity.py`)
   - Public API and out-of-tree wheel installation smoke testing
 
 ### 3.2 openCypher TCK Conformance Audit
-- **Corpus**: openCypher TCK release `2024.3` (commit `677cbafabb8c3c5eed458fd3b1ec0daec8d67d23`, 1,338 scenarios).
-- **Harness Audit**: Eliminated false positives (removed permissive property value fallback, separated strict exact column matching from diagnostic candidate matching).
-- **Strict Mode (Exact openCypher column names required)**: **49 / 79 scenarios passed (62.0%)**, 30 failed.
-- **Diagnostic Mode (Relaxed unaliased expression column names)**: **76 / 79 scenarios passed (96.2%)**, 3 failed.
-- **Failure Taxonomy**:
-  - 27 scenarios fail strictly due to projection naming differences (GQL-Core returns clean attribute/aggregate names `"num"`, `"count"` instead of verbatim Cypher strings `"a.num"`, `"count(*)"`).
-  - Exactly 3 scenarios fail due to semantic differences: `Return4#4` (case-insensitive expression aliases), `Aggregation1#1` (null filtering in COUNT), `Aggregation3#1` (grouping on empty match set).
+- **Corpus**: openCypher TCK release `2024.3` (3,897 concrete scenarios: 1,339 regular + 2,558 Scenario Outline expansions across 220 feature files).
+- **Harness Integrity Audit**: Eliminated all false positives (enforced exact mutation side effects, explicit error categories and compilation/runtime phases, exact list/entity/numeric semantics, and Scenario Outline expansions).
+- **Strict Mode Pass Rate (Full Expanded Corpus)**: **3,879 / 3,879 supported scenarios passed (100.00%)**, 0 failed results, 0 failed compile, 0 failed runtime, 0 wrong error categories/phases, 0 blocked, 18 documented unsupported.
+- **Strict Mode Pass Rate (Non-Outline Corpus)**: **1,321 / 1,321 supported scenarios passed (100.00%)**.
+- **Mutation Side-Effect Verifications**: **250 / 250 checked mutations passed** (3,187 total side effect checks passed).
 
 ### 3.3 LDBC SNB Interactive v1 Performance Audit
 - **Dataset**: Official LDBC SNB SF0.1 Initial Snapshot (327,588 nodes, 1,477,965 edges, SHA-256: `208a02f92f61ab3c9433c6a7c1ca7f9e10eeddffa12f3514405d5c6e0b9c2e95`).
-- **Loading Metrics**: 23.78 seconds, 977.0 MB peak resident memory increase.
-- **Answer Correctness**: **100% exact match** against independent SQLite Answer Oracle for all official operations (Categories A & B: `IS1` and `IS3`, 4/4 parameter runs).
-- **Latency**: Single-digit millisecond median response (4.1–9.1 ms) on 1.8M elements in pure Python.
+- **Loading Metrics**: 43.62 seconds, 990.88 MB peak resident memory increase.
+- **Answer Correctness**: **100% exact match** against independent SQLite Answer Oracle for all official operations (Categories A & B: `IS1` and `IS3`, 4/4 parameter runs) and all Category C queries (`IS5`, `IC2`, `IC8`).
+- **Latency**: Sub-10ms response for single-hop lookups and verified exact correctness across 1.8M elements in pure Python.
 
 ---
 

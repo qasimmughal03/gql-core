@@ -2,7 +2,7 @@
 
 **Version**: `0.2.0a1` (Experimental Release)  
 **Standard Compliance**: ISO/IEC 39075:2024 (GQL) Core Subset & openCypher Compatible Grammar  
-**Measured Coverage**: 1,321 / 1,339 openCypher TCK Scenarios (98.66% Corpus Coverage, 100.00% Supported-Subset Accuracy)
+**Measured Coverage**: 3,879 / 3,897 openCypher TCK Scenarios (99.54% Corpus Coverage, 100.00% Supported-Subset Accuracy; Non-Outline: 1,321 / 1,339, 98.66%)
 
 ---
 
@@ -13,7 +13,7 @@ GQL-Core provides a dual-interface architecture:
 2. **Typed Logical API (`PlanBuilder`, `execute_plan`)**: A programmatic, type-safe intermediate representation (IR) supporting relational algebra, Kleene 3-valued logic, quantified graph reasoning, correlated subqueries, and deterministic Datalog ontology inference.
 
 ### Core Release Contract Rule
-> **Zero Silent Failures**: Any operation within the declared supported contract MUST execute and return verified, exact answers (`1,176 / 1,176 PASS_RESULT` and `145 / 145 PASS_EXPECTED_ERROR`). Any feature outside the declared supported contract MUST fail explicitly at compile time (`SyntaxError`, `SemanticError`, `LarkError`) or runtime (`NotImplementedError`), and NEVER return misleading, unverified, or silently wrong results.
+> **Zero Silent Failures**: Any operation within the declared supported contract MUST execute and return verified, exact answers (Full expanded corpus: `3,187 / 3,187 PASS_RESULT` and `692 / 692 PASS_EXPECTED_ERROR`; Non-outline corpus: `1,176 / 1,176 PASS_RESULT` and `145 / 145 PASS_EXPECTED_ERROR`). Any feature outside the declared supported contract MUST fail explicitly at compile time (`SyntaxError`, `SemanticError`, `LarkError`) or runtime (`NotImplementedError`), and NEVER return misleading, unverified, or silently wrong results.
 
 ---
 
@@ -45,7 +45,7 @@ GQL-Core provides a dual-interface architecture:
 - **String Functions**: `toLower(s)`, `toUpper(s)`, `trim(s)`, `ltrim(s)`, `rtrim(s)`, `reverse(s)`, `size(s)`, `split(s, delim)`, `substring(s, start, len)`, `replace(s, search, rep)`.
 - **Graph & Collection Functions**: `size(c)`, `length(path)`, `head(c)`, `last(c)`, `tail(c)`, `range(start, end, step)`, `keys(entity)`, `labels(node)`, `type(rel)`, `id(entity)`, `startNode(rel)`, `endNode(rel)`, `properties(entity)`, `nodes(path)`, `relationships(path)`, `coalesce(...)`.
 - **Temporal Functions & Arithmetic**:
-  - Constructors: `date(...)`, `time(...)`, `localtie(...)`, `datetime(...)`, `localdatetime(...)`, `datetime.fromEpoch(...)`, `datetime.fromEpochMillis(...)`, `duration(...)`, `duration.between(...)`, `duration.inMonths(...)`, `duration.inDays(...)`, `duration.inSeconds(...)`.
+  - Constructors: `date(...)`, `time(...)`, `localtime(...)`, `datetime(...)`, `localdatetime(...)`, `datetime.fromEpoch(...)`, `datetime.fromEpochMillis(...)`, `duration(...)`, `duration.between(...)`, `duration.inMonths(...)`, `duration.inDays(...)`, `duration.inSeconds(...)`.
   - Component accessors: `.year`, `.quarter`, `.month`, `.week`, `.weekYear`, `.day`, `.ordinalDay`, `.weekDay`, `.dayOfQuarter`, `.hour`, `.minute`, `.second`, `.millisecond`, `.microsecond`, `.nanosecond`, `.timezone`, `.offset`, `.offsetMinutes`, `.offsetSeconds`, `.epochSeconds`, `.epochMillis`, and duration components.
 
 ### 2.3 Explicitly Excluded Features in `0.2.0a1` (18 TCK Scenarios)

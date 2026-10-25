@@ -1,25 +1,46 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77.0.3", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "gql-core"
 version = "0.2.0a1"
-description = "Generic property-graph query engine with formal GQL grammar and benchmark framework"
-license = {text = "Apache-2.0"}
+description = "Experimental embedded property-graph query and typed reasoning engine for Python"
 requires-python = ">=3.11"
-readme = "README.md"
+readme = {file = "README.md", content-type = "text/markdown"}
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+keywords = ["graph", "property-graph", "query-engine", "cypher", "ontology", "inference"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 dependencies = [
     "lark>=1.2.2",
     "pyyaml>=6.0.2",
     "requests>=2.32.3",
 ]
 
+[project.urls]
+Homepage = "https://github.com/qasimmughal03/knowledge-graoh-with-formal-query"
+Source = "https://github.com/qasimmughal03/knowledge-graoh-with-formal-query"
+Documentation = "https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/UNIFIED_DOCUMENTATION.md"
+Issues = "https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/issues"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.3.0",
     "pytest-cov>=5.0.0",
     "networkx>=3.0",
+    "build>=1.2.2",
+    "twine>=5.1.1",
 ]
 benchmark = [
     "zstandard>=0.23.0",
@@ -29,22 +50,21 @@ benchmark = [
 [project.scripts]
 gql-core = "gql_core.cli:main"
 
-[tool.setuptools]
-packages = [
-    "gql_core",
-    "gql_core.query",
-    "gql_core.ontology",
-    "gql_core.inference",
-    "gql_core.physical",
-    "ingestion",
-    "graph",
-    "query",
-    "benchmark",
+# Include supported library modules, benchmark adapters, and existing legacy
+# compatibility modules; large upstream benchmark datasets are not distributed.
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "gql_core", "gql_core.*",
+    "benchmark", "benchmark.*",
+    "query", "query.*",
+    "graph", "graph.*",
+    "ingestion", "ingestion.*",
 ]
+exclude = ["tests", "tests.*", "examples", "examples.*", "scripts", "scripts.*"]
 
 [tool.setuptools.package-data]
 "gql_core.query" = ["grammar.lark"]
-"gql_core" = ["query/grammar.lark"]
 "query" = ["grammar.lark"]
 
 [tool.pytest.ini_options]

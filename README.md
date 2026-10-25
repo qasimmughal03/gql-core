@@ -4,42 +4,42 @@
 
 GQL-Core is an experimental in-memory property-graph engine. Work with labeled nodes and relationships, execute a Cypher-inspired query language, build validated queries through a typed Python API, and derive relationships using declarative inference rules—without a separate database server.
 
-**Version:** \`0.2.0a1\` · **Stage:** public alpha candidate · **License:** Apache-2.0 · **Python:** 3.11+
+**Version:** `0.2.0a1` · **Stage:** public alpha candidate · **License:** Apache-2.0 · **Python:** 3.11+
 
 > **Alpha software.** GQL-Core is not a production database, a complete ISO/IEC 39075:2024 implementation, or a certified openCypher implementation. External compatibility scores describe a specific pinned test corpus, not universal query correctness.
 
 ## Highlights
 
 - **Graph storage:** in-memory nodes, directed relationships, multi-label nodes, properties, adjacency and label indexes.
-- **Declarative queries:** matching, filtering, path traversal, grouping, sorting, \`WITH\`, \`UNWIND\`, selected updates, and built-in expressions.
-- **Typed query plans:** compose \`Scan\`, \`Expand\`, \`Filter\`, \`Project\`, joins, set operators, quantified predicates, and aggregation through \`PlanBuilder\`.
+- **Declarative queries:** matching, filtering, path traversal, grouping, sorting, `WITH`, `UNWIND`, selected updates, and built-in expressions.
+- **Typed query plans:** compose `Scan`, `Expand`, `Filter`, `Project`, joins, set operators, quantified predicates, and aggregation through `PlanBuilder`.
 - **Ontology reasoning:** explicit subtype, inverse, symmetric, transitive, and relationship-composition inference rules, with provenance.
 - **Optional natural-language interface:** translate questions to query text using a configured LLM backend; formal execution itself does not require an LLM.
 - **Reproducible evaluation:** openCypher TCK compatibility harness, LDBC SNB-derived workload, and pytest regression suite.
 
 ## Install
 
-The alpha is available from this repository. **Do not assume that \`gql-core\` is already published on PyPI.**
+The alpha is available from this repository. **Do not assume that `gql-core` is already published on PyPI.**
 
-\`\`\`bash
+```bash
 git clone https://github.com/qasimmughal03/knowledge-graoh-with-formal-query.git
 cd knowledge-graoh-with-formal-query
 git checkout feat/implementation
 python -m pip install -e .
 gql-core --version
-\`\`\`
+```
 
 For contributors:
 
-\`\`\`bash
+```bash
 python -m pip install -e ".[dev,benchmark]"
-\`\`\`
+```
 
-The runtime uses Lark, PyYAML, and Requests. NetworkX integration is optional. The \`ask()\` interface needs a compatible, available LLM service or client; it is not an offline heuristic answering system.
+The runtime uses Lark, PyYAML, and Requests. NetworkX integration is optional. The `ask()` interface needs a compatible, available LLM service or client; it is not an offline heuristic answering system.
 
 ## Quickstart: Python API
 
-\`\`\`python
+```python
 from gql_core import Edge, Node, PropertyGraph, run
 
 graph = PropertyGraph()
@@ -53,15 +53,15 @@ rows = run(
     graph,
 )
 print(rows)  # [{'friend': 'Bob'}]
-\`\`\`
+```
 
-A runnable version is in [\`examples/quickstart.py\`](examples/quickstart.py).
+A runnable version is in [`examples/quickstart.py`](examples/quickstart.py).
 
 ### Typed query plans
 
 For LLM agents and Python applications, structured plans can be validated independently of text-query generation.
 
-\`\`\`python
+```python
 from gql_core import PlanBuilder, eq, execute_plan, lit, prop
 
 plan = (
@@ -72,7 +72,7 @@ plan = (
 )
 result = execute_plan(plan, graph)
 print(result["rows"])  # [{'name': 'Alice'}]
-\`\`\`
+```
 
 See the [typed query API](docs/TYPED_QUERY_API.md), [operator reference](docs/LOGICAL_OPERATOR_SPEC.md), and [ontology/inference guide](docs/INFERENCE_ENGINE.md).
 
@@ -80,47 +80,47 @@ See the [typed query API](docs/TYPED_QUERY_API.md), [operator reference](docs/LO
 
 A small example dataset is included so this command runs after installing the package from a repository checkout:
 
-\`\`\`bash
+```bash
 gql-core query --data examples/sample_graph.json \
   "MATCH (p:Person) RETURN p.name AS name ORDER BY name ASC"
-\`\`\`
+```
 
-Available commands: \`query\`, \`ask\`, \`validate\`, \`ingest\`, \`mirror\`, \`benchmark\`, and \`version\`. Use \`gql-core --help\` for the authoritative argument list. The CLI command is **\`query\`**, not \`run\`.
+Available commands: `query`, `ask`, `validate`, `ingest`, `mirror`, `benchmark`, and `version`. Use `gql-core --help` for the authoritative argument list. The CLI command is **`query`**, not `run`.
 
-For the natural-language command, set up an Ollama-compatible backend or supply a client through the Python API. \`gql-core ask\` does not automatically provide a hosted model.
+For the natural-language command, set up an Ollama-compatible backend or supply a client through the Python API. `gql-core ask` does not automatically provide a hosted model.
 
 ## Project structure
 
 | Directory/module | Purpose |
 | --- | --- |
-| \`gql_core/graph.py\` | \`PropertyGraph\`, \`Node\`, \`Edge\`, \`Path\`, graph adapters |
-| \`gql_core/query/\` | Grammar, parser, semantic validation, query execution |
-| \`gql_core/ir.py\`, \`builder.py\` | Typed expressions, logical operators, fluent plan building |
-| \`gql_core/physical/\` | Expression evaluation and physical execution |
-| \`gql_core/ontology/\`, \`inference/\` | Typed ontology schemas and rule-based inference |
-| \`gql_core/ai.py\` | Optional question-to-query translation |
-| \`benchmark/tck/\` | openCypher compatibility checking |
-| \`benchmark/snb/\` | LDBC social-network workload support |
-| \`examples/\` | Standalone quickstart and domain examples |
-| \`docs/\` | Technical contracts, architecture, benchmark and release reports |
+| `gql_core/graph.py` | `PropertyGraph`, `Node`, `Edge`, `Path`, graph adapters |
+| `gql_core/query/` | Grammar, parser, semantic validation, query execution |
+| `gql_core/ir.py`, `builder.py` | Typed expressions, logical operators, fluent plan building |
+| `gql_core/physical/` | Expression evaluation and physical execution |
+| `gql_core/ontology/`, `inference/` | Typed ontology schemas and rule-based inference |
+| `gql_core/ai.py` | Optional question-to-query translation |
+| `benchmark/tck/` | openCypher compatibility checking |
+| `benchmark/snb/` | LDBC social-network workload support |
+| `examples/` | Standalone quickstart and domain examples |
+| `docs/` | Technical contracts, architecture, benchmark and release reports |
 
 ### Graph adapters
 
-Use \`PropertyGraph.from_records(nodes, edges)\`, \`PropertyGraph.from_edges(...)\`, or \`PropertyGraph.from_networkx(G)\` (requires \`networkx\`). For the CLI's graph JSON format, see [\`examples/sample_graph.json\`](examples/sample_graph.json).
+Use `PropertyGraph.from_records(nodes, edges)`, `PropertyGraph.from_edges(...)`, or `PropertyGraph.from_networkx(G)` (requires `networkx`). For the CLI's graph JSON format, see [`examples/sample_graph.json`](examples/sample_graph.json).
 
-\`from_dict\` expects an object containing \`nodes\` and \`edges\` arrays; it is **not** an adjacency-dictionary adapter.
+`from_dict` expects an object containing `nodes` and `edges` arrays; it is **not** an adjacency-dictionary adapter.
 
 ## Supported functionality and boundaries
 
 GQL-Core implements a substantial, evolving subset of Cypher-like patterns and expressions, including multi-clause pipelines and mutations. Its typed plan API additionally exposes relational algebra and graph reasoning primitives. **The two APIs do not have identical coverage.**
 
-Not all openCypher syntax is supported. In particular, the release documents exclude certain nested correlated \`EXISTS\` text expressions and relationship-type disjunctions. Consult [the supported query contract](docs/SUPPORTED_QUERY_CONTRACT.md) for exact syntax and behavior.
+Not all openCypher syntax is supported. In particular, the release documents exclude certain nested correlated `EXISTS` text expressions and relationship-type disjunctions. Consult [the supported query contract](docs/SUPPORTED_QUERY_CONTRACT.md) for exact syntax and behavior.
 
 Execution semantics include relationship trail uniqueness, three-valued Boolean logic, null propagation, and bag/multiset behavior where applicable. The graph is held in memory; it does not provide database durability, transactional isolation, or distributed execution. Concurrent mutations require application-level synchronization.
 
 ## Benchmarks and correctness
 
-The latest repository [release correctness report](docs/RELEASE_CORRECTNESS_REPORT.md) documents results on the pinned openCypher TCK \`2024.3\` corpus:
+The latest repository [release correctness report](docs/RELEASE_CORRECTNESS_REPORT.md) documents results on the pinned openCypher TCK `2024.3` corpus:
 
 | Reported evaluation | Result |
 | --- | ---: |
@@ -139,14 +139,14 @@ The TCK repository and large benchmark datasets are external assets, not bundled
 
 ## Build and release verification
 
-\`\`\`bash
+```bash
 python -m pip install -e ".[dev,benchmark]"
 python -m pytest tests/
 python -m build
 python -m twine check dist/*
-\`\`\`
+```
 
-The test suite uses upstream TCK fixtures; see [\`docs/PACKAGING.md\`](docs/PACKAGING.md) for the required preparation and wheel smoke test. CI verifies the distribution in an isolated Python environment. Uploading to TestPyPI or PyPI is a **separate manual step**, not part of CI.
+The test suite uses upstream TCK fixtures; see [`docs/PACKAGING.md`](docs/PACKAGING.md) for the required preparation and wheel smoke test. CI verifies the distribution in an isolated Python environment. Uploading to TestPyPI or PyPI is a **separate manual step**, not part of CI.
 
 ## Documentation
 

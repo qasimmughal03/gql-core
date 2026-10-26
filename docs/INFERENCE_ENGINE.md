@@ -2,7 +2,7 @@
 
 **Version**: 1.0  
 **Package**: `gql_core.inference`  
-**Reference Models**: [`InferenceEngine`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/inference/engine.py), [`InferenceRule`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/inference/rules.py), [`Fact`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/inference/rules.py)  
+**Reference Models**: [`InferenceEngine`](gql_core/inference/engine.py), [`InferenceRule`](gql_core/inference/rules.py), [`Fact`](gql_core/inference/rules.py)  
 
 ---
 
@@ -73,10 +73,10 @@ Asserted facts and inferred facts are strictly distinguished. If a relationship 
 ## 5. Execution Modes
 
 ### 5.1 Virtual Query Overlay
-[`engine.create_overlay_graph(graph)`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/inference/engine.py) returns a lightweight copy containing asserted plus derived facts, allowing queries to seamlessly traverse derived edges without altering the source dataset.
+[`engine.create_overlay_graph(graph)`](gql_core/inference/engine.py) returns a lightweight copy containing asserted plus derived facts, allowing queries to seamlessly traverse derived edges without altering the source dataset.
 
 ### 5.2 Controlled Materialization
-[`engine.materialize(graph)`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/inference/engine.py) directly inserts derived edges into the `PropertyGraph`, tagging each edge with:
+[`engine.materialize(graph)`](gql_core/inference/engine.py) directly inserts derived edges into the `PropertyGraph`, tagging each edge with:
 ```python
 props={"is_inferred": True, "inferred_by": "transitive_LOCATED_IN"}
 ```

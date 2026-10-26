@@ -74,6 +74,25 @@ result = execute_plan(plan, graph)
 print(result["rows"])  # [{'name': 'Alice'}]
 ```
 
+A standalone typed plan script is in [`examples/example_b_typed_plan.py`](examples/example_b_typed_plan.py).
+
+### Ontology inference
+
+Derive new graph relationships declaratively using Datalog-style rules without modifying source facts:
+
+```python
+from gql_core.inference import InferenceEngine, make_transitive_rule
+
+# Derive transitive relationships: if A PART_OF B and B PART_OF C => A PART_OF C
+engine = InferenceEngine()
+engine.add_rule(make_transitive_rule("PART_OF"))
+
+facts_by_rel, derived_facts = engine.infer(graph)
+engine.materialize(graph)  # Materializes inferred edges back into the graph
+```
+
+A standalone inference script is in [`examples/example_c_ontology_inference.py`](examples/example_c_ontology_inference.py).
+
 See the [typed query API](docs/TYPED_QUERY_API.md), [operator reference](docs/LOGICAL_OPERATOR_SPEC.md), and [ontology/inference guide](docs/INFERENCE_ENGINE.md).
 
 ## Quickstart: CLI
@@ -128,7 +147,7 @@ The latest repository [release correctness report](docs/RELEASE_CORRECTNESS_REPO
 | Scenarios classified as supported | 3,879 |
 | Strict scenario passes in that subset | **3,879 / 3,879** |
 | Explicitly excluded scenarios | 18 |
-| Project unit/regression tests | **337 / 337** |
+| Project unit/regression tests | **341 / 341** |
 | Official LDBC SNB SF0.1 query parameter cases | **4 / 4** across **2 official query types** |
 
 **Interpretation:** These are version- and harness-scoped results reported by the project, not ISO certification, complete Cypher conformance, or evidence of production reliability. The LDBC study is **unaudited**, covers a limited read-query subset, and reports adapted additional queries separately from official equivalent operations.
@@ -151,6 +170,8 @@ The test suite uses upstream TCK fixtures; see [`docs/PACKAGING.md`](docs/PACKAG
 ## Documentation
 
 - [Unified architecture and verification report](docs/UNIFIED_DOCUMENTATION.md)
+- [Quickstart walkthrough](docs/QUICKSTART.md)
+- [Python API reference](docs/API_REFERENCE.md)
 - [Supported textual query contract](docs/SUPPORTED_QUERY_CONTRACT.md)
 - [Typed Python query API](docs/TYPED_QUERY_API.md)
 - [Ontology and inference](docs/INFERENCE_ENGINE.md)
@@ -158,6 +179,7 @@ The test suite uses upstream TCK fixtures; see [`docs/PACKAGING.md`](docs/PACKAG
 - [Release correctness report](docs/RELEASE_CORRECTNESS_REPORT.md)
 - [TCK scenario failures and methodology](docs/TCK_FAILURE_ANALYSIS.md)
 - [Packaging and release checklist](docs/PACKAGING.md)
+- [Release notes (v0.2.0a1)](docs/RELEASE_NOTES_0.2.0a1.md)
 
 ## Contributing
 

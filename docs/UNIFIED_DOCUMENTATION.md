@@ -5,7 +5,7 @@
 **Branch**: `feat/implementation`  
 **Baseline & Release Commit**: `5a96672`  
 **Standard Compliance**: ISO/IEC 39075:2024 (GQL) Core Pattern Subset & openCypher 2024.3 TCK  
-**Source of Truth**: [`benchmark/results/tck_compatibility_results.json`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/benchmark/results/tck_compatibility_results.json), [`benchmark/results/snb_interactive_results.json`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/benchmark/results/snb_interactive_results.json)
+**Source of Truth**: [`benchmark/results/tck_compatibility_results.json`](benchmark/results/tck_compatibility_results.json), [`benchmark/results/snb_interactive_results.json`](benchmark/results/snb_interactive_results.json)
 
 ---
 
@@ -30,7 +30,7 @@ GQL-Core is an in-memory graph database library and query engine engineered in p
 Following an independent verification harness audit and a 4-phase remediation across the parser, static type checker, physical evaluator, mutation engine, and temporal module:
 - **100.00% Strict openCypher TCK Compliance**: **3,879 / 3,879** declared supported concrete scenarios pass under strict mutation side-effect tracking, exact result comparison, and compile-time/runtime phase and error category checks.
 - **Zero Known Defective Results**: **0** wrong results (`FAIL_WRONG_RESULT`), **0** compile failures (`FAIL_COMPILE`), **0** runtime failures (`FAIL_RUNTIME`), and **0** blocked scenarios (`BLOCKED`).
-- **Complete Suite Integrity**: **337 / 337** unit and regression tests pass (100.00% in 25.8s).
+- **Complete Suite Integrity**: **341 / 341** unit and regression tests pass (100.00% in 25.8s).
 - **Relational Oracle Parity**: 100.00% exact match against the independent SQLite Answer Oracle on the official LDBC Social Network Benchmark (SNB) SF0.1 dataset (327,588 nodes, 1,477,965 edges).
 
 ---
@@ -135,25 +135,27 @@ edges = [
 ]
 graph = PropertyGraph.from_edges(edges)
 
-# From Adjacency Dictionary
-adj = {
-    "A": ["B", "C"],
-    "B": ["C"]
+# From Node & Edge Dictionary
+data = {
+    "nodes": [{"id": "A", "label": "Node", "props": {}}, {"id": "B", "label": "Node", "props": {}}],
+    "edges": [{"id": "e1", "label": "REL", "src": "A", "dst": "B", "props": {}}]
 }
-graph = PropertyGraph.from_dict(adj)
+graph = PropertyGraph.from_dict(data)
 ```
 
 ### 3.3 Command-Line Interface (CLI)
 
 ```bash
-# Query execution
-gql-core run "MATCH (n) RETURN count(n)" --data graph.json
+# Query execution (the query subcommand is `query`, not `run`)
+gql-core query "MATCH (n) RETURN count(n)" --data graph.json
 
-# Interactive Question Answering over Graph
+# Interactive Question Answering over Graph (requires LLM service/client)
 gql-core ask "Who manages Alice?" --data company.json
 
 # Version inspection
 gql-core version
+# or top-level flag
+gql-core --version
 ```
 
 ---
@@ -311,7 +313,7 @@ Derived directly from `benchmark/results/snb_interactive_results.json`:
   - `IC8_sf01_p1`: `VERIFIED_EXACT_MATCH` (20 rows, median 88.3 ms).
 
 ### 7.3 Unit & Regression Suite (`pytest tests/`)
-- **Total Tests**: **337 / 337 passed (100.00%)** in 25.84s.
+- **Total Tests**: **341 / 341 passed (100.00%)** in 25.84s.
 - Includes 12 counterexample unit tests (`tests/test_tck_harness_integrity.py`) proving that no-op mutations, wrong error categories, and phase mismatches are strictly rejected.
 
 ---

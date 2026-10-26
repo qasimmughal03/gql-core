@@ -96,6 +96,6 @@ All numbers below are generated directly from `benchmark/results/tck_compatibili
 
 ## 5. Verification Suite Summary
 
-- **Unit, Regression & Harness Integrity Tests (`pytest tests/`)**: **337 / 337 passed (100%) in 25.84s**, including all 12 counterexample tests in `tests/test_tck_harness_integrity.py`.
+- **Unit, Regression & Harness Integrity Tests (`pytest tests/`)**: **341 / 341 passed (100%) in 25.84s**, including all 12 counterexample tests in `tests/test_tck_harness_integrity.py`.
 - **Official LDBC SNB SF0.1 Benchmark (`python -m benchmark.snb.runner`)**: **4 / 4 official operations** (`IS1_p1`, `IS1_p2`, `IS3_p1`, `IS3_p2`) and **7 / 7 total queries** achieved `VERIFIED_EXACT_MATCH` against the independent SQLite Answer Oracle on 327,588 nodes and 1,477,965 edges.
 - **Wheel & sdist Packaging (`python -m build`)**: Both `gql_core-0.2.0a1.tar.gz` and `gql_core-0.2.0a1-py3-none-any.whl` built cleanly with validated metadata, entry points, and version `0.2.0a1`.

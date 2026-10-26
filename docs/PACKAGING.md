@@ -46,7 +46,7 @@ cd /tmp
 /tmp/gql-core-wheel-test/bin/gql-core --version
 ```
 
-On Windows PowerShell, use `$env:TEMP` and `Scriptspython.exe` / `Scriptsgql-core.exe` instead of the Unix paths.
+On Windows PowerShell, use `$env:TEMP` and `Scripts/python.exe` / `Scripts/gql-core.exe` instead of the Unix paths.
 
 For tests of the actual installed wheel, use an isolated checkout-free smoke script and verify that `gql_core.__file__` comes from `site-packages`.
 

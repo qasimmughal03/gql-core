@@ -14,7 +14,7 @@ GQL-Core provides a fluent, type-safe Python API for constructing and executing 
 
 ## 2. PlanBuilder Fluent Interface
 
-The [`PlanBuilder`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/builder.py) class offers chainable methods:
+The [`PlanBuilder`](gql_core/builder.py) class offers chainable methods:
 
 ```python
 from gql_core import (
@@ -91,7 +91,7 @@ Convenience factory functions for value and boolean expressions:
 
 ## 4. Logical Plan Validation
 
-Plans are validated before execution using [`validate_logical_plan`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/validator_ir.py):
+Plans are validated before execution using [`validate_logical_plan`](gql_core/validator_ir.py):
 
 ```python
 from gql_core import PlanValidationError, validate_logical_plan
@@ -124,4 +124,4 @@ recovered_builder = PlanBuilder.from_json(json_text)
 ```
 
 ### 5.1 LLM Operator Prompt Generation
-[`OperatorRegistry.generate_llm_prompt(schema)`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/registry.py) generates a markdown prompt describing all available entity types, properties, relationships, and operators, allowing an LLM to generate valid structured plans.
+[`OperatorRegistry.generate_llm_prompt(schema)`](gql_core/registry.py) generates a markdown prompt describing all available entity types, properties, relationships, and operators, allowing an LLM to generate valid structured plans.

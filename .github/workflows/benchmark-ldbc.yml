@@ -1,0 +1,63 @@
+name: LDBC SNB SF0.1 Benchmark
+
+on:
+  workflow_dispatch:
+    inputs:
+      samples:
+        description: "Number of measured sample runs per query"
+        required: false
+        default: "1"
+      warmup:
+        description: "Number of warm-up runs per query"
+        required: false
+        default: "0"
+
+jobs:
+  ldbc-snb:
+    name: Run LDBC SNB SF0.1 Read-Only Benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,benchmark]"
+
+      - name: Fetch and unpack LDBC SNB SF0.1 dataset
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m benchmark.snb.download_sf01
+
+      - name: Execute LDBC SNB SF0.1 Benchmark against SQLite Oracle
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m benchmark.snb.runner --dataset official_sf01 --samples ${{ github.event.inputs.samples || 1 }} --warmup ${{ github.event.inputs.warmup || 0 }}
+
+      - name: Verify Oracle Parity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -c "
+          import json
+          with open('benchmark/results/snb_interactive_results.json') as f:
+              results = json.load(f)
+          queries = results.get('queries', {})
+          for qname, qdata in queries.items():
+              assert qdata.get('oracle_match') is True, f'Query {qname} failed oracle match: {qdata}'
+          print('All LDBC queries matched SQLite reference oracle with exact answer parity.')
+          "
+
+      - name: Upload LDBC benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: snb-interactive-results
+          path: benchmark/results/snb_interactive_results.json
+          retention-days: 30

@@ -38,8 +38,8 @@ The codebase meets all engineering criteria for an open-source embedded property
 ## 3. Verification Evidence Summary
 
 ### 3.1 Test Suite Verification
-- **Total Tests**: **337 unit, regression, and property tests**
-- **Test Pass Rate**: **100% (337 / 337 passing in 25.8 seconds)**
+- **Total Tests**: **341 unit, regression, and property tests**
+- **Test Pass Rate**: **100% (341 / 341 passing in 25.8 seconds)**
 - **Test Categories**:
   - AST, parser, and semantic analyzer static checking
   - Physical relational planning and execution

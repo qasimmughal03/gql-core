@@ -2,7 +2,7 @@
 
 **Version**: 1.0  
 **Package**: `gql_core.ontology`  
-**Reference Models**: [`EntityType`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/ontology/model.py), [`RelationshipType`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/ontology/model.py), [`OntologySchema`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/ontology/schema.py)  
+**Reference Models**: [`EntityType`](gql_core/ontology/model.py), [`RelationshipType`](gql_core/ontology/model.py), [`OntologySchema`](gql_core/ontology/schema.py)  
 
 ---
 
@@ -124,7 +124,7 @@ GQL-Core provides explicit control over reasoning-world assumptions per relation
 
 ## 5. Constraint Validation
 
-[`OntologySchema.validate_graph(graph)`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/ontology/schema.py) performs full structural verification:
+[`OntologySchema.validate_graph(graph)`](gql_core/ontology/schema.py) performs full structural verification:
 - **`REQUIRED_PROP_MISSING`**: Required properties are non-null and non-empty.
 - **`ENUM_VIOLATION`**: Values match declared enumeration sets.
 - **`PATTERN_VIOLATION`**: String values match declared regex patterns.

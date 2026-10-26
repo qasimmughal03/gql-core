@@ -1,12 +1,22 @@
-name: Package check
+name: CI & Packaging Gates
 
 on:
   push:
+    branches: ["feat/implementation", "main", "master", "docs/*"]
   pull_request:
+    branches: ["feat/implementation", "main", "master"]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  package:
+  # -------------------------------------------------------------
+  # Gate A: Package Matrix (Python 3.11, 3.12, 3.13)
+  # -------------------------------------------------------------
+  package-matrix:
+    name: Package & Isolated Smoke (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -14,22 +24,154 @@ jobs:
         python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install build tools
+
+      - name: Install build and packaging tools
         run: python -m pip install --upgrade pip build twine
+
       - name: Build wheel and sdist
         run: python -m build
-      - name: Check metadata
+
+      - name: Validate distribution metadata
         run: python -m twine check dist/*
-      - name: Isolated wheel smoke test
+
+      - name: Verify isolated wheel installation and out-of-tree execution
         shell: bash
         run: |
           set -euo pipefail
           WHEEL=$(find dist -name '*.whl' -print -quit)
           python -m venv "$RUNNER_TEMP/gql-wheel-venv"
           "$RUNNER_TEMP/gql-wheel-venv/bin/python" -m pip install "$WHEEL"
+
+          # Execute from outside checkout directory to ensure zero source-tree reliance
           cd "$RUNNER_TEMP"
-          "$RUNNER_TEMP/gql-wheel-venv/bin/python" -c "import gql_core; from gql_core import PropertyGraph,Node,run; assert 'site-packages' in gql_core.__file__; g=PropertyGraph(); g.add_node(Node('n','Test',{'value':'ok'})); assert run('MATCH (n:Test) RETURN n.value AS value',g)==[{'value':'ok'}]; print(gql_core.__version__)"
+
+          # 1. Verify site-packages import and version
+          "$RUNNER_TEMP/gql-wheel-venv/bin/python" -c "
+          import gql_core
+          from gql_core import PropertyGraph, Node, Edge, run, PlanBuilder, eq, lit, prop, execute_plan
+          assert 'site-packages' in gql_core.__file__, f'Not from site-packages: {gql_core.__file__}'
+          assert gql_core.__version__ == '0.2.0a1'
+
+          # Test textual query
+          g = PropertyGraph()
+          g.add_node(Node('n', 'Person', {'name': 'Alice'}))
+          res = run('MATCH (n:Person) RETURN n.name AS name', g)
+          assert res == [{'name': 'Alice'}], res
+
+          # Test typed plan
+          plan = PlanBuilder.scan('p', 'Person').project((prop('p', 'name'), 'name')).build()
+          plan_res = execute_plan(plan, g)['rows']
+          assert plan_res == [{'name': 'Alice'}], plan_res
+          print('Isolated wheel smoke test passed on Python', gql_core.__version__)
+          "
+
+          # 2. Verify CLI commands
           "$RUNNER_TEMP/gql-wheel-venv/bin/gql-core" --version
+          "$RUNNER_TEMP/gql-wheel-venv/bin/gql-core" version
+
+  # -------------------------------------------------------------
+  # Gate B: Complete Unit and Regression Suite
+  # -------------------------------------------------------------
+  unit-tests:
+    name: Unit & Regression Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Fetch pinned openCypher TCK feature fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p benchmark/cache
+          git clone --depth 1 --branch 2024.3 https://github.com/opencypher/openCypher.git benchmark/cache/openCypher
+          test -d benchmark/cache/openCypher/tck/features
+
+      - name: Install package with dev dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Run full unit & regression suite
+        run: python -m pytest tests/ -v
+
+  # -------------------------------------------------------------
+  # Gate C: Strict openCypher TCK Verification
+  # -------------------------------------------------------------
+  tck-verification:
+    name: Strict openCypher TCK Conformance Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Fetch pinned openCypher TCK corpus (2024.3)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p benchmark/cache
+          git clone --depth 1 --branch 2024.3 https://github.com/opencypher/openCypher.git benchmark/cache/openCypher
+          test -d benchmark/cache/openCypher/tck/features
+
+      - name: Install package in editable mode
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+
+      - name: Run strict TCK verification harness
+        run: python -m benchmark.tck.runner
+
+      - name: Validate TCK release acceptance gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -c "
+          import json
+          with open('benchmark/results/tck_compatibility_results.json') as f:
+              data = json.load(f)
+          meta = data['metadata']
+          print(f'Total scenarios: {meta[\"total_scenarios\"]}')
+          print(f'Supported scenarios: {meta[\"supported_scenarios\"]}')
+          print(f'Passed result checks: {meta[\"passed_result_checks\"]}')
+          print(f'Passed expected error checks: {meta[\"passed_expected_error_checks\"]}')
+          print(f'Failed results: {meta[\"failed_results\"]}')
+          print(f'Failed compile: {meta[\"failed_compile\"]}')
+          print(f'Failed runtime: {meta[\"failed_runtime\"]}')
+          print(f'Blocked: {meta[\"blocked_scenarios\"]}')
+          print(f'Unsupported: {meta[\"unsupported_scenarios\"]}')
+
+          # Strict gate assertions
+          assert meta['total_scenarios'] == 3897, f'Expected 3897 scenarios, got {meta[\"total_scenarios\"]}'
+          assert meta['supported_scenarios'] == 3879, f'Expected 3879 supported, got {meta[\"supported_scenarios\"]}'
+          assert meta['failed_results'] == 0, f'Expected 0 failed results, got {meta[\"failed_results\"]}'
+          assert meta['failed_compile'] == 0, f'Expected 0 compile failures, got {meta[\"failed_compile\"]}'
+          assert meta['failed_runtime'] == 0, f'Expected 0 runtime failures, got {meta[\"failed_runtime\"]}'
+          assert meta['blocked_scenarios'] == 0, f'Expected 0 blocked, got {meta[\"blocked_scenarios\"]}'
+          assert meta['unsupported_scenarios'] == 18, f'Expected 18 unsupported, got {meta[\"unsupported_scenarios\"]}'
+          assert meta['supported_pass_rate'] == 1.0, f'Expected 100% pass rate, got {meta[\"supported_pass_rate\"]}'
+          print('TCK release acceptance criteria fully satisfied (100.00% pass rate).')
+          "
+
+      - name: Upload machine-readable TCK results artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tck-compatibility-results
+          path: benchmark/results/tck_compatibility_results.json
+          retention-days: 30

@@ -245,7 +245,7 @@ All 276 unit, regression, and property tests pass in 11.1s. An isolated virtual 
 
 | Metric | Result | Status |
 | :--- | :--- | :--- |
-| **Unit & Regression Suite (`pytest tests/`)** | 337 / 337 passed (25.8s) | **PASS (100.00%)** |
+| **Unit & Regression Suite (`pytest tests/`)** | 341 / 341 passed (25.8s) | **PASS (100.00%)** |
 | **openCypher TCK (Strict Mode, Full Expanded Corpus)** | 3,879 / 3,879 supported passed (81.6s) | **PASS (100.00%)** |
 | **openCypher TCK (Non-Outline Corpus)** | 1,321 / 1,321 supported passed | **PASS (100.00%)** |
 | **openCypher TCK Mutation Side Effects** | 250 / 250 checked mutations passed (3,187 total SE passed) | **PASS (100.00%)** |

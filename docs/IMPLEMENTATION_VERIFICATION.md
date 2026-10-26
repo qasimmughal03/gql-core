@@ -123,10 +123,10 @@ The package was verified by building the distribution wheel and running queries 
 ## 7. Documentation Deliverables
 
 The complete documentation suite for the logical operator and ontology reasoning system is available in `docs/`:
-1. [`LOGICAL_OPERATOR_SPEC.md`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/docs/LOGICAL_OPERATOR_SPEC.md) - Mathematical definitions, 3VL truth tables, relational and graph operators, quantifiers, temporal domain.
-2. [`ONTOLOGY_SCHEMA_SPEC.md`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/docs/ONTOLOGY_SCHEMA_SPEC.md) - Declarative schema format, DAG subtype inheritance, cardinality bounds, CWA vs OWA.
-3. [`INFERENCE_ENGINE.md`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/docs/INFERENCE_ENGINE.md) - Stratified semi-naive fixed point algorithm, cyclic rule termination, provenance tracking, index acceleration.
-4. [`TYPED_QUERY_API.md`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/docs/TYPED_QUERY_API.md) - Fluent `PlanBuilder` API reference, JSON IR schema, LLM prompting guide.
-5. [`OPERATOR_TEST_MATRIX.md`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/docs/OPERATOR_TEST_MATRIX.md) - Comprehensive mapping of every operator to test files, test names, and verified invariants.
-6. [`OPERATOR_BENCHMARKS.md`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/docs/OPERATOR_BENCHMARKS.md) - Benchmarks for transitive closure inference, correlated existence, 3VL filtering, and aggregation.
-7. [`IMPLEMENTATION_VERIFICATION.md`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/docs/IMPLEMENTATION_VERIFICATION.md) - This verification report.
+1. [`LOGICAL_OPERATOR_SPEC.md`](docs/LOGICAL_OPERATOR_SPEC.md) - Mathematical definitions, 3VL truth tables, relational and graph operators, quantifiers, temporal domain.
+2. [`ONTOLOGY_SCHEMA_SPEC.md`](docs/ONTOLOGY_SCHEMA_SPEC.md) - Declarative schema format, DAG subtype inheritance, cardinality bounds, CWA vs OWA.
+3. [`INFERENCE_ENGINE.md`](docs/INFERENCE_ENGINE.md) - Stratified semi-naive fixed point algorithm, cyclic rule termination, provenance tracking, index acceleration.
+4. [`TYPED_QUERY_API.md`](docs/TYPED_QUERY_API.md) - Fluent `PlanBuilder` API reference, JSON IR schema, LLM prompting guide.
+5. [`OPERATOR_TEST_MATRIX.md`](docs/OPERATOR_TEST_MATRIX.md) - Comprehensive mapping of every operator to test files, test names, and verified invariants.
+6. [`OPERATOR_BENCHMARKS.md`](docs/OPERATOR_BENCHMARKS.md) - Benchmarks for transitive closure inference, correlated existence, 3VL filtering, and aggregation.
+7. [`IMPLEMENTATION_VERIFICATION.md`](docs/IMPLEMENTATION_VERIFICATION.md) - This verification report.

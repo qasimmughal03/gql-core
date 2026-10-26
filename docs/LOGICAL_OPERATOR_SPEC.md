@@ -8,7 +8,7 @@
 
 ## 1. Overview
 
-GQL-Core provides a canonical, strongly typed, immutable logical Intermediate Representation (IR) for expressing graph, relational, Boolean, quantified, temporal, and ontology queries. The IR is decoupled from concrete query syntax, enabling both programmatic execution (via [`PlanBuilder`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/builder.py)) and automated generation by LLM agents.
+GQL-Core provides a canonical, strongly typed, immutable logical Intermediate Representation (IR) for expressing graph, relational, Boolean, quantified, temporal, and ontology queries. The IR is decoupled from concrete query syntax, enabling both programmatic execution (via [`PlanBuilder`](gql_core/builder.py)) and automated generation by LLM agents.
 
 All expressions and operators conform to strict typing, deterministic evaluation, and safe versioned JSON serialization (zero `eval` or dynamic code execution).
 
@@ -16,7 +16,7 @@ All expressions and operators conform to strict typing, deterministic evaluation
 
 ## 2. Value Expressions
 
-All value expressions inherit from [`ValueExpr`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/ir.py).
+All value expressions inherit from [`ValueExpr`](gql_core/ir.py).
 
 | Expression | Arguments | Output Type | Description |
 | :--- | :--- | :--- | :--- |
@@ -37,7 +37,7 @@ All value expressions inherit from [`ValueExpr`](file:///c:/Users/HP/Documents/P
 
 ## 3. Boolean Predicates & Three-Valued Logic (3VL)
 
-All Boolean expressions inherit from [`BoolExpr`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/ir.py) and evaluate under Kleene 3-Valued Logic:
+All Boolean expressions inherit from [`BoolExpr`](gql_core/ir.py) and evaluate under Kleene 3-Valued Logic:
 - **`True`**
 - **`False`**
 - **`None`** (Unknown)
@@ -92,7 +92,7 @@ In `Filter` operations, rows are retained strictly if the predicate evaluates to
 
 ## 6. Relational & Graph Operators
 
-All relational operators inherit from [`RelOp`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/ir.py) and emit tabular rows:
+All relational operators inherit from [`RelOp`](gql_core/ir.py) and emit tabular rows:
 
 1. **`Scan(var, label, inline_filters)`**: Root scan over graph entities.
 2. **`Expand(input, from_var, edge_var, edge_label, direction, to_var, to_label, optional)`**: 1-hop relationship traversal. Supports `optional=True` for left outer graph joins.
@@ -141,4 +141,4 @@ Every plan serializes to a clean, safe JSON representation:
   "distinct": false
 }
 ```
-Deserialization uses [`plan_from_dict`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/gql_core/ir.py) and executes zero dynamic code.
+Deserialization uses [`plan_from_dict`](gql_core/ir.py) and executes zero dynamic code.

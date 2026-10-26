@@ -2,7 +2,7 @@
 
 **Audit Date**: 2026-10-18  
 **Platform**: Windows amd64, Python 3.14.7  
-**Test Suite**: [`tests/test_operator_benchmarks.py`](file:///c:/Users/HP/Documents/Portfolio/knowledge-graoh-with-formal-query/tests/test_operator_benchmarks.py)  
+**Test Suite**: [`tests/test_operator_benchmarks.py`](tests/test_operator_benchmarks.py)  
 
 ---
 

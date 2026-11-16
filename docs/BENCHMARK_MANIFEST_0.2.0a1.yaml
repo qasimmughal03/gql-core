@@ -1,0 +1,41 @@
+# Frozen Baseline Benchmark Manifest
+# GQL-Core v0.2.0a1
+
+engine:
+  name: "gql-core"
+  version: "0.2.0a1"
+  git_commit: "b69d8b3c2ae6369dc04ce327e3ae28ed9bc87a93"
+  git_tag: "v0.2.0a1"
+  license: "Apache-2.0"
+  distributions:
+    wheel:
+      filename: "gql_core-0.2.0a1-py3-none-any.whl"
+      sha256: "71eb9ca2ce587d294695837483c5f9856f5b97ee8df35527d9649947154bf29b"
+    sdist:
+      filename: "gql_core-0.2.0a1.tar.gz"
+      sha256: "79c625a17b899fa65cf10555c9c6198c9c40f985102ee4eb564a39bff149814a"
+
+verification_gates:
+  pytest_unit_regression:
+    total: 341
+    passed: 341
+    failed: 0
+    pass_rate: "100.00%"
+  opencypher_tck:
+    corpus: "openCypher TCK v1.0.0"
+    total_scenarios: 3897
+    declared_supported: 3879
+    passing_supported: 3879
+    explicit_unsupported: 18
+    pass_rate: "100.00%"
+  ldbc_snb:
+    scale_factor: 0.1
+    oracle: "SQLite Ground-Truth"
+    verified_cases: 4
+    parity: "100.00%"
+
+runtime_environment:
+  supported_python:
+    - "3.11"
+    - "3.12"
+    - "3.13"

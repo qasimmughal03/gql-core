@@ -48,3 +48,8 @@ env/
 
 # Temporary scratch scripts
 scratch/
+
+benchmark/data/*.tsv
+benchmark/data/*.sif.gz
+benchmark/data/*.csv
+

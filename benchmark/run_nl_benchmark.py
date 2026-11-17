@@ -237,7 +237,7 @@ def _print_summary(out: dict) -> None:
     print(f"\n{'Query':<42} {'Class':<16} {'Cypher ms':>10} {'SQL ms':>10} {'OK':>4}")
     print("-" * 86)
     for r in out["results"]:
-        ok = "✓" if r["result_correct"] else "✗"
+        ok = "PASS" if r["result_correct"] else "FAIL"
         print(
             f"  {r['name']:<40} {r['query_class']:<16} "
             f"{r['cypher']['median_ms']:>10.2f} "

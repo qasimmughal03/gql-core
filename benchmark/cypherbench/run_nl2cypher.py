@@ -31,6 +31,10 @@ from benchmark.cypherbench.download import CACHE_DIR, TEST_GRAPHS, graph_path
 from benchmark.cypherbench.loader import load_simplekg
 from benchmark.cypherbench.metrics import execution_accuracy
 from benchmark.gemini_client import make_client, run_slug
+from benchmark import nl_pipeline
+from gql_core import correct_relationship_directions, schema_triples
+from gql_core.nl import value_hints
+from gql_core.query.values import value_index
 from benchmark.ollama_client import PredictionCache
 
 NL2CYPHER_PROMPT_DEFAULT = """Translate the question to Cypher query based on the schema of a Neo4j knowledge graph.
@@ -66,14 +70,51 @@ def clean_prediction(text: str) -> str:
     return text.replace("```cypher", "").replace("```", "").strip()
 
 
-def select_items(test: list[dict], graphs: list[str], per_graph: int | None, seed: int) -> list[dict]:
+def select_items(test: list[dict], graphs: list[str], per_graph: int | None, seed: int,
+                 exclude: set[str] | None = None) -> list[dict]:
     items = []
     for g in graphs:
-        pool = [x for x in test if x["graph"] == g]
+        pool = [x for x in test if x["graph"] == g and x["qid"] not in (exclude or set())]
         if per_graph is not None and per_graph < len(pool):
             pool = random.Random(f"{seed}:{g}").sample(pool, per_graph)
         items += pool
     return items
+
+
+def _pipeline_record(it, g, graph, schema_str, hints, triples, index, client, cache, timeout, engine_ok) -> dict:
+    def generate(prompt: str, key: str) -> dict:
+        rec = cache.get(key)
+        if rec is None:
+            gen = client.generate(prompt, stop=["\n```"])
+            rec = {"id": key, "raw": gen.text, "gen_seconds": round(gen.seconds, 2),
+                   "prompt_tokens": gen.prompt_tokens, "output_tokens": gen.output_tokens}
+            cache.put(rec)
+        return rec
+
+    prompt = NL2CYPHER_PROMPT_DEFAULT.format(schema=nl_pipeline.schema_with_hints(schema_str, hints),
+                                             question=it["nl_question"])
+    out = nl_pipeline.answer(prompt, graph=graph, triples=triples, index=index, generate=generate,
+                             execute=lambda q: run_with_timeout(q, graph, timeout), clean=clean_prediction,
+                             qid=it["qid"])
+    best = out["best"]
+    rec = {
+        "qid": it["qid"], "graph": g, "nl_question": it["nl_question"],
+        "match_category": it["from_template"]["match_category"],
+        "return_pattern_id": it["from_template"]["return_pattern_id"],
+        "gold_cypher": it["gold_cypher"], "pred_cypher": best["query"],
+        "gen_seconds": sum((cache.get(k) or {}).get("gen_seconds", 0) for k in
+                           [it["qid"]] + [f"{it['qid']}#retry{j}" for j in range(1, len(out["attempts"]))]),
+        "gold_reproducible_on_engine": engine_ok.get(it["qid"]),
+        "attempts": [{k: a[k] for k in ("model_query", "query", "repairs", "error", "feedback")}
+                     for a in out["attempts"]],
+        "executable": 0.0, "execution_accuracy": 0.0,
+    }
+    if best["error"] is None:
+        rec["executable"] = 1.0
+        rec["execution_accuracy"] = execution_accuracy(best["rows"], it["answer_json"], it["gold_cypher"])
+    else:
+        rec["error"] = best["error"]
+    return rec
 
 
 def main() -> None:
@@ -87,21 +128,36 @@ def main() -> None:
     ap.add_argument("--timeout", type=float, default=120.0, help="per-query execution timeout (s)")
     ap.add_argument("--parity", type=Path, default=Path("benchmark/results/cypherbench_engine_parity.json"),
                     help="Layer A results, used to flag questions whose gold query GQL-Core cannot reproduce")
+    ap.add_argument("--correct-directions", action="store_true",
+                    help="reverse relationship arrows the schema makes impossible before running "
+                         "(gql_core.correct_relationship_directions); written to a separate results file")
+    ap.add_argument("--pipeline", action="store_true",
+                    help="GQL-Core NL pipeline (benchmark/nl_pipeline.py): stored-value hints in the prompt, "
+                         "query repair, one execution-feedback retry; written to a separate results file")
+    ap.add_argument("--exclude-sample-seed", type=int, default=None,
+                    help="draw the sample from questions NOT in this seed's sample (a disjoint dev set)")
     ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
 
     slug = run_slug(args.provider, args.model)
     if args.out is None:
-        args.out = OUT if args.provider == "ollama" else OUT.with_name(f"{OUT.stem}__{slug}.json")
+        name = OUT.stem if args.provider == "ollama" else f"{OUT.stem}__{slug}"
+        name += "__pipeline" if args.pipeline else "__corrected" if args.correct_directions else ""
+        name += f"__seed{args.seed}" if args.seed != 0 or args.exclude_sample_seed is not None else ""
+        args.out = OUT.with_name(f"{name}.json")
     client = make_client(args.provider, args.model)
     model_info = client.check()
-    cache = PredictionCache(Path("benchmark/cache/predictions") / f"cypherbench__{slug}.jsonl")
+    cache = PredictionCache(Path("benchmark/cache/predictions")
+                            / f"cypherbench__{slug}{'__pipeline' if args.pipeline else ''}.jsonl")
     engine_ok: dict[str, bool] = {}
     if args.parity.exists():
         engine_ok = {r["qid"]: r["status"] == "match" for r in json.loads(args.parity.read_text(encoding="utf-8"))["results"]}
 
     test = load_test()
-    items = select_items(test, args.graphs, args.per_graph, args.seed)
+    exclude = None
+    if args.exclude_sample_seed is not None:
+        exclude = {x["qid"] for x in select_items(test, args.graphs, args.per_graph, args.exclude_sample_seed)}
+    items = select_items(test, args.graphs, args.per_graph, args.seed, exclude)
     print(f"model {args.model} ({model_info.get('details', {}).get('parameter_size')}); {len(items)} questions", flush=True)
 
     results = []
@@ -111,8 +167,19 @@ def main() -> None:
             continue
         graph, schema = load_simplekg(graph_path(g))
         schema_str = official_schema_str(schema)
+        triples = schema_triples(schema)
+        if args.pipeline:
+            hints = value_hints(graph, labels=[e["label"] for e in schema["entities"]])
+            index = value_index(graph)
         print(f"[{g}] {len(graph._nodes):,} nodes / {len(graph._edges):,} edges; {len(g_items)} questions", flush=True)
         for i, it in enumerate(g_items, 1):
+            if args.pipeline:
+                results.append(_pipeline_record(it, g, graph, schema_str, hints, triples, index, client, cache,
+                                                args.timeout, engine_ok))
+                if i % 10 == 0 or i == len(g_items):
+                    print(f"  {i}/{len(g_items)}  EX "
+                          f"{avg([r['execution_accuracy'] for r in results if r['graph'] == g]):.3f}", flush=True)
+                continue
             cached = cache.get(it["qid"])
             if cached is None:
                 prompt = NL2CYPHER_PROMPT_DEFAULT.format(schema=schema_str, question=it["nl_question"])
@@ -121,6 +188,10 @@ def main() -> None:
                           "prompt_tokens": gen.prompt_tokens, "output_tokens": gen.output_tokens}
                 cache.put(cached)
             pred = clean_prediction(cached["raw"])
+            changes: list[str] = []
+            if args.correct_directions:
+                fix = correct_relationship_directions(pred, triples)
+                pred, changes = fix.query, fix.changes
             rec = {
                 "qid": it["qid"], "graph": g, "nl_question": it["nl_question"],
                 "match_category": it["from_template"]["match_category"],
@@ -130,6 +201,9 @@ def main() -> None:
                 "gold_reproducible_on_engine": engine_ok.get(it["qid"]),
                 "executable": 0.0, "execution_accuracy": 0.0,
             }
+            if args.correct_directions:
+                rec["pred_cypher_model"] = clean_prediction(cached["raw"])
+                rec["direction_changes"] = changes
             try:
                 rows = run_with_timeout(pred, graph, args.timeout)
                 rec["executable"] = 1.0
@@ -151,9 +225,15 @@ def main() -> None:
         "model": model_info,
         "protocol": "official zero-shot prompt + official schema string; temperature 0; official EX comparison; "
                     "predicted queries executed on GQL-Core, compared with Neo4j gold answers",
+        "direction_correction": args.correct_directions,
+        "pipeline": nl_pipeline.__doc__.strip() if args.pipeline else None,
+        "retried": sum(1 for r in results if len(r.get("attempts", ())) > 1),
+        "repaired": sum(1 for r in results if any(a["repairs"] for a in r.get("attempts", ()))),
+        "queries_direction_corrected": sum(1 for r in results if r.get("direction_changes")),
         "git_commit": git_commit(),
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "sample": {"per_graph": args.per_graph, "seed": args.seed, "n": len(results),
+                   "excluded_sample_of_seed": args.exclude_sample_seed,
                    "full_test_size": len(test)},
         "execution_accuracy": avg([r["execution_accuracy"] for r in results]),
         "executable": avg([r["executable"] for r in results]),

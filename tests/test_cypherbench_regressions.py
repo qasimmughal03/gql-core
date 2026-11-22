@@ -234,3 +234,27 @@ def test_exists_subquery_unsupported_form_is_an_error_not_a_wrong_answer():
     import pytest
     with pytest.raises(Exception, match="UnsupportedFeature"):
         run("MATCH (p:Player) WHERE EXISTS { MATCH (p)-->(t) RETURN count(t) } RETURN p", _graph())
+
+
+def test_expand_matches_a_secondary_label():
+    # MetaQA: the node "1941" is both a Movie and a Year. Expanding to (y:Year) checked only
+    # the primary label, so release-year questions returned nothing.
+    g = PropertyGraph()
+    g.add_node(Node("Hold Back the Dawn", "Movie", {"name": "Hold Back the Dawn"}))
+    g.add_node(Node("1941", "Movie", {"name": "1941"}, labels=("Movie", "Year")))
+    g.add_edge(Edge("e1", "release_year", "Hold Back the Dawn", "1941"))
+    q = "MATCH (m:Movie {name: 'Hold Back the Dawn'})-[:release_year]->(y:Year) RETURN y.name AS y"
+    assert run(q, g) == [{"y": "1941"}]
+    assert run("MATCH (y:Year) RETURN y.name AS y", g) == [{"y": "1941"}]
+
+
+def test_multi_type_relationship_in_clause_pipeline():
+    # [:a|b] matched nothing on the clause path (DISTINCT, WITH, count(DISTINCT ...)),
+    # because each edge's type was compared with the whole string 'playsFor|coaches'.
+    g = _graph()
+    g.add_edge(Edge("e9", "coaches", "p1", "t2"))
+    q = "MATCH (p:Player {name: 'Ann'})-[:playsFor|coaches]->(t:Team) RETURN DISTINCT t.name AS t ORDER BY t"
+    assert run(q, g) == [{"t": "Bulls"}, {"t": "Kings"}]
+    assert run("MATCH (p:Player)-[:playsFor|coaches]->(t:Team) RETURN count(DISTINCT t) AS n", g) == [{"n": 2}]
+    assert run("MATCH (p:Player)-[r:playsFor|coaches]->(t:Team) WITH p, count(r) AS n WHERE n > 1 RETURN p.name AS p ORDER BY p", g) \
+        == [{"p": "Ann"}, {"p": "Bob"}]

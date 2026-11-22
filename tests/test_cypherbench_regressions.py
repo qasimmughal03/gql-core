@@ -258,3 +258,19 @@ def test_multi_type_relationship_in_clause_pipeline():
     assert run("MATCH (p:Player)-[:playsFor|coaches]->(t:Team) RETURN count(DISTINCT t) AS n", g) == [{"n": 2}]
     assert run("MATCH (p:Player)-[r:playsFor|coaches]->(t:Team) WITH p, count(r) AS n WHERE n > 1 RETURN p.name AS p ORDER BY p", g) \
         == [{"p": "Ann"}, {"p": "Bob"}]
+
+
+def test_nested_property_in_single_where_condition():
+    # MATCH (n) WHERE n.date.year = 1988 returned nothing: the planner pushed the condition
+    # into the scan and looked up a property literally named "date.year".
+    from gql_core.query.cypher_temporal import CypherTemporalValue, _date_to_props, _format_date
+
+    def date(y, m, d):  # the value the CypherBench loader stores for a schema `date` property
+        return CypherTemporalValue(_format_date(y, m, d), _date_to_props(y, m, d), kind="date")
+
+    g = PropertyGraph()
+    g.add_node(Node("a1", "Accident", {"name": "Pan Am Flight 103", "date": date(1988, 12, 21)}))
+    g.add_node(Node("a2", "Accident", {"name": "TWA Flight 800", "date": date(1996, 7, 17)}))
+    assert run("MATCH (a:Accident) WHERE a.date.year = 1988 RETURN a.name AS n", g) == [{"n": "Pan Am Flight 103"}]
+    assert run("MATCH (a:Accident) WHERE a.date.year > 1990 RETURN a.name AS n", g) == [{"n": "TWA Flight 800"}]
+    assert run("MATCH (a:Accident) WHERE a.date.month = 12 RETURN count(a) AS c", g) == [{"c": 1}]

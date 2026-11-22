@@ -570,6 +570,10 @@ def _matches_pushed(
             return False
         if cmp.lhs.prop is None:
             value = target
+        elif "." in cmp.lhs.prop and cmp.lhs.prop not in getattr(target, "props", {}):
+            # Nested access such as n.date.year: read it the way WHERE does, not as a
+            # property literally named "date.year".
+            value = _read_ref_full(cmp.lhs, {cmp.lhs.var: target})
         elif hasattr(target, "props") and cmp.lhs.prop in target.props:
             value = target.props[cmp.lhs.prop]
         elif cmp.lhs.prop == "id" and hasattr(target, "id"):

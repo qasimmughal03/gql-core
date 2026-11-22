@@ -147,3 +147,37 @@ def test_both_ends_bound_starts_from_lower_degree_node():
     t = time.perf_counter()
     assert run(q, g) == [{"c": 1}]
     assert time.perf_counter() - t < 10
+
+
+def test_where_equality_chooses_start_node_and_keeps_results():
+    g = _industry_graph(companies=300)
+    queries = [
+        "MATCH (c1:Company)-[r:operatesIn]->(i1:Industry)<-[r2:operatesIn]-(c2:Company) "
+        "WHERE c2.name = 'Co7' RETURN c1.name AS a, i1.name AS i",
+        "MATCH (c:Company)-[:operatesIn]->(i:Industry) WHERE i.name IN ['Ind1', 'Ind2'] AND c.name <> 'Co3' "
+        "RETURN c.name AS a, i.name AS i",
+        "MATCH (c1:Company)-->(i:Industry)<--(c2:Company) WHERE c2.name = 'Co7' OR c2.name = 'Co8' "
+        "RETURN c1.name AS a",
+        "MATCH (c1:Company)-->(i:Industry)<--(c2:Company) WHERE c2.name = 7 RETURN c1.name AS a",
+    ]
+    for q in queries:
+        clause = parse(q).clauses[0]
+        hints = _ex._where_equality_hints(clause.where)
+        pat = clause.patterns[0]
+        fast = _ex._match_path_pattern(pat, {}, g, hints)
+        slow = _ex._match_linear(pat, {}, g)
+        keep = [m for m in slow if _ex._eval_single_expr(clause.where, m, g) is True]
+        got = [m for m in fast if _ex._eval_single_expr(clause.where, m, g) is True]
+        assert _rows_key(got) == _rows_key(keep), q
+        assert bool(keep) == ("= 7" not in q), q  # type-mismatched equality matches nothing
+
+
+def test_where_equality_on_far_node_is_fast_on_large_graph():
+    g = _industry_graph(companies=20000)
+    q = ("MATCH (c1:Company)-[r:operatesIn]->(i1:Industry)<-[r2:operatesIn]-(c2:Company) "
+         "WHERE c2.name = 'Co7' RETURN count(DISTINCT c1) AS c")
+    t = time.perf_counter()
+    rows = run(q, g)
+    assert time.perf_counter() - t < 10
+    co7 = {e.dst for e in g._edges.values() if e.src == "c7"}
+    assert rows == [{"c": len({e.src for e in g._edges.values() if e.dst in co7} - {"c7"})}]

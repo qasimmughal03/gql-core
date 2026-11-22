@@ -1434,12 +1434,13 @@ def _execute_return_or_with(
 
 def _execute_match_clause(clause: MatchClause, rows: list[dict], graph: PropertyGraph) -> list[dict]:
     out = []
+    hints = _where_equality_hints(clause.where)
     for r in rows:
         match_rows = [dict(r)]
         for pat in clause.patterns:
             new_match_rows = []
             for cur_row in match_rows:
-                sub_matches = _match_path_pattern(pat, cur_row, graph)
+                sub_matches = _match_path_pattern(pat, cur_row, graph, hints)
                 new_match_rows.extend(sub_matches)
             match_rows = new_match_rows
 
@@ -1490,7 +1491,53 @@ def _referenced_vars(value: Any, out: set[str]) -> set[str]:
     return out
 
 
-def _anchor_cost(node_pat: NodePat, seed_row: dict, graph: PropertyGraph) -> tuple[int, int]:
+Hints = dict[str, list[tuple[str, tuple]]]
+
+
+def _hint_value(v: Any) -> tuple[bool, Any]:
+    if type(v).__name__ == "Literal" and hasattr(v, "value"):
+        v = v.value
+    if isinstance(v, (str, int, float)) and not isinstance(v, bool):
+        return True, v
+    return False, None
+
+
+def _where_equality_hints(where: Any) -> Hints:
+    """Conjunctive ``var.prop = literal`` / ``var.prop IN [literals]`` terms of a WHERE.
+
+    Used only to choose where a pattern starts and to prune that node's candidates.
+    The full WHERE is still evaluated on every match afterwards, so a hint can
+    never change the result; it only avoids building rows WHERE would reject.
+    """
+    hints: Hints = {}
+    stack = [where] if where is not None else []
+    while stack:
+        e = stack.pop()
+        if isinstance(e, And):
+            stack.extend(e.children)
+        elif isinstance(e, Comparison) and e.op == "=" and isinstance(e.lhs, Ref) and e.lhs.prop and "." not in e.lhs.prop:
+            ok, v = _hint_value(e.rhs)
+            if ok:
+                hints.setdefault(e.lhs.var, []).append((e.lhs.prop, (v,)))
+        elif type(e).__name__ == "In" and isinstance(getattr(e, "element", None), Ref):
+            ref, coll = e.element, getattr(e, "collection", None)
+            elems = getattr(coll, "elements", None)
+            if ref.prop and "." not in ref.prop and elems is not None:
+                vals = [_hint_value(x) for x in elems]
+                if all(ok for ok, _ in vals):
+                    hints.setdefault(ref.var, []).append((ref.prop, tuple(v for _, v in vals)))
+    return hints
+
+
+def _passes_hints(node: Node, terms: list[tuple[str, tuple]]) -> bool:
+    for prop, allowed in terms:
+        val = node.props.get(prop)
+        if val is None or isinstance(val, bool) or val not in allowed:
+            return False
+    return True
+
+
+def _anchor_cost(node_pat: NodePat, seed_row: dict, graph: PropertyGraph, hints: Hints | None = None) -> tuple[int, int]:
     """Estimated cost of starting a pattern at this node (lower is better)."""
     if node_pat.var and isinstance(seed_row.get(node_pat.var), Node):
         # Among bound nodes, start from the one with fewer edges to walk.
@@ -1498,10 +1545,11 @@ def _anchor_cost(node_pat: NodePat, seed_row: dict, graph: PropertyGraph) -> tup
         return (0, len(graph._out.get(nid, ())) + len(graph._in.get(nid, ())))
     labels = tuple(node_pat.labels) or ((node_pat.label,) if node_pat.label else ())
     size = min((len(graph._by_label.get(l, ())) for l in labels), default=len(graph._nodes))
-    return (1 if node_pat.filters else 2, size)
+    constrained = bool(node_pat.filters) or bool(hints and node_pat.var in hints)
+    return (1 if constrained else 2, size)
 
 
-def _choose_anchor(pat: Pattern, seed_row: dict, graph: PropertyGraph) -> int:
+def _choose_anchor(pat: Pattern, seed_row: dict, graph: PropertyGraph, hints: Hints | None = None) -> int:
     """Index of the node to start matching from.
 
     openCypher pattern semantics do not depend on traversal order, so a chain may
@@ -1523,7 +1571,7 @@ def _choose_anchor(pat: Pattern, seed_row: dict, graph: PropertyGraph) -> int:
             _referenced_vars(v, refs)
         if refs & local:
             return 0
-    costs = [_anchor_cost(n, seed_row, graph) for n in pat.nodes]
+    costs = [_anchor_cost(n, seed_row, graph, hints) for n in pat.nodes]
     best = min(range(len(costs)), key=lambda i: costs[i])  # ties keep the leftmost node
     return best if costs[best] < costs[0] else 0
 
@@ -1533,10 +1581,10 @@ def _reverse_pattern(nodes: tuple, rels: tuple) -> Pattern:
     return Pattern(nodes=tuple(reversed(nodes)), rels=rev_rels)
 
 
-def _match_path_pattern(pat: Pattern, seed_row: dict, graph: PropertyGraph) -> list[dict]:
-    k = _choose_anchor(pat, seed_row, graph)
+def _match_path_pattern(pat: Pattern, seed_row: dict, graph: PropertyGraph, hints: Hints | None = None) -> list[dict]:
+    k = _choose_anchor(pat, seed_row, graph, hints)
     if k == 0:
-        return _match_linear(pat, seed_row, graph)
+        return _match_linear(pat, seed_row, graph, hints)
     nodes = list(pat.nodes)
     anchor = nodes[k]
     if not anchor.var:
@@ -1545,7 +1593,7 @@ def _match_path_pattern(pat: Pattern, seed_row: dict, graph: PropertyGraph) -> l
     rels = tuple(pat.rels)
     # Left part (nodes[0..k]) walked backwards from the anchor.
     left = _reverse_pattern(tuple(nodes[: k + 1]), rels[:k])
-    rows = _match_linear(left, seed_row, graph)
+    rows = _match_linear(left, seed_row, graph, hints)
     if k < len(nodes) - 1:
         # Right part continues from the now-bound anchor.
         bound = replace(anchor, label=None, labels=(), filters=())
@@ -1557,7 +1605,7 @@ def _match_path_pattern(pat: Pattern, seed_row: dict, graph: PropertyGraph) -> l
     return rows
 
 
-def _match_linear(pat: Pattern, seed_row: dict, graph: PropertyGraph) -> list[dict]:
+def _match_linear(pat: Pattern, seed_row: dict, graph: PropertyGraph, hints: Hints | None = None) -> list[dict]:
     if not pat.nodes:
         return [seed_row]
 
@@ -1584,6 +1632,8 @@ def _match_linear(pat: Pattern, seed_row: dict, graph: PropertyGraph) -> list[di
 
     if start_node_pat.filters:
         start_nodes = [n for n in start_nodes if _matches_inline_filters(n, tuple((k, _read_ref_full(v, seed_row, graph)) for k, v in start_node_pat.filters))]
+    if hints and start_node_pat.var in hints:
+        start_nodes = [n for n in start_nodes if _passes_hints(n, hints[start_node_pat.var])]
 
     current_matches = []
     for sn in start_nodes:

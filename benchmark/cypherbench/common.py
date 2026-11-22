@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ctypes
 import json
 import subprocess
 import threading
@@ -35,8 +36,20 @@ class QueryTimeout(Exception):
     pass
 
 
+def _stop_thread(t: threading.Thread) -> None:
+    """Raise QueryTimeout inside a runaway query thread so it stops using CPU.
+
+    An abandoned thread would otherwise keep running and slow every later query
+    (the GIL is shared), turning one timeout into a run of them. The engine is
+    pure Python, so the exception is delivered at the next bytecode boundary.
+    """
+    if t.ident is not None:
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_ulong(t.ident), ctypes.py_object(QueryTimeout))
+    t.join(60)
+
+
 def run_with_timeout(cypher: str, graph: Any, timeout_s: float) -> list[dict]:
-    """Run on a daemon thread; a timed-out query is abandoned and counted as a failure."""
+    """Run on a worker thread; a query still running after timeout_s is stopped and counted as a failure."""
     box: dict[str, Any] = {}
 
     def target() -> None:
@@ -49,6 +62,7 @@ def run_with_timeout(cypher: str, graph: Any, timeout_s: float) -> list[dict]:
     t.start()
     t.join(timeout_s)
     if t.is_alive():
+        _stop_thread(t)
         raise QueryTimeout(f"query exceeded {timeout_s}s")
     if "exc" in box:
         raise box["exc"]

@@ -181,3 +181,56 @@ def test_where_equality_on_far_node_is_fast_on_large_graph():
     assert time.perf_counter() - t < 10
     co7 = {e.dst for e in g._edges.values() if e.src == "c7"}
     assert rows == [{"c": len({e.src for e in g._edges.values() if e.dst in co7} - {"c7"})}]
+
+
+# ── EXISTS (found by Gemini 2.5 Flash's NL->Cypher output on CypherBench) ──
+
+def _names(q: str) -> list[str]:
+    return [r["name"] for r in run(q, _graph())]
+
+
+def test_exists_subquery_pattern():
+    # Previously left unparsed: EXISTS returned no rows and NOT EXISTS returned all rows.
+    assert _names("MATCH (p:Player) WHERE EXISTS { (p)-[:playsFor]->(:Team {name: 'Bulls'}) } "
+                  "RETURN p.name AS name ORDER BY name") == ["Bob", "Cid"]
+    assert _names("MATCH (p:Player) WHERE NOT EXISTS { (p)-[:playsFor]->(:Team {name: 'Bulls'}) } "
+                  "RETURN p.name AS name ORDER BY name") == ["Ann"]
+
+
+def test_exists_subquery_where_sees_its_own_variables():
+    # Previously rejected with "WHERE references unbound variable 't'".
+    assert _names("MATCH (p:Player) WHERE EXISTS { (p)-[:playsFor]->(t:Team) WHERE t.name = 'Bulls' } "
+                  "RETURN p.name AS name ORDER BY name") == ["Bob", "Cid"]
+    assert _names("MATCH (p:Player) WHERE EXISTS { MATCH (p)-[:playsFor]->(t:Team) WHERE t.name = 'Kings' } "
+                  "RETURN p.name AS name ORDER BY name") == ["Ann", "Bob"]
+
+
+def test_exists_subquery_with_return_keeps_outer_column_names():
+    rows = run("MATCH (p:Player) WHERE EXISTS { MATCH (p)-[:playsFor]->(t:Team) WHERE t.name = 'Bulls' RETURN t } "
+               "RETURN p.name ORDER BY p.name", _graph())
+    assert rows == [{"p.name": "Bob"}, {"p.name": "Cid"}]
+
+
+def test_call_subquery_keeps_outer_column_names():
+    # Column names were read from the RETURN inside the braces.
+    rows = run("CALL { MATCH (n:Player) RETURN n } RETURN n.name ORDER BY n.name", _graph())
+    assert rows == [{"n.name": "Ann"}, {"n.name": "Bob"}, {"n.name": "Cid"}]
+
+
+def test_exists_subquery_in_return():
+    rows = run("MATCH (p:Player) RETURN p.name AS name, EXISTS { (p)-->(:Team {name: 'Kings'}) } AS k "
+               "ORDER BY name", _graph())
+    assert rows == [{"name": "Ann", "k": True}, {"name": "Bob", "k": True}, {"name": "Cid", "k": False}]
+
+
+def test_exists_function_on_pattern_and_property():
+    # Neo4j 4 forms; previously "Unknown function 'EXISTS'".
+    assert _names("MATCH (p:Player) WHERE EXISTS((p)-->(:Team {name: 'Kings'})) "
+                  "OR EXISTS((p)-->(:Team {name: 'Bulls'})) RETURN p.name AS name ORDER BY name") == ["Ann", "Bob", "Cid"]
+    assert _names("MATCH (p:Player) WHERE exists(p.mass_kg) RETURN p.name AS name ORDER BY name") == ["Ann", "Cid"]
+
+
+def test_exists_subquery_unsupported_form_is_an_error_not_a_wrong_answer():
+    import pytest
+    with pytest.raises(Exception, match="UnsupportedFeature"):
+        run("MATCH (p:Player) WHERE EXISTS { MATCH (p)-->(t) RETURN count(t) } RETURN p", _graph())

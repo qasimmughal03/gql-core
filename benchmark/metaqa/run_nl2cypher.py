@@ -32,7 +32,8 @@ from pathlib import Path
 from benchmark.cypherbench.common import QueryTimeout, avg, git_commit, run_with_timeout
 from benchmark.cypherbench.run_nl2cypher import clean_prediction
 from benchmark.metaqa.loader import HOPS, OBJECT_LABEL, load_graph, load_questions
-from benchmark.ollama_client import OllamaClient, PredictionCache
+from benchmark.gemini_client import make_client, run_slug
+from benchmark.ollama_client import PredictionCache
 
 PROMPT = """Translate the question to Cypher query based on the schema of a Neo4j knowledge graph.
 - Output the Cypher query in a single line, without any additional output or explanation. Do not wrap the query with any formatting like ```.
@@ -84,17 +85,22 @@ def answers_from_rows(rows: list[dict], topic: str) -> set[str]:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--model", required=True, help="Ollama model tag, e.g. qwen2.5-coder:7b")
+    ap.add_argument("--provider", choices=["ollama", "gemini"], default="ollama",
+                    help="ollama (local) or gemini (needs GEMINI_API_KEY in the environment)")
+    ap.add_argument("--model", required=True, help="model name, e.g. qwen2.5-coder:7b or gemini-2.5-flash-lite")
     ap.add_argument("--hops", nargs="+", type=int, default=list(HOPS), choices=HOPS)
     ap.add_argument("--per-hop", type=int, default=None, help="seeded sample size per hop")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--timeout", type=float, default=60.0, help="per-query execution timeout (s)")
-    ap.add_argument("--out", type=Path, default=OUT)
+    ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
 
-    client = OllamaClient(args.model)
+    slug = run_slug(args.provider, args.model)
+    if args.out is None:
+        args.out = OUT if args.provider == "ollama" else OUT.with_name(f"{OUT.stem}__{slug}.json")
+    client = make_client(args.provider, args.model)
     model_info = client.check()
-    cache = PredictionCache(Path("benchmark/cache/predictions") / f"metaqa__{args.model.replace(':', '_').replace('/', '_')}.jsonl")
+    cache = PredictionCache(Path("benchmark/cache/predictions") / f"metaqa__{slug}.jsonl")
     graph, triples = load_graph()
     schema = schema_str()
     print(f"MetaQA KB: {len(graph._nodes):,} entities / {len(graph._edges):,} triples; model {args.model}", flush=True)

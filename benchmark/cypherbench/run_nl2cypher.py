@@ -30,7 +30,8 @@ from benchmark.cypherbench.common import QueryTimeout, avg, breakdown, git_commi
 from benchmark.cypherbench.download import CACHE_DIR, TEST_GRAPHS, graph_path
 from benchmark.cypherbench.loader import load_simplekg
 from benchmark.cypherbench.metrics import execution_accuracy
-from benchmark.ollama_client import OllamaClient, PredictionCache
+from benchmark.gemini_client import make_client, run_slug
+from benchmark.ollama_client import PredictionCache
 
 NL2CYPHER_PROMPT_DEFAULT = """Translate the question to Cypher query based on the schema of a Neo4j knowledge graph.
 - Output the Cypher query in a single line, without any additional output or explanation. Do not wrap the query with any formatting like ```.
@@ -77,19 +78,24 @@ def select_items(test: list[dict], graphs: list[str], per_graph: int | None, see
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--model", required=True, help="Ollama model tag, e.g. qwen2.5-coder:7b")
+    ap.add_argument("--provider", choices=["ollama", "gemini"], default="ollama",
+                    help="ollama (local) or gemini (needs GEMINI_API_KEY in the environment)")
+    ap.add_argument("--model", required=True, help="model name, e.g. qwen2.5-coder:7b or gemini-2.5-flash-lite")
     ap.add_argument("--graphs", nargs="+", default=TEST_GRAPHS, choices=TEST_GRAPHS)
     ap.add_argument("--per-graph", type=int, default=None, help="seeded stratified sample size per graph")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--timeout", type=float, default=120.0, help="per-query execution timeout (s)")
     ap.add_argument("--parity", type=Path, default=Path("benchmark/results/cypherbench_engine_parity.json"),
                     help="Layer A results, used to flag questions whose gold query GQL-Core cannot reproduce")
-    ap.add_argument("--out", type=Path, default=OUT)
+    ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
 
-    client = OllamaClient(args.model)
+    slug = run_slug(args.provider, args.model)
+    if args.out is None:
+        args.out = OUT if args.provider == "ollama" else OUT.with_name(f"{OUT.stem}__{slug}.json")
+    client = make_client(args.provider, args.model)
     model_info = client.check()
-    cache = PredictionCache(Path("benchmark/cache/predictions") / f"cypherbench__{args.model.replace(':', '_').replace('/', '_')}.jsonl")
+    cache = PredictionCache(Path("benchmark/cache/predictions") / f"cypherbench__{slug}.jsonl")
     engine_ok: dict[str, bool] = {}
     if args.parity.exists():
         engine_ok = {r["qid"]: r["status"] == "match" for r in json.loads(args.parity.read_text(encoding="utf-8"))["results"]}

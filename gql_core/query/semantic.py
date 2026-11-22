@@ -19,6 +19,7 @@ from typing import Any
 from gql_core.query.ast import (
     And,
     CallClause,
+    CallSubquery,
     Comparison,
     CreateClause,
     DeleteClause,
@@ -195,7 +196,12 @@ def _validate_with_order_by(clause: WithClause) -> None:
         _check_term(term.ref)
 
 
-def validate_query(query: Query, schema_path: str | Path | None = None, graph: Any = None) -> None:
+def validate_query(
+    query: Query,
+    schema_path: str | Path | None = None,
+    graph: Any = None,
+    _outer_bindings: dict | None = None,
+) -> None:
     """Validate a parsed query against the graph ontology.
 
     When schema_path is provided (or set via set_schema_path), full
@@ -209,7 +215,8 @@ def validate_query(query: Query, schema_path: str | Path | None = None, graph: A
     from gql_core.query.static_types import check_static_types
     check_static_types(query)
     schema = _resolve_schema(schema_path)
-    bindings: dict[str, _Binding] = {}
+    # A correlated CALL { WITH x ... } subquery sees the outer scope it imports from.
+    bindings: dict[str, _Binding] = dict(_outer_bindings) if _outer_bindings else {}
 
     if query.clauses:
         for clause in query.clauses:
@@ -329,6 +336,15 @@ def validate_query(query: Query, schema_path: str | Path | None = None, graph: A
                 for orig, alias in clause.yield_items:
                     col = alias or orig
                     bindings[col] = _Binding(kind="value")
+
+            elif isinstance(clause, CallSubquery):
+                correlated = bool(clause.query.clauses) and isinstance(clause.query.clauses[0], WithClause)
+                validate_query(clause.query, schema_path=schema_path, graph=graph,
+                               _outer_bindings=bindings if correlated else None)
+                for col, binding in _subquery_output_bindings(clause.query).items():
+                    if col in bindings:
+                        raise SemanticError(f"VariableAlreadyBound: Variable {col!r} returned by CALL subquery is already declared")
+                    bindings[col] = binding
 
             elif isinstance(clause, WithClause):
                 from gql_core.ir import ListExpr
@@ -668,6 +684,43 @@ def _validate_projection_aggregations(projections: tuple[Projection, ...]) -> No
             elif isinstance(p.expr, RegexMatch):
                 _check_mixed(p.expr.string_expr)
 
+
+
+def _subquery_output_bindings(query: Query) -> dict[str, _Binding]:
+    """Columns a CALL { ... } subquery adds to the outer scope (from its final RETURN).
+
+    A bare variable keeps its node/edge kind and label so the outer query can
+    read its properties; anything else is a plain value.
+    """
+    ret = next((cl for cl in reversed(query.clauses) if isinstance(cl, ReturnClause)), None)
+    if ret is None:
+        return {}
+    kinds: dict[str, _Binding] = {}
+    for cl in query.clauses:
+        if isinstance(cl, MatchClause):
+            for pat in cl.patterns:
+                for node in pat.nodes:
+                    if node.var:
+                        kinds.setdefault(node.var, _Binding(kind="node", label=node.label))
+                for rel in pat.rels:
+                    if rel.var:
+                        kinds.setdefault(rel.var, _Binding(kind="edge", label=rel.label))
+    out: dict[str, _Binding] = {}
+    for p in ret.items:
+        var = _bare_var_name(p.expr)
+        col = p.alias or var
+        if col is None:
+            continue
+        out[col] = kinds.get(var, _Binding(kind="value")) if var else _Binding(kind="value")
+    return out
+
+
+def _bare_var_name(expr: Any) -> str | None:
+    if isinstance(expr, Ref) and expr.prop is None:
+        return expr.var
+    if isinstance(expr, Variable):
+        return expr.name
+    return None
 
 def _bind_node(bindings: dict[str, _Binding], var: str, label: str | None) -> None:
     existing = bindings.get(var)

@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import math
 from collections import deque
+from dataclasses import replace
 from collections.abc import Iterable, Iterator
 from typing import Any
 
@@ -47,6 +48,7 @@ from gql_core.query.ast import (
     MergeClause,
     MergeAction,
     CallClause,
+    CallSubquery,
 )
 from gql_core.query.parser import parse
 from gql_core.query.planner import (
@@ -74,6 +76,7 @@ def _is_pipeline_query(query: Query) -> bool:
         RemoveClause,
         MergeClause,
         CallClause,
+        CallSubquery,
     )
     for cl in query.clauses:
         if isinstance(cl, pipeline_clause_types):
@@ -1393,7 +1396,9 @@ def _execute_return_or_with(
                         if k in res_row:
                             return _safe_sort_key(res_row[k])
                 val = _read_ref_full(t, merged, graph)
-                if val is None and isinstance(t, Ref) and t.var in merged:
+                # Fall back to the raw binding only for a bare variable (ORDER BY n);
+                # a null property (ORDER BY n.prop) must sort as null, not as the node.
+                if val is None and isinstance(t, Ref) and t.prop is None and t.var in merged:
                     val = merged[t.var]
                 return _safe_sort_key(val)
 
@@ -1464,7 +1469,95 @@ def _execute_match_clause(clause: MatchClause, rows: list[dict], graph: Property
     return out
 
 
+_FLIP_DIRECTION = {"out": "in", "in": "out", "both": "both"}
+
+
+def _referenced_vars(value: Any, out: set[str]) -> set[str]:
+    """Collect variable names referenced anywhere inside a filter value expression."""
+    if isinstance(value, Ref):
+        out.add(value.var)
+    elif isinstance(value, (list, tuple, set, frozenset)):
+        for v in value:
+            _referenced_vars(v, out)
+    elif isinstance(value, dict):
+        for v in value.values():
+            _referenced_vars(v, out)
+    elif hasattr(value, "__dataclass_fields__"):
+        if type(value).__name__ == "Variable" and isinstance(getattr(value, "name", None), str):
+            out.add(value.name)
+        for f in value.__dataclass_fields__:
+            _referenced_vars(getattr(value, f, None), out)
+    return out
+
+
+def _anchor_cost(node_pat: NodePat, seed_row: dict, graph: PropertyGraph) -> tuple[int, int]:
+    """Estimated cost of starting a pattern at this node (lower is better)."""
+    if node_pat.var and isinstance(seed_row.get(node_pat.var), Node):
+        # Among bound nodes, start from the one with fewer edges to walk.
+        nid = seed_row[node_pat.var].id
+        return (0, len(graph._out.get(nid, ())) + len(graph._in.get(nid, ())))
+    labels = tuple(node_pat.labels) or ((node_pat.label,) if node_pat.label else ())
+    size = min((len(graph._by_label.get(l, ())) for l in labels), default=len(graph._nodes))
+    return (1 if node_pat.filters else 2, size)
+
+
+def _choose_anchor(pat: Pattern, seed_row: dict, graph: PropertyGraph) -> int:
+    """Index of the node to start matching from.
+
+    openCypher pattern semantics do not depend on traversal order, so a chain may
+    be evaluated from any node. Starting at a bound or property-constrained node
+    (e.g. the far end of ``(n)-->(m)<--(x {name: 'A'})``) avoids expanding from
+    every ``n``. Reordering is skipped when it could change results: named paths
+    and variable-length steps (edge order), and filters that reference variables
+    bound by the pattern itself (they must be evaluated left to right).
+    """
+    if len(pat.nodes) < 2 or pat.path_var:
+        return 0
+    if any(getattr(r, "quantifier", ("one",)) != ("one",) for r in pat.rels):
+        return 0
+    pattern_vars = {n.var for n in pat.nodes if n.var} | {r.var for r in pat.rels if r.var}
+    local = pattern_vars - set(seed_row)
+    for item in list(pat.nodes) + list(pat.rels):
+        refs: set[str] = set()
+        for _, v in item.filters:
+            _referenced_vars(v, refs)
+        if refs & local:
+            return 0
+    costs = [_anchor_cost(n, seed_row, graph) for n in pat.nodes]
+    best = min(range(len(costs)), key=lambda i: costs[i])  # ties keep the leftmost node
+    return best if costs[best] < costs[0] else 0
+
+
+def _reverse_pattern(nodes: tuple, rels: tuple) -> Pattern:
+    rev_rels = tuple(replace(r, direction=_FLIP_DIRECTION.get(r.direction, r.direction)) for r in reversed(rels))
+    return Pattern(nodes=tuple(reversed(nodes)), rels=rev_rels)
+
+
 def _match_path_pattern(pat: Pattern, seed_row: dict, graph: PropertyGraph) -> list[dict]:
+    k = _choose_anchor(pat, seed_row, graph)
+    if k == 0:
+        return _match_linear(pat, seed_row, graph)
+    nodes = list(pat.nodes)
+    anchor = nodes[k]
+    if not anchor.var:
+        anchor = replace(anchor, var=f"__anchor_{k}")
+        nodes[k] = anchor
+    rels = tuple(pat.rels)
+    # Left part (nodes[0..k]) walked backwards from the anchor.
+    left = _reverse_pattern(tuple(nodes[: k + 1]), rels[:k])
+    rows = _match_linear(left, seed_row, graph)
+    if k < len(nodes) - 1:
+        # Right part continues from the now-bound anchor.
+        bound = replace(anchor, label=None, labels=(), filters=())
+        right = Pattern(nodes=(bound, *nodes[k + 1:]), rels=rels[k:])
+        rows = [m for r in rows for m in _match_linear(right, r, graph)]
+    if anchor.var.startswith("__anchor_"):
+        for r in rows:
+            r.pop(anchor.var, None)
+    return rows
+
+
+def _match_linear(pat: Pattern, seed_row: dict, graph: PropertyGraph) -> list[dict]:
     if not pat.nodes:
         return [seed_row]
 
@@ -2044,13 +2137,43 @@ def _execute_call_clause(clause: CallClause, rows: list[dict], graph: PropertyGr
     return out
 
 
-def execute_pipeline(query: Query, graph: PropertyGraph) -> list[dict]:
-    """Execute a multi-clause openCypher pipeline query against a PropertyGraph."""
+def _is_correlated_subquery(query: Query) -> bool:
+    """A CALL subquery imports outer variables iff it (or any UNION branch) starts with WITH."""
+    branches = [query] + [q for _, q in query.unions]
+    return any(q.clauses and isinstance(q.clauses[0], WithClause) for q in branches)
+
+
+def _execute_call_subquery(clause: CallSubquery, rows: list[dict], graph: PropertyGraph) -> list[dict]:
+    """Join each incoming row with the rows returned by the subquery (openCypher CALL { })."""
+    inner = clause.query
+    if _is_correlated_subquery(inner):
+        out = []
+        for row in rows:
+            for sub in execute_pipeline(inner, graph, initial_rows=[dict(row)]):
+                merged = dict(row)
+                merged.update(sub)
+                out.append(merged)
+        return out
+    sub_rows = [dict(r) for r in execute_pipeline(inner, graph)]
+    out = []
+    for row in rows:
+        for sub in sub_rows:
+            merged = dict(row)
+            merged.update(sub)
+            out.append(merged)
+    return out
+
+
+def execute_pipeline(query: Query, graph: PropertyGraph, initial_rows: list[dict] | None = None) -> list[dict]:
+    """Execute a multi-clause openCypher pipeline query against a PropertyGraph.
+
+    ``initial_rows`` seeds the pipeline (used for correlated CALL subqueries).
+    """
     if query.unions:
         base_q = Query(clauses=query.clauses)
-        out = execute_pipeline(base_q, graph)
+        out = execute_pipeline(base_q, graph, initial_rows)
         for u_type, sub_q in query.unions:
-            sub_res = execute_pipeline(sub_q, graph)
+            sub_res = execute_pipeline(sub_q, graph, initial_rows)
             if "ALL" in u_type.upper():
                 out.extend(sub_res)
             else:
@@ -2065,10 +2188,12 @@ def execute_pipeline(query: Query, graph: PropertyGraph) -> list[dict]:
                 out = dedup
         return out
 
-    rows = [{}]
+    rows = [dict(r) for r in initial_rows] if initial_rows else [{}]
     for clause in query.clauses:
         if isinstance(clause, MatchClause):
             rows = _execute_match_clause(clause, rows, graph)
+        elif isinstance(clause, CallSubquery):
+            rows = _execute_call_subquery(clause, rows, graph)
         elif isinstance(clause, UnwindClause):
             rows = _execute_unwind_clause(clause, rows, graph=graph)
         elif isinstance(clause, WithClause):

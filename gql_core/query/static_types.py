@@ -31,6 +31,7 @@ from gql_core.ir import (
 from gql_core.query.ast import (
     And as ASTAnd,
     CallClause,
+    CallSubquery,
     Comparison as ASTComparison,
     CreateClause,
     MatchClause,
@@ -337,6 +338,15 @@ def check_static_types(query: Any) -> None:
         elif isinstance(cl, UnwindClause):
             _t(cl.expr, scope)
             scope[cl.alias] = _elem_type(cl.expr, scope)
+        elif isinstance(cl, CallSubquery):
+            ret = next((c for c in reversed(cl.query.clauses) if isinstance(c, ReturnClause)), None)
+            for p in (ret.items if ret else ()):
+                if p.alias:
+                    scope[p.alias] = ANY
+                elif isinstance(p.expr, Ref) and p.expr.prop is None:
+                    scope[p.expr.var] = ANY
+                elif type(p.expr).__name__ == "Variable":
+                    scope[p.expr.name] = ANY
         elif isinstance(cl, CallClause):
             for a in cl.args:
                 if _is_expr(a):

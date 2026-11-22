@@ -18,6 +18,7 @@ from lark.exceptions import UnexpectedToken, UnexpectedCharacters
 from gql_core.query.ast import (
     And as ASTAnd,
     CallClause,
+    CallSubquery,
     Comparison as ASTComparison,
     CreateClause,
     DeleteClause,
@@ -784,6 +785,10 @@ class CypherPipelineTransformer(Transformer):
         alias = str(items[1]) if len(items) > 1 else None
         return ("yield_item", orig, alias)
 
+    def call_subquery(self, items):
+        inner = next(it for it in items if isinstance(it, Query))
+        return CallSubquery(query=inner)
+
     def call_clause(self, items):
         proc_name = str(items[0])
         args = []
@@ -921,8 +926,9 @@ def _extract_raw_projections(source: str) -> list[tuple[str, str | None]]:
 
 # Singleton parsers
 _PARSER_LALR = Lark.open(str(_GRAMMAR), parser="lalr", maybe_placeholders=False)
+_AST_TRANSFORMER = CypherPipelineTransformer()
 _PARSER_AST = Lark.open(
-    str(_GRAMMAR), parser="lalr", maybe_placeholders=False, transformer=CypherPipelineTransformer()
+    str(_GRAMMAR), parser="lalr", maybe_placeholders=False, transformer=_AST_TRANSFORMER
 )
 _PARSER_EARLEY: Lark | None = None
 
@@ -938,6 +944,9 @@ def parse(source: str) -> Query:
     """Parse a GQL-Core / openCypher source string into a Query AST."""
     if not isinstance(source, str):
         raise TypeError(f"Expected query string, got {type(source).__name__}")
+    # The LALR transformer is a shared singleton; parenthesized-expression markers are
+    # object ids, which Python reuses, so they must not leak from one parse to the next.
+    _AST_TRANSFORMER._parenthesized_ids.clear()
     try:
         q: Query = _PARSER_AST.parse(source)
     except (UnexpectedToken, UnexpectedCharacters):

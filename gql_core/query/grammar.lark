@@ -12,27 +12,29 @@ clause: optional_match_clause
       | delete_clause
       | remove_clause
       | merge_clause
+      | call_subquery
       | call_clause
       | return_clause
 
-optional_match_clause: "OPTIONAL" "MATCH" pattern ("," pattern)* where_clause?
-match_clause: "MATCH" pattern ("," pattern)* where_clause?
-unwind_clause: "UNWIND" expr "AS" ident
-with_clause: "WITH" DISTINCT? (return_item ("," return_item)* | STAR) where_clause? order_by? skip? limit?
-return_clause: "RETURN" DISTINCT? (return_item ("," return_item)* | STAR) order_by? skip? limit?
+optional_match_clause: "OPTIONAL"i "MATCH"i pattern ("," pattern)* where_clause?
+match_clause: "MATCH"i pattern ("," pattern)* where_clause?
+unwind_clause: "UNWIND"i expr "AS"i ident
+with_clause: "WITH"i DISTINCT? (return_item ("," return_item)* | STAR) where_clause? order_by? skip? limit?
+return_clause: "RETURN"i DISTINCT? (return_item ("," return_item)* | STAR) order_by? skip? limit?
 
-call_clause: "CALL" proc_name ("(" (expr ("," expr)*)? ")")? ("YIELD" yield_item ("," yield_item)*)?
+call_subquery: "CALL"i "{" start "}"
+call_clause: "CALL"i proc_name ("(" (expr ("," expr)*)? ")")? ("YIELD"i yield_item ("," yield_item)*)?
 proc_name: ident ("." ident)*
-yield_item: STAR | ident ("AS" ident)?
+yield_item: STAR | ident ("AS"i ident)?
 
-create_clause: "CREATE" pattern ("," pattern)*
-set_clause: "SET" set_item ("," set_item)*
-delete_clause: DETACH? "DELETE" expr ("," expr)*
-remove_clause: "REMOVE" remove_item ("," remove_item)*
-merge_clause: "MERGE" pattern merge_action*
+create_clause: "CREATE"i pattern ("," pattern)*
+set_clause: "SET"i set_item ("," set_item)*
+delete_clause: DETACH? "DELETE"i expr ("," expr)*
+remove_clause: "REMOVE"i remove_item ("," remove_item)*
+merge_clause: "MERGE"i pattern merge_action*
 
-merge_action: "ON" "CREATE" "SET" set_item ("," set_item)* -> merge_on_create
-            | "ON" "MATCH" "SET" set_item ("," set_item)*  -> merge_on_match
+merge_action: "ON"i "CREATE"i "SET"i set_item ("," set_item)* -> merge_on_create
+            | "ON"i "MATCH"i "SET"i set_item ("," set_item)*  -> merge_on_match
 
 set_item: postfix_expr "=" expr                          -> set_prop
         | postfix_expr "+=" expr                         -> set_prop_merge
@@ -64,29 +66,29 @@ quantifier: "*"                                          -> q_star
           | "*" INT DOTDOT                               -> q_range_from
           | "*" DOTDOT                                   -> q_star
 
-where_clause: "WHERE" expr
+where_clause: "WHERE"i expr
 
 pattern_predicate: node_pat (rel_pat node_pat)+
 
 return_item: expr alias?                                 -> proj_item
-alias: "AS" ident
+alias: "AS"i ident
 
-order_by: "ORDER" "BY" order_term ("," order_term)*
+order_by: "ORDER"i "BY"i order_term ("," order_term)*
 order_term: expr direction?
 direction: ASC | DESC
-skip: "SKIP" expr
-limit: "LIMIT" expr
+skip: "SKIP"i expr
+limit: "LIMIT"i expr
 
 ?expr: or_expr
 
 ?or_expr: xor_expr
-        | or_expr "OR" xor_expr                          -> or_op
+        | or_expr "OR"i xor_expr                          -> or_op
 
 ?xor_expr: and_expr
-         | xor_expr "XOR" and_expr                       -> xor_op
+         | xor_expr "XOR"i and_expr                       -> xor_op
 
 ?and_expr: not_expr
-         | and_expr "AND" not_expr                       -> and_op
+         | and_expr "AND"i not_expr                       -> and_op
 
 ?not_expr: NOT_KW not_expr                               -> not_op
          | comp_expr
@@ -103,11 +105,11 @@ limit: "LIMIT" expr
 ?predicate_expr: add_expr
                | predicate_expr IS_KW NULL_KW            -> is_null_op
                | predicate_expr IS_KW NOT_KW NULL_KW      -> is_not_null_op
-               | predicate_expr "STARTS" "WITH" add_expr -> starts_with_op
-               | predicate_expr "ENDS" "WITH" add_expr   -> ends_with_op
-               | predicate_expr "CONTAINS" add_expr      -> contains_op
+               | predicate_expr "STARTS"i "WITH"i add_expr -> starts_with_op
+               | predicate_expr "ENDS"i "WITH"i add_expr   -> ends_with_op
+               | predicate_expr "CONTAINS"i add_expr      -> contains_op
                | predicate_expr "=~" add_expr            -> regex_op
-               | predicate_expr "IN" add_expr            -> in_op
+               | predicate_expr "IN"i add_expr            -> in_op
 
 ?add_expr: mul_expr
          | add_expr "+" mul_expr                         -> add_op
@@ -146,17 +148,17 @@ limit: "LIMIT" expr
      | "(" expr ")"                                      -> paren_expr
 
 exists_subquery: EXISTS_KW "{" (pattern where_clause? | start) "}"
-quantifier_call: QUANTIFIER_FUNC "(" ident "IN" expr ("WHERE" expr)? ")"
+quantifier_call: QUANTIFIER_FUNC "(" ident "IN"i expr ("WHERE"i expr)? ")"
 
 param: "$" (ident | INT)
 
-case_expr: "CASE" expr? (when_then)+ ("ELSE" expr)? "END"
-when_then: "WHEN" expr "THEN" expr
+case_expr: "CASE"i expr? (when_then)+ ("ELSE"i expr)? "END"i
+when_then: "WHEN"i expr "THEN"i expr
 
-list_comprehension: "[" ident "IN" expr list_comp_where? list_comp_map? "]"
-list_comp_where: "WHERE" expr
+list_comprehension: "[" ident "IN"i expr list_comp_where? list_comp_map? "]"
+list_comp_where: "WHERE"i expr
 list_comp_map: "|" expr
-pattern_comprehension: "[" (ident "=")? pattern_expr ("WHERE" expr)? "|" expr "]"
+pattern_comprehension: "[" (ident "=")? pattern_expr ("WHERE"i expr)? "|" expr "]"
 pattern_expr: node_pat (rel_pat node_pat)+
 
 list_lit: "[" (expr ("," expr)*)? "]"
@@ -178,9 +180,9 @@ value: HEX_INT                                           -> hex_val
      | FALSE                                             -> false_val
      | NULL                                              -> null_val
 
-TRUE: "true" | "TRUE"
-FALSE: "false" | "FALSE"
-NULL: "null" | "NULL"
+TRUE: "true" | "TRUE"i
+FALSE: "false" | "FALSE"i
+NULL: "null" | "NULL"i
 STAR: "*"
 SINGLE_QUOTED_STRING: /'([^'\\]|\\.)*'/
 HEX_INT.2: /-?0[xX][0-9a-fA-F]+/

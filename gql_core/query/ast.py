@@ -185,6 +185,15 @@ class CallClause:
     yield_items: tuple[tuple[str, str | None], ...] = ()
 
 
+@dataclass(frozen=True)
+class CallSubquery:
+    """``CALL { <query> }`` — a nested query (possibly a UNION) whose RETURN
+    columns are joined onto each incoming row. The subquery is correlated
+    when its first clause is an importing ``WITH`` of outer variables."""
+
+    query: Any  # Query
+
+
 Clause = (
     MatchClause
     | UnwindClause
@@ -196,6 +205,7 @@ Clause = (
     | RemoveClause
     | MergeClause
     | CallClause
+    | CallSubquery
 )
 
 

@@ -55,7 +55,7 @@ jobs:
           import gql_core
           from gql_core import PropertyGraph, Node, Edge, run, PlanBuilder, eq, lit, prop, execute_plan
           assert 'site-packages' in gql_core.__file__, f'Not from site-packages: {gql_core.__file__}'
-          assert gql_core.__version__ == '0.2.0a1'
+          assert gql_core.__version__ == '0.2.0a2'
 
           # Test textual query
           g = PropertyGraph()

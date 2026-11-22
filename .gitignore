@@ -12,6 +12,7 @@ benchmark/results/*
 !benchmark/results/results.json
 !benchmark/results/tck_compatibility_results.json
 !benchmark/results/snb_interactive_results.json
+!benchmark/results/cypherbench_engine_parity.json
 benchmark/cache/
 
 

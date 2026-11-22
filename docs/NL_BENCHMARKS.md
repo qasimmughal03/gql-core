@@ -31,7 +31,7 @@ exactly our key sequence. Both numbers are in the results file.
 
 Results: `benchmark/results/cypherbench_engine_parity.json`.
 
-**Result (full test split, 2,348 questions, `PYTHONHASHSEED=0`, 120 s timeout, CPU-only laptop):**
+**Result (full test split, 2,348 questions, commit `43cab07`, `PYTHONHASHSEED=0`, 120 s timeout, CPU-only laptop):**
 
 | Graph | Questions | Official execution accuracy | Counting tied order as a match |
 | --- | --- | --- | --- |
@@ -74,6 +74,33 @@ undefined.
 
 Results: `benchmark/results/cypherbench_nl2cypher.json`, `benchmark/results/metaqa_nl2cypher.json`.
 
+**CypherBench NL→Cypher result** (`qwen2.5-coder:3b`, Q4_K_M, via Ollama on CPU; 30 seeded
+questions per graph, seed 0, n = 210 of 2,348):
+
+| Graph | nba | flight_accident | fictional_character | company | geography | movie | politics | **All** |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Execution accuracy | 20.0% | 26.7% | 13.3% | 6.7% | 3.3% | 13.3% | 10.0% | **13.3%** |
+
+92.4% of the predicted queries run, and all 16 that do not are invalid Cypher that Neo4j would also reject. By pattern, the model does best on single-node lookups
+(44%) and one-hop questions (20–38%). It scores 0% on unions, `OPTIONAL MATCH`, comparisons
+and time-sensitive questions, and 5% on three-node group-bys. Every gold query is reproducible
+on GQL-Core (Layer A), so none of these misses is an engine gap. The failures are `OR` between patterns, SQL-style `GROUP BY … HAVING` or SQL
+subqueries, `ORDER BY` without `RETURN`, an unbound variable, and truncated output.
+
+**MetaQA result** (`qwen2.5-coder:3b`, Q4_K_M, via Ollama on CPU; 100 seeded questions per hop, seed 0):
+
+| Split | n (of test size) | Exact match | F1 | Hit | Executable |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 1-hop | 100 (9,947) | 67.0% | 70.2% | 72.0% | 98% |
+| 2-hop | 100 (14,872) | 0.0% | 0.0% | 0.0% | 99% |
+| 3-hop | 100 (14,274) | 0.0% | 0.1% | 2.0% | 99% |
+| **All** | **300** | **22.3%** | **23.5%** | **24.7%** | **98.7%** |
+
+The 2- and 3-hop zeros were inspected and are model errors: the model stops after one hop,
+links attributes to the wrong node type (for example genre to the actor instead of the movie),
+reverses relationship directions, or reads release year as a property when it is a separate
+node. The queries run, but they return nothing or the wrong entities.
+
 ## Engine gaps found and fixed by Layer A
 
 Running real gold queries surfaced three engine bugs, each with a regression test in
@@ -91,6 +118,9 @@ Running real gold queries surfaced three engine bugs, each with a regression tes
    variable-length steps and filters that reference other pattern variables keep
    left-to-right order. The three gold queries that had timed out now finish in
    0.1–2.5 s with correct answers.
+5. Equality and `IN` conditions in `WHERE` (for example `WHERE c.name = 'X'`) were not used to
+   choose the start node, so model-written queries in Layer B timed out. They now choose the start
+   node and prune its candidates; the full `WHERE` is still applied, so results are unchanged.
 
 A latent parser bug also appeared along the way: parenthesized-expression markers,
 keyed by `id()`, leaked between parses, so chained comparisons depended on earlier

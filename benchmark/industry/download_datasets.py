@@ -1,8 +1,5 @@
-"""
-Downloader and loader for authentic industry datasets:
-1. Hetionet v1.0 (Biomedical Knowledge Network - Himmelstein et al., eLife)
-2. Open Source Insights / GHSA (Software Supply Chain Dependency & Vulnerability Network)
-"""
+"""Downloader and parser for Hetionet v1.0 (Himmelstein et al., eLife 2017),
+from the official hetio/hetionet repository."""
 
 from __future__ import annotations
 

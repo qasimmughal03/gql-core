@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "timestamp": "2026-11-22T17:12:58Z",
+    "timestamp": "2026-11-23T09:53:46Z",
     "corpus": "openCypher TCK",
     "git_commit": "677cbafabb8c3c5eed458fd3b1ec0daec8d67d23",
     "release_tag": "2024.3",
@@ -65,7 +65,7 @@
       "expected_error_accuracy_pct": 100.0,
       "strict_compatibility_pct": 98.66
     },
-    "duration_seconds": 25.63
+    "duration_seconds": 79.62
   },
   "category_breakdown": {
     "clauses": {

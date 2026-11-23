@@ -337,6 +337,23 @@ class CypherPipelineTransformer(Transformer):
     def pattern_expr(self, items):
         return self.pattern(items)
 
+    def exists_subquery(self, items):
+        """EXISTS { pattern [WHERE cond] } and EXISTS { MATCH pattern [WHERE cond] [RETURN ...] }."""
+        body = [it for it in items if not (isinstance(it, Token) and it.type == "EXISTS_KW")]
+        if body and isinstance(body[0], Pattern):
+            return PatternPredicate(body[0], where=body[1] if len(body) > 1 else None, subquery=True)
+        q = body[0] if body else None
+        if isinstance(q, Query) and not q.unions:
+            cl = list(q.clauses)
+            ret = cl.pop() if cl and type(cl[-1]).__name__ == "ReturnClause" else None
+            plain_return = ret is None or (ret.order_by is None and ret.skip is None and ret.limit is None
+                                           and not any(getattr(p, "agg", None) for p in ret.items))
+            if (len(cl) == 1 and type(cl[0]).__name__ == "MatchClause" and not cl[0].optional
+                    and len(cl[0].patterns) == 1 and plain_return):
+                return PatternPredicate(cl[0].patterns[0], where=cl[0].where, subquery=True)
+        raise SyntaxError("UnsupportedFeature: EXISTS { ... } supports a single pattern with an optional WHERE "
+                          "(and an optional plain RETURN)")
+
     # Expressions
     def add_op(self, items):
         return Arithmetic("+", items[0], items[1])
@@ -513,6 +530,13 @@ class CypherPipelineTransformer(Transformer):
             target_name = str(target)
 
         fn_name_up = target_name.upper()
+        if fn_name_up == "EXISTS" and len(args) == 1:
+            # Neo4j 4 forms: exists((a)-->(b)) is the pattern predicate itself;
+            # exists(n.prop) means the property is present.
+            if isinstance(args[0], PatternPredicate):
+                return args[0]
+            if isinstance(args[0], Ref) and args[0].prop:
+                return IRIsNotNull(args[0])
         if fn_name_up in ("COUNT", "SUM", "AVG", "MIN", "MAX", "COLLECT"):
             arg_ref = args[0] if args else Ref("*")
             return Projection(expr=arg_ref, agg=fn_name_up, alias=None, distinct=distinct)
@@ -881,11 +905,37 @@ class CypherPipelineTransformer(Transformer):
         return items[0]
 
 
+def _mask_nested(source: str) -> str:
+    """Blank out text inside {...} and string literals with a non-space placeholder (keeping the length), so keyword
+    searches see only the top-level query, not EXISTS { ... } or CALL { ... } bodies."""
+    out = []
+    depth = 0
+    quote = None
+    for ch in source:
+        if quote:
+            out.append("_")
+            if ch == quote:
+                quote = None
+        elif ch in ('"', "'"):
+            quote = ch
+            out.append("_")
+        elif ch == "{":
+            depth += 1
+            out.append("_")
+        elif ch == "}":
+            depth = max(depth - 1, 0)
+            out.append("_")
+        else:
+            out.append(ch if depth == 0 else "_")
+    return "".join(out)
+
+
 def _extract_raw_projections(source: str) -> list[tuple[str, str | None]]:
-    m = re.search(r'\bRETURN\b\s+(.*?)(?:\bORDER\s+BY\b|\bLIMIT\b|\bSKIP\b|\bUNION\b|$)', source, re.I | re.DOTALL)
+    m = re.search(r'\bRETURN\b\s+(.*?)(?:\bORDER\s+BY\b|\bLIMIT\b|\bSKIP\b|\bUNION\b|$)', _mask_nested(source),
+                  re.I | re.DOTALL)
     if not m:
         return []
-    clause = m.group(1).strip()
+    clause = source[m.start(1):m.end(1)].strip()
     if clause.upper().startswith("DISTINCT "):
         clause = clause[9:].strip()
     items = []

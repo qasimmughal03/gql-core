@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use GQL-Core, please cite it as below."
+title: "GQL-Core: embedded graph querying and rule-based reasoning for Python"
+type: software
+authors:
+  - given-names: Muhammad
+    family-names: Qasim
+version: 0.2.0a3
+date-released: 2026-11-23
+license: Apache-2.0
+repository-code: "https://github.com/qasimmughal03/knowledge-graoh-with-formal-query"
+url: "https://pypi.org/project/gql-core/"
+keywords:
+  - property graph
+  - query engine
+  - cypher
+  - knowledge graph
+  - inference
+  - text-to-cypher

@@ -23,6 +23,8 @@ from typing import Any, Callable
 
 from gql_core.graph import PropertyGraph
 from gql_core.query.executor import run as run_query
+from gql_core.nl import execution_feedback, feedback_prompt, keep_revision, repair_query, value_hints
+from gql_core.query.directions import schema_triples
 from gql_core.query.parser import parse as parse_query
 
 
@@ -40,15 +42,14 @@ def extract_schema_summary(graph: PropertyGraph) -> dict[str, Any]:
                 node_props[label].update(node.props.keys())
 
     edge_info: dict[str, dict[str, Any]] = defaultdict(lambda: {"connections": set(), "props": set()})
+    # Every (source label, target label) pair that occurs, counting all labels of a node,
+    # so the prompt never shows a direction the graph does not have.
+    for rel, src_label, dst_label in schema_triples(graph):
+        edge_info[rel]["connections"].add((src_label, dst_label))
     for label, eids in graph._edge_by_label.items():
-        for eid in list(eids)[:100]:  # Sample up to 100 edges per label
+        for eid in list(eids)[:100]:  # Sample up to 100 edges per label for property names
             edge = graph._edges.get(eid)
             if edge:
-                src_node = graph._nodes.get(edge.src)
-                dst_node = graph._nodes.get(edge.dst)
-                src_label = src_node.label if src_node else "Node"
-                dst_label = dst_node.label if dst_node else "Node"
-                edge_info[label]["connections"].add((src_label, dst_label))
                 edge_info[label]["props"].update(edge.props.keys())
 
     return {
@@ -95,6 +96,9 @@ def format_schema_prompt(graph: PropertyGraph) -> str:
         "- ORDER BY and LIMIT (e.g. ORDER BY count DESC LIMIT 5)",
         "- String values in double quotes: \"value\"",
     ])
+    hints = value_hints(graph)
+    if hints:
+        lines.extend(["", "=== STORED VALUES (use exactly as written) ===", hints])
     return "\n".join(lines)
 
 
@@ -143,6 +147,7 @@ def translate_to_gql(
     *,
     client: Callable[[str], str] | str | None = None,
     model: str = "llama3",
+    correct_directions: bool = True,
 ) -> str:
     """Translate a natural-language question into a valid GQL-Core query string.
 
@@ -156,31 +161,44 @@ def translate_to_gql(
         LLM backend. If None, checks for OLLAMA_URL or default localhost.
     model : str
         Model name (default: "llama3").
+    correct_directions : bool
+        Repair the generated query with :func:`gql_core.nl.repair_query`: reverse
+        relationship arrows that are impossible in this graph (for example
+        ``(:Person)-[:written_by]->(:Movie)`` when every ``written_by`` edge goes from a
+        Movie to a Person), and ground string literals to stored values (``'Center'`` to
+        ``'center'``) when exactly one stored value matches ignoring case.
     """
     system_prompt = format_schema_prompt(graph)
     full_prompt = f"{system_prompt}\n\nUSER QUESTION: {question}\nGQL-CORE QUERY:"
+    raw_output = _generate(full_prompt, system_prompt, question, client=client, model=model)
+    return _finish(raw_output, graph, correct_directions)
 
+
+def _generate(full_prompt: str, system_prompt: str, user_text: str, *,
+              client: Callable[[str], str] | str | None, model: str) -> str:
     if callable(client):
-        raw_output = client(full_prompt)
-    elif client == "ollama" or client is None:
+        return client(full_prompt)
+    if client == "ollama" or client is None:
         base_url = os.environ.get("OLLAMA_URL", "http://localhost:11434")
         try:
-            raw_output = _call_ollama(system_prompt, question, model=model, base_url=base_url)
+            return _call_ollama(system_prompt, user_text, model=model, base_url=base_url)
         except Exception as exc:
             raise ConnectionError(
                 f"Could not reach Ollama at {base_url} ({exc}). "
                 "Ensure Ollama is running or pass a custom callable client=..."
             ) from exc
-    else:
-        raise ValueError(f"Unsupported client type: {type(client).__name__}")
+    raise ValueError(f"Unsupported client type: {type(client).__name__}")
 
+
+def _finish(raw_output: str, graph: PropertyGraph, repair: bool) -> str:
     cleaned_gql = clean_generated_gql(raw_output)
     # Validate syntax early
     try:
         parse_query(cleaned_gql)
     except Exception as exc:
         raise ValueError(f"Generated query is not valid GQL-Core: {cleaned_gql!r} ({exc})") from exc
-
+    if repair:
+        cleaned_gql = repair_query(cleaned_gql, graph).query
     return cleaned_gql
 
 
@@ -191,6 +209,8 @@ def ask(
     client: Callable[[str], str] | str | None = None,
     model: str = "llama3",
     explain: bool = False,
+    correct_directions: bool = True,
+    max_retries: int = 1,
 ) -> list[dict[str, Any]] | dict[str, Any]:
     """Ask a natural-language question against a PropertyGraph.
 
@@ -209,20 +229,61 @@ def ask(
         Model identifier.
     explain : bool, optional
         If True, returns a dict with 'query', 'results', and 'count'.
+    correct_directions : bool, optional
+        Repair relationship directions and string literals (default True); see
+        :func:`translate_to_gql`.
+    max_retries : int, optional
+        If the query fails, returns no rows, or returns duplicate rows, show the model
+        what happened and let it revise the query, up to this many times (default 1).
+        With ``explain=True`` every attempt is listed under ``attempts``, with the model's
+        query (``model_query``), what was repaired (``repairs``), the query that ran
+        (``query``), and any ``error`` or ``feedback``.
 
     Returns
     -------
     list[dict] or dict
         Deterministic query results.
     """
-    gql_query = translate_to_gql(graph, question, client=client, model=model)
-    results = run_query(gql_query, graph)
+    system_prompt = format_schema_prompt(graph)
+    full_prompt = f"{system_prompt}\n\nUSER QUESTION: {question}\nGQL-CORE QUERY:"
+    attempts: list[dict[str, Any]] = []
 
+    def attempt(raw: str) -> dict[str, Any]:
+        rec: dict[str, Any] = {"query": None, "model_query": None, "repairs": [],
+                               "results": None, "error": None}
+        try:
+            rec["model_query"] = _finish(raw, graph, False)
+            rec["query"] = rec["model_query"]
+            if correct_directions:
+                fixed = repair_query(rec["model_query"], graph)
+                rec["query"], rec["repairs"] = fixed.query, fixed.changes
+            rec["results"] = run_query(rec["query"], graph)
+        except Exception as exc:  # noqa: BLE001 - reported back to the model
+            rec["error"] = f"{type(exc).__name__}: {exc}"
+            rec["query"] = rec["query"] or clean_generated_gql(raw)
+        rec["feedback"] = execution_feedback(rec["results"], rec["error"])
+        attempts.append(rec)
+        return rec
+
+    best = attempt(_generate(full_prompt, system_prompt, question, client=client, model=model))
+    for _ in range(max_retries):
+        if best["feedback"] is None:
+            break
+        retry_prompt = feedback_prompt(full_prompt + " ", best["query"], best["feedback"])
+        retry_user = feedback_prompt(f"USER QUESTION: {question}\nGQL-CORE QUERY: ", best["query"], best["feedback"])
+        rec = attempt(_generate(retry_prompt, system_prompt, retry_user, client=client, model=model))
+        if keep_revision(best["results"], best["error"], rec["results"], rec["error"]):
+            best = rec
+
+    if best["error"] is not None and not explain:
+        raise ValueError(f"Generated query failed: {best['query']!r} ({best['error']})")
+    results = best["results"] or []
     if explain:
         return {
             "question": question,
-            "query": gql_query,
+            "query": best["query"],
             "count": len(results),
             "results": results,
+            "attempts": attempts,
         }
     return results

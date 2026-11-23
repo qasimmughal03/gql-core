@@ -352,7 +352,9 @@ def eval_predicate(expr: BoolExpr | None, row: dict[str, Any], graph: PropertyGr
         if graph is None:
             return False
         matches = _match_path_pattern(expr.pattern, row, graph)
-        return len(matches) > 0
+        if expr.where is None:
+            return len(matches) > 0
+        return any(eval_predicate(expr.where, m, graph) is True for m in matches)
 
     if isinstance(expr, (And, ASTAnd)):
         has_unknown = False

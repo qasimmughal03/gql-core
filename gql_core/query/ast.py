@@ -69,7 +69,16 @@ class Not:
 
 @dataclass(frozen=True)
 class PatternPredicate:
+    """True when the pattern has at least one match for the current row.
+
+    Pattern predicates such as ``WHERE (a)-->(b)`` may only use bound variables.
+    ``EXISTS { pattern [WHERE cond] }`` (``subquery=True``) may introduce new
+    variables, which are visible only to ``where``.
+    """
+
     pattern: Pattern
+    where: Any = None
+    subquery: bool = False
 
 
 # Type alias for any boolean expression.

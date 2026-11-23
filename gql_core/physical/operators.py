@@ -169,7 +169,7 @@ def exec_recursive_expand(
             continue
 
         # Zero hops: yields start node if min_hops == 0
-        if min_hops == 0 and (to_label is None or src_node.label == to_label):
+        if min_hops == 0 and (to_label is None or to_label in (src_node.labels or (src_node.label,))):
             out = dict(r)
             out[to_var] = src_node
             if edge_var:
@@ -202,7 +202,7 @@ def exec_recursive_expand(
                 new_depth = depth + 1
                 new_used = used | {e.id}
 
-                if new_depth >= min_hops and (to_label is None or nbr_node.label == to_label):
+                if new_depth >= min_hops and (to_label is None or to_label in (nbr_node.labels or (nbr_node.label,))):
                     out = dict(r)
                     out[to_var] = nbr_node
                     if edge_var:

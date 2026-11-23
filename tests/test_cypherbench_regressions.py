@@ -181,3 +181,96 @@ def test_where_equality_on_far_node_is_fast_on_large_graph():
     assert time.perf_counter() - t < 10
     co7 = {e.dst for e in g._edges.values() if e.src == "c7"}
     assert rows == [{"c": len({e.src for e in g._edges.values() if e.dst in co7} - {"c7"})}]
+
+
+# ── EXISTS (found by Gemini 2.5 Flash's NL->Cypher output on CypherBench) ──
+
+def _names(q: str) -> list[str]:
+    return [r["name"] for r in run(q, _graph())]
+
+
+def test_exists_subquery_pattern():
+    # Previously left unparsed: EXISTS returned no rows and NOT EXISTS returned all rows.
+    assert _names("MATCH (p:Player) WHERE EXISTS { (p)-[:playsFor]->(:Team {name: 'Bulls'}) } "
+                  "RETURN p.name AS name ORDER BY name") == ["Bob", "Cid"]
+    assert _names("MATCH (p:Player) WHERE NOT EXISTS { (p)-[:playsFor]->(:Team {name: 'Bulls'}) } "
+                  "RETURN p.name AS name ORDER BY name") == ["Ann"]
+
+
+def test_exists_subquery_where_sees_its_own_variables():
+    # Previously rejected with "WHERE references unbound variable 't'".
+    assert _names("MATCH (p:Player) WHERE EXISTS { (p)-[:playsFor]->(t:Team) WHERE t.name = 'Bulls' } "
+                  "RETURN p.name AS name ORDER BY name") == ["Bob", "Cid"]
+    assert _names("MATCH (p:Player) WHERE EXISTS { MATCH (p)-[:playsFor]->(t:Team) WHERE t.name = 'Kings' } "
+                  "RETURN p.name AS name ORDER BY name") == ["Ann", "Bob"]
+
+
+def test_exists_subquery_with_return_keeps_outer_column_names():
+    rows = run("MATCH (p:Player) WHERE EXISTS { MATCH (p)-[:playsFor]->(t:Team) WHERE t.name = 'Bulls' RETURN t } "
+               "RETURN p.name ORDER BY p.name", _graph())
+    assert rows == [{"p.name": "Bob"}, {"p.name": "Cid"}]
+
+
+def test_call_subquery_keeps_outer_column_names():
+    # Column names were read from the RETURN inside the braces.
+    rows = run("CALL { MATCH (n:Player) RETURN n } RETURN n.name ORDER BY n.name", _graph())
+    assert rows == [{"n.name": "Ann"}, {"n.name": "Bob"}, {"n.name": "Cid"}]
+
+
+def test_exists_subquery_in_return():
+    rows = run("MATCH (p:Player) RETURN p.name AS name, EXISTS { (p)-->(:Team {name: 'Kings'}) } AS k "
+               "ORDER BY name", _graph())
+    assert rows == [{"name": "Ann", "k": True}, {"name": "Bob", "k": True}, {"name": "Cid", "k": False}]
+
+
+def test_exists_function_on_pattern_and_property():
+    # Neo4j 4 forms; previously "Unknown function 'EXISTS'".
+    assert _names("MATCH (p:Player) WHERE EXISTS((p)-->(:Team {name: 'Kings'})) "
+                  "OR EXISTS((p)-->(:Team {name: 'Bulls'})) RETURN p.name AS name ORDER BY name") == ["Ann", "Bob", "Cid"]
+    assert _names("MATCH (p:Player) WHERE exists(p.mass_kg) RETURN p.name AS name ORDER BY name") == ["Ann", "Cid"]
+
+
+def test_exists_subquery_unsupported_form_is_an_error_not_a_wrong_answer():
+    import pytest
+    with pytest.raises(Exception, match="UnsupportedFeature"):
+        run("MATCH (p:Player) WHERE EXISTS { MATCH (p)-->(t) RETURN count(t) } RETURN p", _graph())
+
+
+def test_expand_matches_a_secondary_label():
+    # MetaQA: the node "1941" is both a Movie and a Year. Expanding to (y:Year) checked only
+    # the primary label, so release-year questions returned nothing.
+    g = PropertyGraph()
+    g.add_node(Node("Hold Back the Dawn", "Movie", {"name": "Hold Back the Dawn"}))
+    g.add_node(Node("1941", "Movie", {"name": "1941"}, labels=("Movie", "Year")))
+    g.add_edge(Edge("e1", "release_year", "Hold Back the Dawn", "1941"))
+    q = "MATCH (m:Movie {name: 'Hold Back the Dawn'})-[:release_year]->(y:Year) RETURN y.name AS y"
+    assert run(q, g) == [{"y": "1941"}]
+    assert run("MATCH (y:Year) RETURN y.name AS y", g) == [{"y": "1941"}]
+
+
+def test_multi_type_relationship_in_clause_pipeline():
+    # [:a|b] matched nothing on the clause path (DISTINCT, WITH, count(DISTINCT ...)),
+    # because each edge's type was compared with the whole string 'playsFor|coaches'.
+    g = _graph()
+    g.add_edge(Edge("e9", "coaches", "p1", "t2"))
+    q = "MATCH (p:Player {name: 'Ann'})-[:playsFor|coaches]->(t:Team) RETURN DISTINCT t.name AS t ORDER BY t"
+    assert run(q, g) == [{"t": "Bulls"}, {"t": "Kings"}]
+    assert run("MATCH (p:Player)-[:playsFor|coaches]->(t:Team) RETURN count(DISTINCT t) AS n", g) == [{"n": 2}]
+    assert run("MATCH (p:Player)-[r:playsFor|coaches]->(t:Team) WITH p, count(r) AS n WHERE n > 1 RETURN p.name AS p ORDER BY p", g) \
+        == [{"p": "Ann"}, {"p": "Bob"}]
+
+
+def test_nested_property_in_single_where_condition():
+    # MATCH (n) WHERE n.date.year = 1988 returned nothing: the planner pushed the condition
+    # into the scan and looked up a property literally named "date.year".
+    from gql_core.query.cypher_temporal import CypherTemporalValue, _date_to_props, _format_date
+
+    def date(y, m, d):  # the value the CypherBench loader stores for a schema `date` property
+        return CypherTemporalValue(_format_date(y, m, d), _date_to_props(y, m, d), kind="date")
+
+    g = PropertyGraph()
+    g.add_node(Node("a1", "Accident", {"name": "Pan Am Flight 103", "date": date(1988, 12, 21)}))
+    g.add_node(Node("a2", "Accident", {"name": "TWA Flight 800", "date": date(1996, 7, 17)}))
+    assert run("MATCH (a:Accident) WHERE a.date.year = 1988 RETURN a.name AS n", g) == [{"n": "Pan Am Flight 103"}]
+    assert run("MATCH (a:Accident) WHERE a.date.year > 1990 RETURN a.name AS n", g) == [{"n": "TWA Flight 800"}]
+    assert run("MATCH (a:Accident) WHERE a.date.month = 12 RETURN count(a) AS c", g) == [{"c": 1}]

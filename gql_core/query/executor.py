@@ -245,6 +245,12 @@ def _scan(op: ScanOp, rows: Iterable[dict], graph: PropertyGraph) -> Iterator[di
             yield new_row
 
 
+def _node_has_label(node: Node, label: str) -> bool:
+    """True if ``label`` is any of the node's labels, not only its primary one."""
+    labels = getattr(node, "labels", ()) or ((node.label,) if node.label else ())
+    return label in labels
+
+
 def _base_edge_id(eid: str) -> str:
     return eid[:-4] if eid.endswith("_rev") else eid
 
@@ -259,7 +265,7 @@ def _expand(op: ExpandOp, rows: Iterable[dict], graph: PropertyGraph) -> Iterato
             path_edge_ids = frozenset(_base_edge_id(e.id) for e in edge_path)
             if used_edges and (used_edges & path_edge_ids):
                 continue
-            if op.to_label is not None and target.label != op.to_label:
+            if op.to_label is not None and not _node_has_label(target, op.to_label):
                 continue
             if not _matches_inline_filters(target, op.to_inline_filters):
                 continue
@@ -531,7 +537,7 @@ def _matches_inline_filters(
             if is_auto or (node.id != value and str(node.id) != str(value)):
                 return False
         elif prop == "label" and prop not in node.props:
-            if node.label != value:
+            if not _node_has_label(node, value):
                 return False
         else:
             if prop not in node.props:
@@ -564,6 +570,10 @@ def _matches_pushed(
             return False
         if cmp.lhs.prop is None:
             value = target
+        elif "." in cmp.lhs.prop and cmp.lhs.prop not in getattr(target, "props", {}):
+            # Nested access such as n.date.year: read it the way WHERE does, not as a
+            # property literally named "date.year".
+            value = _read_ref_full(cmp.lhs, {cmp.lhs.var: target})
         elif hasattr(target, "props") and cmp.lhs.prop in target.props:
             value = target.props[cmp.lhs.prop]
         elif cmp.lhs.prop == "id" and hasattr(target, "id"):
@@ -1733,7 +1743,7 @@ def _match_linear(pat: Pattern, seed_row: dict, graph: PropertyGraph, hints: Hin
                     continue
                 if rel.filters and not all(all(e.props.get(k) == _read_ref_full(v, cur_r, graph) for k, v in rel.filters) for e in edge_path):
                     continue
-                if rel.label and not all(e.label == rel.label for e in edge_path):
+                if rel.label and not all(e.label in rel.label.split("|") for e in edge_path):
                     continue
                 target_labels = set(getattr(target, "labels", ()) or ((target.label,) if target.label else ()))
                 if next_node_labels and not next_node_labels.issubset(target_labels):

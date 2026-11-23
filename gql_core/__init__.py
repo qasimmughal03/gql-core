@@ -12,7 +12,7 @@ GQL-Core implements:
 9. Fluent programmatic query builder API and LLM-facing operator registry.
 """
 
-__version__ = "0.2.0a2"
+__version__ = "0.2.0a3"
 
 # Graph store and legacy components
 from gql_core.ai import ask, translate_to_gql
@@ -83,9 +83,11 @@ from gql_core.ontology import (
     ReasoningMode,
     RelationshipType,
 )
+from gql_core.query.directions import DirectionCorrection, correct_relationship_directions, schema_triples
 from gql_core.query.executor import run as run_query
 from gql_core.query.parser import parse
 from gql_core.query.planner import plan
+from gql_core.query.values import ValueGrounding, ground_values
 from gql_core.registry import OperatorMetadata, OperatorRegistry, execute_plan
 from gql_core.temporal import Date, DateTime, Duration, Interval, TemporalTypeError, Time
 from gql_core.types import DataType, TypeErrorDiagnostic
@@ -110,8 +112,10 @@ __all__ = [
     "col",
     "collect",
     "contains",
+    "correct_relationship_directions",
     "count",
     "DataType",
+    "DirectionCorrection",
     "Date",
     "DateTime",
     "Duration",
@@ -121,6 +125,7 @@ __all__ = [
     "eq",
     "execute_plan",
     "exists",
+    "ground_values",
     "Fact",
     "GraphIngester",
     "gt",
@@ -170,6 +175,7 @@ __all__ = [
     "RelationshipType",
     "run",
     "run_query",
+    "schema_triples",
     "ShapeValidator",
     "ShapeViolationError",
     "single_rel",
@@ -181,5 +187,6 @@ __all__ = [
     "TypeErrorDiagnostic",
     "validate_logical_plan",
     "ValidationReport",
+    "ValueGrounding",
     "var",
 ]

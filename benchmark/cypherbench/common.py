@@ -94,6 +94,6 @@ def breakdown(items: list[dict], metric: str) -> dict[str, dict[str, float]]:
 def git_commit() -> str:
     """Short HEAD hash, with "+dirty" when tracked engine/benchmark code has uncommitted changes."""
     head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True).stdout.strip()
-    dirty = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no", "--", "gql_core", "benchmark"],
+    dirty = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no", "--", "gql_core", "benchmark", ":(exclude)benchmark/results"],
                            capture_output=True, text=True).stdout.strip()
     return f"{head}+dirty" if dirty else head

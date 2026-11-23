@@ -1,47 +1,44 @@
 # GQL-Core
 
-**Embedded graph querying and typed logical reasoning for Python.**
+**Embedded graph querying and rule-based reasoning for Python. No database server.**
 
-GQL-Core is an experimental in-memory property-graph engine. Work with labeled nodes and relationships, execute a Cypher-inspired query language, build validated queries through a typed Python API, and derive relationships using declarative inference rules—without a separate database server.
+**Version:** `0.2.0a3` · **Stage:** alpha · **License:** Apache-2.0 · **Python:** 3.11+ · [PyPI](https://pypi.org/project/gql-core/)
 
-**Version:** `0.2.0a2` · **Stage:** public alpha candidate · **License:** Apache-2.0 · **Python:** 3.11+
+## Why GQL-Core?
 
-> **Alpha software.** GQL-Core is not a production database, a complete ISO/IEC 39075:2024 implementation, or a certified openCypher implementation. External compatibility scores describe a specific pinned test corpus, not universal query correctness.
+Many applications have graph-shaped data: dependencies between services, citations between
+cases, interactions between drugs, people and the films they made. Querying it usually means
+either running a graph database next to your application, or writing ad-hoc traversal code that
+nobody else can read.
 
-## Highlights
-
-- **Graph storage:** in-memory nodes, directed relationships, multi-label nodes, properties, adjacency and label indexes.
-- **Declarative queries:** matching, filtering, path traversal, grouping, sorting, `WITH`, `UNWIND`, selected updates, and built-in expressions.
-- **Typed query plans:** compose `Scan`, `Expand`, `Filter`, `Project`, joins, set operators, quantified predicates, and aggregation through `PlanBuilder`.
-- **Ontology reasoning:** explicit subtype, inverse, symmetric, transitive, and relationship-composition inference rules, with provenance.
-- **Optional natural-language interface:** translate questions to query text using a configured LLM backend; formal execution itself does not require an LLM.
-- **Measured accuracy:** checked against published benchmarks (openCypher TCK, CypherBench, MetaQA, LDBC SNB) using their own data, gold answers and metrics; see [Accuracy and benchmarks](#accuracy-and-benchmarks).
-
-## Install
+GQL-Core is a third option: a property-graph engine that runs **inside your Python process**.
+You load nodes and relationships, query them with Cypher, derive new relationships with
+declarative rules that record *why* each one exists, and, if you want, let a language model
+write the queries from plain English, with GQL-Core checking them against the graph before they
+run.
 
 ```bash
 python -m pip install gql-core
-gql-core --version
 ```
 
-The package is on PyPI as [`gql-core`](https://pypi.org/project/gql-core/) (alpha, `0.2.0a2`). To work from source:
+## Features
 
-```bash
-git clone https://github.com/qasimmughal03/knowledge-graoh-with-formal-query.git
-cd knowledge-graoh-with-formal-query
-git checkout feat/implementation
-python -m pip install -e .
-```
+- **Property graph in memory:** labelled nodes (several labels per node), directed
+  relationships, properties, label and adjacency indexes. Load from records, JSON or NetworkX.
+- **Cypher queries:** `MATCH`, `OPTIONAL MATCH`, `WHERE`, `WITH`, `UNWIND`, aggregation,
+  `ORDER BY`, `UNION`, `CALL { }` and `EXISTS { }` subqueries, variable-length paths, and
+  selected updates. 3,879 of 3,879 supported openCypher TCK scenarios pass.
+- **Typed query plans:** build and validate a plan in Python (`PlanBuilder`) instead of
+  generating text: scans, expansions, joins, set operators, quantified predicates, aggregation.
+- **Rule-based reasoning:** subtype, inverse, symmetric, transitive and composition rules,
+  evaluated to a fixed point. Every derived fact records the rule and the facts it came from.
+- **Natural-language questions (optional):** `ask()` has a model of your choice write the query,
+  then repairs reversed relationships and mis-cased values against the graph, and retries once
+  with execution feedback.
 
-For contributors:
+## Three examples
 
-```bash
-python -m pip install -e ".[dev,benchmark]"
-```
-
-The runtime uses Lark, PyYAML, and Requests. NetworkX integration is optional. The `ask()` interface needs a compatible, available LLM service or client; it is not an offline heuristic answering system.
-
-## Quickstart: Python API
+### 1. Query a graph without running a database
 
 ```python
 from gql_core import Edge, Node, PropertyGraph, run
@@ -52,203 +49,226 @@ graph.add_node(Node(id="bob", label="Person", props={"name": "Bob"}))
 graph.add_edge(Edge(id="e1", label="KNOWS", src="alice", dst="bob"))
 
 rows = run(
-    "MATCH (a:Person)-[:KNOWS]->(b:Person) "
-    "WHERE a.name = 'Alice' RETURN b.name AS friend",
+    "MATCH (a:Person)-[:KNOWS]->(b:Person) WHERE a.name = 'Alice' RETURN b.name AS friend",
     graph,
 )
 print(rows)  # [{'friend': 'Bob'}]
 ```
 
-A runnable version is in [`examples/quickstart.py`](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/examples/quickstart.py).
-
-### Typed query plans
-
-For LLM agents and Python applications, structured plans can be validated independently of text-query generation.
+### 2. Derive a relationship and see where it came from
 
 ```python
-from gql_core import PlanBuilder, eq, execute_plan, lit, prop
-
-plan = (
-    PlanBuilder.scan("p", "Person")
-    .filter(eq(prop("p", "name"), lit("Alice")))
-    .project((prop("p", "name"), "name"))
-    .build()
-)
-result = execute_plan(plan, graph)
-print(result["rows"])  # [{'name': 'Alice'}]
-```
-
-A standalone typed plan script is in [`examples/example_b_typed_plan.py`](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/examples/example_b_typed_plan.py).
-
-### Ontology inference
-
-Derive new graph relationships declaratively using Datalog-style rules without modifying source facts:
-
-```python
+from gql_core import Edge, Node, PropertyGraph, run
 from gql_core.inference import InferenceEngine, make_transitive_rule
 
-# Derive transitive relationships: if A PART_OF B and B PART_OF C => A PART_OF C
+g = PropertyGraph()
+for id_, name in [("core", "Core Platform"), ("eng", "Engineering"), ("acme", "Acme")]:
+    g.add_node(Node(id=id_, label="Unit", props={"name": name}))
+g.add_edge(Edge(id="e1", label="PART_OF", src="core", dst="eng"))
+g.add_edge(Edge(id="e2", label="PART_OF", src="eng", dst="acme"))
+
 engine = InferenceEngine()
 engine.add_rule(make_transitive_rule("PART_OF"))
+_, derived = engine.infer(g)
+for fact in derived:
+    print(fact.args, "by", fact.rule_name, "from", [f.args for f in fact.evidence])
+# ('core', 'PART_OF', 'acme') by transitive_PART_OF
+#     from [('core', 'PART_OF', 'eng'), ('eng', 'PART_OF', 'acme')]
 
-facts_by_rel, derived_facts = engine.infer(graph)
-engine.materialize(graph)  # Materializes inferred edges back into the graph
+engine.materialize(g)  # derived edges become queryable, marked with the rule that made them
+run("MATCH (u:Unit)-[r:PART_OF]->(:Unit {name: 'Acme'}) "
+    "RETURN u.name AS unit, r.inferred_by AS rule ORDER BY unit", g)
+# [{'unit': 'Core Platform', 'rule': 'transitive_PART_OF'}, {'unit': 'Engineering', 'rule': None}]
 ```
 
-A standalone inference script is in [`examples/example_c_ontology_inference.py`](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/examples/example_c_ontology_inference.py).
+### 3. Use it in an application
 
-See the [typed query API](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/TYPED_QUERY_API.md), [operator reference](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/LOGICAL_OPERATOR_SPEC.md), and [ontology/inference guide](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/INFERENCE_ENGINE.md).
+[`examples/integration_demo/`](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/tree/main/examples/integration_demo)
+is a small impact-analysis application that installs GQL-Core from PyPI. It loads a service
+graph, derives indirect dependencies with their provenance, and answers "what breaks if the
+database fails, and who owns it?":
 
-## Quickstart: CLI
+```text
+$ python app.py --failed db
+If 'db' fails, these services are affected:
+  Mobile BFF     tier 1  indirect  owner: Frontend
+  Storefront     tier 1  indirect  owner: Frontend
+  Auth API       tier 2  direct    owner: Identity
+  Orders API     tier 2  direct    owner: Checkout
+  Payments API   tier 2  indirect  owner: Payments
+```
 
-A small example dataset is included so this command runs after installing the package from a repository checkout:
+With a model, the same graph answers questions in plain English:
+
+```python
+from gql_core import ask
+
+def llm(prompt: str) -> str:   # any model: a function from prompt text to query text
+    return my_client.generate(prompt)
+
+out = ask(graph, "Which services does the Payments team own?", client=llm, explain=True)
+out["results"]    # rows from GQL-Core
+out["attempts"]   # per attempt: the model's query, what was repaired, the query run, any feedback
+```
+
+Pass `correct_directions=False` or `max_retries=0` to turn the checks off. Without a `client`,
+`ask()` uses a local Ollama server. The demo includes a ten-line Gemini client.
+
+More runnable examples: [typed query plans](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/examples/example_b_typed_plan.py),
+[inference rules](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/examples/example_c_ontology_inference.py),
+and domain programs for [legal](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/examples/domains/legal_kg.py),
+[software supply chain](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/examples/domains/software_supply_chain.py) and
+[biomedical](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/examples/domains/biomedical_network.py) graphs.
+
+### Command line
 
 ```bash
 gql-core query --data examples/sample_graph.json \
   "MATCH (p:Person) RETURN p.name AS name ORDER BY name ASC"
 ```
 
-Available commands: `query`, `ask`, `validate`, `ingest`, `mirror`, `benchmark`, and `version`. Use `gql-core --help` for the authoritative argument list. The CLI command is **`query`**, not `run`.
+Commands: `query`, `ask`, `validate`, `ingest`, `mirror`, `benchmark`, `version`
+(`gql-core --help`).
 
-For the natural-language command, set up an Ollama-compatible backend or supply a client through the Python API. `gql-core ask` does not automatically provide a hosted model.
+## Architecture
 
-## Project structure
+```text
+Cypher text ──► parser (Lark grammar) ──► AST ──► semantic checks ──► planner ──► executor ─┐
+PlanBuilder ──► typed logical plan ──► validator ──► physical operators ───────────────────┤
+                                                                                           ▼
+Inference rules ──► fixed-point engine ──► derived facts (with provenance) ──► PropertyGraph
+Question ──► model ──► query ──► direction / value repair ──► run ──► feedback ──► retry once
+```
 
-| Directory/module | Purpose |
+| Module | Purpose |
 | --- | --- |
-| `gql_core/graph.py` | `PropertyGraph`, `Node`, `Edge`, `Path`, graph adapters |
-| `gql_core/query/` | Grammar, parser, semantic validation, query execution |
-| `gql_core/ir.py`, `builder.py` | Typed expressions, logical operators, fluent plan building |
-| `gql_core/physical/` | Expression evaluation and physical execution |
+| `gql_core/graph.py` | `PropertyGraph`, `Node`, `Edge`, `Path`, loaders (`from_records`, `from_dict`, `from_networkx`) |
+| `gql_core/query/` | Grammar, parser, semantic checks, planner and executor for Cypher text; direction and value repair |
+| `gql_core/ir.py`, `builder.py` | Typed expressions, logical operators, `PlanBuilder` |
+| `gql_core/physical/` | Expression evaluation and physical operators for typed plans |
 | `gql_core/ontology/`, `inference/` | Typed ontology schemas and rule-based inference |
-| `gql_core/ai.py` | Optional question-to-query translation |
-| `benchmark/tck/` | openCypher compatibility checking |
-| `benchmark/snb/` | LDBC social-network workload support |
-| `examples/` | Standalone quickstart and domain examples |
-| `docs/` | Technical contracts, architecture, benchmark and release reports |
+| `gql_core/ai.py`, `nl.py` | `ask()`, `translate_to_gql()`, repair and execution feedback |
 
-### Graph adapters
+Details: [system architecture](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/SYSTEM_ARCHITECTURE.md),
+[typed query API](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/TYPED_QUERY_API.md),
+[inference](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/INFERENCE_ENGINE.md).
 
-Use `PropertyGraph.from_records(nodes, edges)`, `PropertyGraph.from_edges(...)`, or `PropertyGraph.from_networkx(G)` (requires `networkx`). For the CLI's graph JSON format, see [`examples/sample_graph.json`](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/examples/sample_graph.json).
+## Benchmarks
 
-`from_dict` expects an object containing `nodes` and `edges` arrays; it is **not** an adjacency-dictionary adapter.
+Every number comes from a **published benchmark** run with its own data, gold answers and
+official metric, or, where marked, from a check against independently computed ground truth.
+Nothing is scored against hand-written expected values.
 
-## Supported functionality and boundaries
+### The engine: does GQL-Core return the right answer?
 
-GQL-Core implements a substantial, evolving subset of Cypher-like patterns and expressions, including multi-clause pipelines and mutations. Its typed plan API additionally exposes relational algebra and graph reasoning primitives. **The two APIs do not have identical coverage.**
-
-Not all openCypher syntax is supported. In particular, the release documents exclude certain nested correlated `EXISTS` text expressions and relationship-type disjunctions. Consult [the supported query contract](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/SUPPORTED_QUERY_CONTRACT.md) for exact syntax and behavior.
-
-Execution semantics include relationship trail uniqueness, three-valued Boolean logic, null propagation, and bag/multiset behavior where applicable. The graph is held in memory; it does not provide database durability, transactional isolation, or distributed execution. Concurrent mutations require application-level synchronization.
-
-## Accuracy and benchmarks
-
-Every number below comes from a **published benchmark** run with its own data, gold answers and
-official metric, or, where marked, from our own check against independently computed ground
-truth. Nothing here is scored against hand-written expected values. Each row gives the sample
-size it comes from.
-
-### Query engine: does GQL-Core return the right answer?
+These measure GQL-Core alone: a fixed query goes in, and its result is compared with the
+reference.
 
 | Benchmark | What is checked | Result |
 | --- | --- | ---: |
 | [openCypher TCK](https://github.com/opencypher/openCypher) `2024.3` | Language conformance scenarios: results, errors and side effects | **3,879 / 3,879** supported scenarios pass (18 explicitly excluded of 3,897) |
-| [CypherBench](https://huggingface.co/datasets/megagonlabs/cypherbench) test split ([paper](https://arxiv.org/abs/2412.18702)), measured at commit `43cab07` | All 2,348 gold Cypher queries run on GQL-Core over 7 real Wikidata-derived graphs (up to 885k nodes and 1.9M relationships), compared with the answers **Neo4j** produced, using the official execution-accuracy metric | **98.21%** (2,306 / 2,348); **100%** when rows that differ only in the order of tied `ORDER BY` keys are counted as matches |
+| [CypherBench](https://huggingface.co/datasets/megagonlabs/cypherbench) test split ([paper](https://arxiv.org/abs/2412.18702)), measured at commit `43cab07` | All 2,348 gold Cypher queries run on GQL-Core over 7 Wikidata-derived graphs (up to 885k nodes and 1.9M relationships), compared with the answers **Neo4j** produced, with the official execution-accuracy metric | **98.21%** (2,306 / 2,348); **100%** when rows that differ only in the order of tied `ORDER BY` keys count as matches |
 | [LDBC SNB](https://ldbcouncil.org/benchmarks/snb/) SF0.1 (unaudited) | Official query parameter cases on a 327,588-node, 1,477,965-relationship graph | **4 / 4** across 2 official query types |
-| Hetionet v1.0 (our own evaluation, not a published benchmark) | 5 Cypher queries and one Datalog metapath rule on real biomedical data, each compared with an independent plain-Python computation | **6 / 6** agree; 27,498 derived facts equal to the independent join |
-| Project test suite | Unit and regression tests | **355 / 355** |
+| Hetionet v1.0 (our own check, not a published benchmark) | 5 Cypher queries and one rule on real biomedical data, each compared with an independent plain-Python computation | **6 / 6** agree; 27,498 derived facts equal the independent join |
+| Test suite | Unit and regression tests | **394 / 394** |
 
 On CypherBench there were no errors and no timeouts (120 s limit, as in the official
 evaluation). All 42 official failures are `ORDER BY` queries whose tied rows come back in a
 different order from Neo4j's. openCypher leaves that order undefined, but the official metric
-counts it as a failure, so we report both numbers.
+counts it as a failure, so both numbers are reported.
 
-| CypherBench graph | nba | flight_accident | fictional_character | company | geography | movie | politics |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Questions | 270 | 189 | 385 | 347 | 366 | 401 | 390 |
-| Execution accuracy | 98.15% | 98.94% | 100% | 96.54% | 98.36% | 98.50% | 97.18% |
+### Domain evaluations: question in, answer out
 
-### Natural language → Cypher: how accurate is `ask()`?
+These are **end-to-end results of a pipeline**: a language model (Gemini 2.5 Flash) writes the
+query, and GQL-Core repairs and runs it. They depend on the model and the prompt as much as on
+GQL-Core, and are reported in three configurations so each part's contribution is visible:
 
-`ask()` asks an LLM to write the query, then runs it on GQL-Core. **Its accuracy depends mainly on
-the model you connect, not on the engine.** The engine runs the generated queries correctly, as
-measured above. These numbers use a deliberately small local model, `qwen2.5-coder:3b` (3.1B
-parameters, Q4_K_M) through Ollama on a CPU-only laptop, with the benchmarks' zero-shot protocol
-(temperature 0, no examples, no retries). They are a baseline, not a ceiling.
+- **Model only:** the model's query runs exactly as written, from each benchmark's zero-shot prompt.
+- **+ direction correction:** the same queries, with relationship directions the schema forbids reversed.
+- **GQL-Core pipeline:** everything `ask()` does: stored-value hints in the prompt, direction and
+  value repair, and one retry with execution feedback.
 
-| Benchmark | Sample (seeded) | Result |
-| --- | --- | --- |
-| CypherBench NL→Cypher (official zero-shot prompt) | 210 of 2,348 (30 per graph) | 13.3% execution accuracy; 92.4% of generated queries run. By graph: flight_accident 26.7%, nba 20.0%, fictional_character and movie 13.3%, politics 10.0%, company 6.7%, geography 3.3% |
-| MetaQA 1-hop | 100 of 9,947 | 67% exact match, 70% F1, 72% at least one correct answer |
-| MetaQA 2-hop | 100 of 14,872 | 0% exact match |
-| MetaQA 3-hop | 100 of 14,274 | 0% exact match, 2% at least one correct answer |
+| Benchmark (metric) | Sample | Model only | + direction correction | **Pipeline** |
+| --- | --- | ---: | ---: | ---: |
+| [CypherBench](https://huggingface.co/datasets/megagonlabs/cypherbench), 7 graphs (execution accuracy) | 210 of 2,348 | 61.4% | 66.2% | **73.3%** |
+| [MetaQA](https://github.com/yuyuz/MetaQA) 1-hop (exact match) | 100 of 9,947 | 69% | 88% | **88%** |
+| MetaQA 2-hop | 100 of 14,872 | 40% | 100% | **100%** |
+| MetaQA 3-hop | 100 of 14,274 | 52% | 80% | **86%** |
+| MetaQA, all | 300 | 53.7% | 89.3% | **91.3%** |
 
-A 3B model handles direct lookups and one-hop questions. It does not reliably compose multi-hop
-paths: it stops after one hop, reverses relationship directions, or invents relationships that
-are not in the schema. 92% (CypherBench) to 99% (MetaQA) of the generated queries run. Every query that fails is
-invalid Cypher that Neo4j would also reject, and the engine reproduces every CypherBench gold
-answer, so the misses are wrong queries rather than engine failures. On CypherBench the model scores 0% on unions, `OPTIONAL MATCH`, comparisons and
-time-sensitive questions. Expect much better results from larger models; the
-[CypherBench paper](https://arxiv.org/abs/2412.18702) reports results for a range of models.
-Measure your own with the commands below.
+Engine `0.2.0a3`; CypherBench at commit `afce555`, MetaQA at `67cd6f8`; seeded samples (seed 0),
+temperature 0, thinking off. No step sees a gold query or answer. The pipeline was developed on
+a disjoint seeded sample (CypherBench 78.1%, MetaQA 92.3%) and run once on this one.
 
-### What these results do not show
-
-They are version- and harness-scoped results, not ISO/IEC 39075 certification, complete Cypher
-conformance, or evidence of production reliability. The LDBC study is unaudited and covers a
-limited read-query subset; latency depends on the machine, dataset and commit (see
-[LDBC coverage](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/LDBC_QUERY_COVERAGE.md)). The programs in `examples/domains/` (legal,
-software supply chain, biomedical) are illustrative demonstrations on small hand-built graphs.
-They show how to use the API and are not accuracy evidence.
+Most remaining MetaQA misses come from the dataset: its knowledge base merges different films
+that share a title. Most remaining CypherBench misses are a different reading of the question
+from the gold query's. Every question, with the expected answer, each configuration's query and
+answer, and the reason for each miss, is in
+[`gemini_nl_benchmark_answers.xlsx`](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/benchmark/results/gemini_nl_benchmark_answers.xlsx).
+Methodology, per-graph results and failure analysis:
+[docs/NL_BENCHMARKS.md](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/NL_BENCHMARKS.md).
 
 ### Reproduce
 
-Benchmark datasets are downloaded on demand and are not bundled in the wheel.
+Datasets are downloaded on demand and are not part of the package.
 
 ```bash
+git clone https://github.com/qasimmughal03/knowledge-graoh-with-formal-query.git
+cd knowledge-graoh-with-formal-query
 python -m pip install -e ".[dev,benchmark]"
 python -m benchmark.tck.runner                                    # openCypher TCK
 python -m benchmark.cypherbench.download
 PYTHONHASHSEED=0 python -m benchmark.cypherbench.run_engine_parity # engine vs Neo4j gold answers
-python -m benchmark.cypherbench.run_nl2cypher --model qwen2.5-coder:3b --per-graph 30 --seed 0
-python -m benchmark.metaqa.run_nl2cypher --model qwen2.5-coder:3b --per-hop 100 --seed 0
+export GEMINI_API_KEY=...                                         # domain evaluations
+python -m benchmark.cypherbench.run_nl2cypher --provider gemini --model gemini-2.5-flash --per-graph 30 --pipeline
+python -m benchmark.metaqa.run_nl2cypher --provider gemini --model gemini-2.5-flash --per-hop 100 --pipeline
 ```
 
-Methodology, per-category breakdowns and the engine bugs these benchmarks found are in
-[docs/NL_BENCHMARKS.md](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/NL_BENCHMARKS.md) and the
-[release correctness report](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/RELEASE_CORRECTNESS_REPORT.md). Per-question results are in
-`benchmark/results/`.
+Drop `--pipeline` for the model-only numbers, or use `--correct-directions` for direction
+correction alone. `--provider ollama --model <tag>` runs a local model instead.
 
-## Build and release verification
+## Limitations
+
+- **Alpha.** APIs can change between `0.x` releases.
+- **In memory only.** No durability, transactions or distributed execution; concurrent writes
+  need your own locking. The whole graph must fit in RAM.
+- **A subset of Cypher.** Not an ISO/IEC 39075 (GQL) implementation and not certified
+  openCypher. `EXISTS { MATCH … }` supports a single pattern; other unsupported forms raise
+  `UnsupportedFeature` rather than answer wrongly. See the
+  [supported query contract](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/SUPPORTED_QUERY_CONTRACT.md).
+  The text and typed-plan APIs do not have identical coverage.
+- **`ask()` needs a model** and is only as good as the model's reading of the question: about
+  one CypherBench question in four is still answered wrongly with the full pipeline.
+- **Benchmark scope.** Results are for the stated versions, samples and harnesses. The LDBC run
+  is unaudited and covers a small read-query subset. The domain programs in `examples/domains/`
+  are illustrations on small hand-built graphs, not accuracy evidence.
+
+## Development
 
 ```bash
 python -m pip install -e ".[dev,benchmark]"
 python -m pytest tests/
-python -m build
-python -m twine check dist/*
+python -m build && python -m twine check dist/*
 ```
 
-The test suite uses upstream TCK fixtures; see [`docs/PACKAGING.md`](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/PACKAGING.md) for the required preparation and wheel smoke test. CI verifies the distribution in an isolated Python environment. Uploading to TestPyPI or PyPI is a **separate manual step**, not part of CI.
+See [CONTRIBUTING.md](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/CONTRIBUTING.md)
+for the branch, test and release process, and [CHANGELOG.md](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/CHANGELOG.md)
+for what changed in each version.
 
 ## Documentation
 
-- [Unified architecture and verification report](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/UNIFIED_DOCUMENTATION.md)
-- [Quickstart walkthrough](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/QUICKSTART.md)
-- [Python API reference](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/API_REFERENCE.md)
-- [Supported textual query contract](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/SUPPORTED_QUERY_CONTRACT.md)
-- [Typed Python query API](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/TYPED_QUERY_API.md)
-- [Ontology and inference](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/INFERENCE_ENGINE.md)
-- [Logical operator specification](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/LOGICAL_OPERATOR_SPEC.md)
-- [Release correctness report](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/RELEASE_CORRECTNESS_REPORT.md)
-- [CypherBench and MetaQA results and methodology](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/NL_BENCHMARKS.md)
-- [TCK scenario failures and methodology](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/TCK_FAILURE_ANALYSIS.md)
-- [Packaging and release checklist](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/PACKAGING.md)
-- [Release notes (v0.2.0a2)](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/RELEASE_NOTES_0.2.0a2.md) · [v0.2.0a1](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/docs/RELEASE_NOTES_0.2.0a1.md)
+- [Quickstart walkthrough](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/QUICKSTART.md)
+- [Python API reference](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/API_REFERENCE.md)
+- [Supported query contract](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/SUPPORTED_QUERY_CONTRACT.md)
+- [Typed query API](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/TYPED_QUERY_API.md) · [Logical operators](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/LOGICAL_OPERATOR_SPEC.md)
+- [Ontology and inference](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/INFERENCE_ENGINE.md)
+- [Domain evaluations (CypherBench, MetaQA)](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/NL_BENCHMARKS.md) · [TCK analysis](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/TCK_FAILURE_ANALYSIS.md) · [Release correctness report](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/RELEASE_CORRECTNESS_REPORT.md)
+- Release notes: [0.2.0a3](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/RELEASE_NOTES_0.2.0a3.md) · [0.2.0a2](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/RELEASE_NOTES_0.2.0a2.md) · [0.2.0a1](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/RELEASE_NOTES_0.2.0a1.md)
 
-## Contributing
+## Citation and license
 
-Open an issue with a minimal graph, the exact query/plan, expected output, actual output, Python version, and relevant stack trace. New operators and bug fixes should come with regression tests and, where applicable, a compatibility scenario.
+If you use GQL-Core in research, cite it with [CITATION.cff](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/CITATION.cff).
 
-## License
-
-[Apache License 2.0](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/feat/implementation/LICENSE). GQL-Core is an independent project. Referencing ISO, openCypher, Neo4j, or LDBC does not imply affiliation or official certification.
+[Apache License 2.0](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/LICENSE).
+GQL-Core is an independent project. Referencing ISO, openCypher, Neo4j, LDBC or Google does not
+imply affiliation or certification.

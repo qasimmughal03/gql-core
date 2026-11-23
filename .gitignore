@@ -13,8 +13,9 @@ benchmark/results/*
 !benchmark/results/tck_compatibility_results.json
 !benchmark/results/snb_interactive_results.json
 !benchmark/results/cypherbench_engine_parity.json
-!benchmark/results/cypherbench_nl2cypher.json
-!benchmark/results/metaqa_nl2cypher.json
+!benchmark/results/cypherbench_nl2cypher__*.json
+!benchmark/results/metaqa_nl2cypher__*.json
+!benchmark/results/gemini_nl_benchmark_answers.xlsx
 benchmark/cache/
 
 

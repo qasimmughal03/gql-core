@@ -285,6 +285,8 @@ def _pattern_vars(pattern: Any) -> list[str]:
 
 
 def _check_pattern_predicate(pp: PatternPredicate, scope: dict[str, str]) -> None:
+    if pp.subquery:
+        return  # EXISTS { ... } may introduce variables local to the subquery
     for v in _pattern_vars(pp.pattern):
         if v.startswith("__anon"):
             continue

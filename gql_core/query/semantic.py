@@ -635,7 +635,7 @@ def _validate_projection_aggregations(projections: tuple[Projection, ...]) -> No
                 standalone_keys.add((p.alias, None))
 
     for p in projections:
-        if isinstance(p.expr, PatternPredicate):
+        if isinstance(p.expr, PatternPredicate) and not p.expr.subquery:
             raise SemanticError("Pattern expressions are not allowed in projection without EXISTS")
         _check_nested_aggregates(p if p.agg is not None else p.expr)
         if p.agg is None and _is_aggregate(p.expr):

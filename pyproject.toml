@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gql-core"
-version = "0.2.0a3"
+version = "0.2.0a4"
 description = "Experimental embedded property-graph query and typed reasoning engine for Python"
 requires-python = ">=3.11"
 readme = {file = "README.md", content-type = "text/markdown"}

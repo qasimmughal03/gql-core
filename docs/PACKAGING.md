@@ -31,8 +31,8 @@ python -m twine check dist/*
 ```
 
 Expected filenames:
-- `dist/gql_core-0.2.0a3-py3-none-any.whl`
-- `dist/gql_core-0.2.0a3.tar.gz`
+- `dist/gql_core-0.2.0a4-py3-none-any.whl`
+- `dist/gql_core-0.2.0a4.tar.gz`
 
 ## Installed-package smoke test
 
@@ -40,7 +40,7 @@ Run from **outside** the repository so that a local checkout cannot mask missing
 
 ```bash
 python -m venv /tmp/gql-core-wheel-test
-/tmp/gql-core-wheel-test/bin/python -m pip install dist/gql_core-0.2.0a3-py3-none-any.whl
+/tmp/gql-core-wheel-test/bin/python -m pip install dist/gql_core-0.2.0a4-py3-none-any.whl
 cd /tmp
 /tmp/gql-core-wheel-test/bin/python -c "import gql_core; print(gql_core.__version__, gql_core.__file__)"
 /tmp/gql-core-wheel-test/bin/gql-core --version
@@ -95,7 +95,7 @@ No PyPI token is stored in GitHub. Instead, PyPI trusts this repository's releas
 ### Verifying a published release
 
 ```bash
-python -m pip download gql-core==0.2.0a3 --no-deps -d check/
+python -m pip download gql-core==0.2.0a4 --no-deps -d check/
 sha256sum check/*        # compare with SHA256SUMS on the GitHub release and the hashes on PyPI
 ```
 

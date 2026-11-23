@@ -1,7 +1,7 @@
 # GQL-Core Unified Technical Documentation & Verification Report
 
 **Release**: `0.2.0a1` (Public Alpha Release)  
-**Repository**: `qasimmughal03/knowledge-graoh-with-formal-query`  
+**Repository**: `qasimmughal03/gql-core`  
 **Branch**: `feat/implementation`  
 **Baseline & Release Commit**: `5a96672`  
 **Standard Compliance**: ISO/IEC 39075:2024 (GQL) Core Pattern Subset & openCypher 2024.3 TCK  

@@ -9,8 +9,8 @@ report: if Neo4j or the openCypher TCK gives a different result, say which.
 ## Setting up
 
 ```bash
-git clone https://github.com/qasimmughal03/knowledge-graoh-with-formal-query.git
-cd knowledge-graoh-with-formal-query
+git clone https://github.com/qasimmughal03/gql-core.git
+cd gql-core
 python -m pip install -e ".[dev,benchmark]"
 python -m pytest tests/
 ```

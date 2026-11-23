@@ -86,7 +86,7 @@ A manual run of the workflow (Actions → Release → Run workflow) publishes to
 No PyPI token is stored in GitHub. Instead, PyPI trusts this repository's release workflow:
 
 1. On PyPI, open *gql-core → Manage → Publishing* and add a GitHub publisher: owner
-   `qasimmughal03`, repository `knowledge-graoh-with-formal-query`, workflow `release.yml`,
+   `qasimmughal03`, repository `gql-core`, workflow `release.yml`,
    environment `pypi`. Do the same on TestPyPI with environment `testpypi`.
 2. On GitHub, open *Settings → Environments*, create `pypi` and `testpypi`, add yourself as a
    required reviewer, and limit deployments to tags matching `v*`.

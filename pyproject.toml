@@ -29,10 +29,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/qasimmughal03/knowledge-graoh-with-formal-query"
-Source = "https://github.com/qasimmughal03/knowledge-graoh-with-formal-query"
-Documentation = "https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/QUICKSTART.md"
-Issues = "https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/issues"
+Homepage = "https://github.com/qasimmughal03/gql-core"
+Source = "https://github.com/qasimmughal03/gql-core"
+Documentation = "https://github.com/qasimmughal03/gql-core/blob/main/docs/QUICKSTART.md"
+Issues = "https://github.com/qasimmughal03/gql-core/issues"
 
 [project.optional-dependencies]
 dev = [

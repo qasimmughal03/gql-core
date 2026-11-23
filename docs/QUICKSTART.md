@@ -9,8 +9,8 @@ This guide walks you through the core capabilities of GQL-Core (`0.2.0a1`) in un
 GQL-Core requires Python 3.11 or later. Clone and install in editable mode:
 
 ```bash
-git clone https://github.com/qasimmughal03/knowledge-graoh-with-formal-query.git
-cd knowledge-graoh-with-formal-query
+git clone https://github.com/qasimmughal03/gql-core.git
+cd gql-core
 python -m pip install -e .
 ```
 

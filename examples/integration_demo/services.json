@@ -1,0 +1,33 @@
+{
+  "nodes": [
+    {"id": "db", "label": "Service", "name": "Postgres", "tier": 3},
+    {"id": "cache", "label": "Service", "name": "Redis", "tier": 3},
+    {"id": "auth", "label": "Service", "name": "Auth API", "tier": 2},
+    {"id": "orders", "label": "Service", "name": "Orders API", "tier": 2},
+    {"id": "payments", "label": "Service", "name": "Payments API", "tier": 2},
+    {"id": "web", "label": "Service", "name": "Storefront", "tier": 1},
+    {"id": "mobile", "label": "Service", "name": "Mobile BFF", "tier": 1},
+    {"id": "platform", "label": "Team", "name": "Platform"},
+    {"id": "identity", "label": "Team", "name": "Identity"},
+    {"id": "checkout", "label": "Team", "name": "Checkout"},
+    {"id": "payments_team", "label": "Team", "name": "Payments"},
+    {"id": "frontend", "label": "Team", "name": "Frontend"}
+  ],
+  "edges": [
+    {"id": "d1", "label": "DEPENDS_ON", "src": "auth", "dst": "db"},
+    {"id": "d2", "label": "DEPENDS_ON", "src": "auth", "dst": "cache"},
+    {"id": "d3", "label": "DEPENDS_ON", "src": "orders", "dst": "db"},
+    {"id": "d4", "label": "DEPENDS_ON", "src": "orders", "dst": "auth"},
+    {"id": "d5", "label": "DEPENDS_ON", "src": "payments", "dst": "auth"},
+    {"id": "d6", "label": "DEPENDS_ON", "src": "web", "dst": "orders"},
+    {"id": "d7", "label": "DEPENDS_ON", "src": "web", "dst": "payments"},
+    {"id": "d8", "label": "DEPENDS_ON", "src": "mobile", "dst": "orders"},
+    {"id": "o1", "label": "OWNS", "src": "platform", "dst": "db"},
+    {"id": "o2", "label": "OWNS", "src": "platform", "dst": "cache"},
+    {"id": "o3", "label": "OWNS", "src": "identity", "dst": "auth"},
+    {"id": "o4", "label": "OWNS", "src": "checkout", "dst": "orders"},
+    {"id": "o5", "label": "OWNS", "src": "payments_team", "dst": "payments"},
+    {"id": "o6", "label": "OWNS", "src": "frontend", "dst": "web"},
+    {"id": "o7", "label": "OWNS", "src": "frontend", "dst": "mobile"}
+  ]
+}

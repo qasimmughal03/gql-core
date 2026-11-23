@@ -1,10 +1,11 @@
-name: CI & Packaging Gates
+name: CI
 
 on:
   push:
-    branches: ["feat/implementation", "main", "master", "docs/*"]
+    branches: ["main"]
   pull_request:
-    branches: ["feat/implementation", "main", "master"]
+    branches: ["main"]
+  workflow_call:
   workflow_dispatch:
 
 concurrency:
@@ -39,6 +40,19 @@ jobs:
       - name: Validate distribution metadata
         run: python -m twine check dist/*
 
+      - name: Wheel contains only the gql_core package
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import glob, zipfile
+          wheel = glob.glob("dist/*.whl")[0]
+          top = {n.split("/")[0] for n in zipfile.ZipFile(wheel).namelist()}
+          extra = {t for t in top if t != "gql_core" and not t.endswith(".dist-info")}
+          assert not extra, f"unexpected top-level entries in {wheel}: {sorted(extra)}"
+          print("wheel top level:", sorted(top))
+          PY
+
       - name: Verify isolated wheel installation and out-of-tree execution
         shell: bash
         run: |
@@ -55,7 +69,8 @@ jobs:
           import gql_core
           from gql_core import PropertyGraph, Node, Edge, run, PlanBuilder, eq, lit, prop, execute_plan
           assert 'site-packages' in gql_core.__file__, f'Not from site-packages: {gql_core.__file__}'
-          assert gql_core.__version__ == '0.2.0a2'
+          from importlib.metadata import version
+          assert gql_core.__version__ == version('gql-core'), (gql_core.__version__, version('gql-core'))
 
           # Test textual query
           g = PropertyGraph()
@@ -142,32 +157,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -c "
+          python - <<'PY'
           import json
-          with open('benchmark/results/tck_compatibility_results.json') as f:
-              data = json.load(f)
-          meta = data['metadata']
-          print(f'Total scenarios: {meta[\"total_scenarios\"]}')
-          print(f'Supported scenarios: {meta[\"supported_scenarios\"]}')
-          print(f'Passed result checks: {meta[\"passed_result_checks\"]}')
-          print(f'Passed expected error checks: {meta[\"passed_expected_error_checks\"]}')
-          print(f'Failed results: {meta[\"failed_results\"]}')
-          print(f'Failed compile: {meta[\"failed_compile\"]}')
-          print(f'Failed runtime: {meta[\"failed_runtime\"]}')
-          print(f'Blocked: {meta[\"blocked_scenarios\"]}')
-          print(f'Unsupported: {meta[\"unsupported_scenarios\"]}')
-
-          # Strict gate assertions
-          assert meta['total_scenarios'] == 3897, f'Expected 3897 scenarios, got {meta[\"total_scenarios\"]}'
-          assert meta['supported_scenarios'] == 3879, f'Expected 3879 supported, got {meta[\"supported_scenarios\"]}'
-          assert meta['failed_results'] == 0, f'Expected 0 failed results, got {meta[\"failed_results\"]}'
-          assert meta['failed_compile'] == 0, f'Expected 0 compile failures, got {meta[\"failed_compile\"]}'
-          assert meta['failed_runtime'] == 0, f'Expected 0 runtime failures, got {meta[\"failed_runtime\"]}'
-          assert meta['blocked_scenarios'] == 0, f'Expected 0 blocked, got {meta[\"blocked_scenarios\"]}'
-          assert meta['unsupported_scenarios'] == 18, f'Expected 18 unsupported, got {meta[\"unsupported_scenarios\"]}'
-          assert meta['supported_pass_rate'] == 1.0, f'Expected 100% pass rate, got {meta[\"supported_pass_rate\"]}'
-          print('TCK release acceptance criteria fully satisfied (100.00% pass rate).')
-          "
+          with open("benchmark/results/tck_compatibility_results.json", encoding="utf-8") as f:
+              s = json.load(f)["metadata"]["strict_mode"]
+          for key in ("total_scenarios", "supported_scenarios", "PASS_RESULT", "PASS_EXPECTED_ERROR",
+                      "FAIL_WRONG_RESULT", "FAIL_COMPILE", "FAIL_RUNTIME", "failed_side_effect_checks",
+                      "wrong_error_categories", "BLOCKED", "UNSUPPORTED", "pass_rate_supported_pct"):
+              print(f"{key}: {s[key]}")
+          assert s["total_scenarios"] == 3897, s["total_scenarios"]
+          assert s["supported_scenarios"] == 3879, s["supported_scenarios"]
+          assert s["UNSUPPORTED"] == 18, s["UNSUPPORTED"]
+          assert s["BLOCKED"] == 0, s["BLOCKED"]
+          for key in ("FAIL_WRONG_RESULT", "FAIL_COMPILE", "FAIL_RUNTIME",
+                      "failed_side_effect_checks", "wrong_error_categories"):
+              assert s[key] == 0, (key, s[key])
+          assert s["PASS_RESULT"] + s["PASS_EXPECTED_ERROR"] == s["supported_scenarios"]
+          assert s["pass_rate_supported_pct"] == 100.0, s["pass_rate_supported_pct"]
+          print("TCK gate passed: every supported scenario passes.")
+          PY
 
       - name: Upload machine-readable TCK results artifact
         uses: actions/upload-artifact@v4

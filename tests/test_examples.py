@@ -31,3 +31,19 @@ def test_example_c_ontology_inference():
     mod = importlib.import_module("examples.example_c_ontology_inference")
     assert callable(mod.main)
     mod.main()
+
+
+def test_integration_demo_impact_analysis():
+    """examples/integration_demo: derived dependencies keep provenance and drive the impact query."""
+    app = importlib.import_module("examples.integration_demo.app")
+    graph = app.load_graph()
+    derived = app.derive_dependencies(graph)
+    assert "web DEPENDS_ON db  (rule transitive_DEPENDS_ON, from web->orders and orders->db)" in derived
+    rows = app.impact(graph, "db")
+    assert [(r["service"], r["dependency"]) for r in rows] == [
+        ("Mobile BFF", "indirect"),
+        ("Storefront", "indirect"),
+        ("Auth API", "direct"),
+        ("Orders API", "direct"),
+        ("Payments API", "indirect"),
+    ]

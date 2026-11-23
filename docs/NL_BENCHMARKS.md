@@ -48,63 +48,129 @@ There were no errors and no timeouts. All 42 official failures are `ORDER BY` qu
 differ from Neo4j's only in the order of rows with equal sort keys, which openCypher leaves
 undefined.
 
-## Layer B: NL→Cypher with a local model (Ollama)
+## Layer B: NL→Cypher with Gemini 2.5 Flash
 
-`python -m benchmark.cypherbench.run_nl2cypher --model <ollama-tag> [--per-graph N]`
-`python -m benchmark.metaqa.run_nl2cypher --model <ollama-tag> [--per-hop N]`
+```bash
+export GEMINI_API_KEY=...        # read from the environment, sent as a header, never stored
+python -m benchmark.cypherbench.run_nl2cypher --provider gemini --model gemini-2.5-flash --per-graph 30 [--correct-directions | --pipeline]
+python -m benchmark.metaqa.run_nl2cypher      --provider gemini --model gemini-2.5-flash --per-hop 100  [--correct-directions | --pipeline]
+```
 
+`--provider ollama` runs a local model instead.
+
+**Model and decoding.** `gemini-2.5-flash` through the Gemini API, temperature 0, thinking
+disabled (`thinkingBudget: 0`), up to 512 output tokens. The model's raw outputs are cached in
+`benchmark/cache/predictions/`, so a run can be re-scored without new API calls.
+
+**Prompts.**
 * **CypherBench:** the official zero-shot prompt and schema string
-  (`zero_shot_nl2cypher.py`), temperature 0, official post-processing. The predicted
-  query runs on GQL-Core and is scored with official execution accuracy against
-  Neo4j's gold answer; the executable rate is reported too. PSJS (provenance subgraph
-  Jaccard) needs Neo4j provenance tracking and is not computed. Questions whose gold
-  query GQL-Core cannot reproduce (Layer A failures) are flagged, so engine gaps are
-  not mistaken for model errors.
-* **MetaQA:** MetaQA has gold answers but no gold queries, so this is end-to-end KGQA:
-  the CypherBench prompt wording plus the MetaQA schema, with one added line saying
-  that the bracketed entity is an exact node `name`. The answer set is the first
-  returned column, with the topic entity removed (MetaQA gold sets never include it).
-  Metrics: exact set match, mean F1, and Hit (at least one returned answer is
-  correct). "Hit" is not "Hits@1", because a Cypher query returns an unranked set.
-* **Sampling.** On a CPU-only machine the full splits take days. `--per-graph` and
-  `--per-hop` draw a fixed, seeded, stratified sample. The sample size, seed and every
-  evaluated id are written to the results, so reported numbers state the n they come
-  from. Model outputs are cached in `benchmark/cache/predictions/`, so interrupted
-  runs resume.
+  (`zero_shot_nl2cypher.py`) and the official post-processing. The predicted query runs on
+  GQL-Core and is scored with official execution accuracy against Neo4j's gold answer. PSJS
+  (provenance subgraph Jaccard) needs Neo4j provenance tracking and is not computed.
+* **MetaQA:** MetaQA has gold answers but no gold queries, so this is end-to-end KGQA: the
+  CypherBench prompt wording plus the MetaQA schema, with one added line saying that the
+  bracketed entity is an exact node `name`. The answer set is the first returned column, with
+  the topic entity removed (MetaQA gold sets never include it). Metrics: exact set match, mean
+  F1, and Hit (at least one returned answer is correct). "Hit" is not "Hits@1", because a
+  Cypher query returns an unranked set.
 
-Results: `benchmark/results/cypherbench_nl2cypher.json`, `benchmark/results/metaqa_nl2cypher.json`.
+**Three configurations**, each in its own results file:
 
-**CypherBench NL→Cypher result** (`qwen2.5-coder:3b`, Q4_K_M, via Ollama on CPU; 30 seeded
-questions per graph, seed 0, n = 210 of 2,348):
+| Configuration | Flag | What changes |
+| --- | --- | --- |
+| Model only | none | The model's query runs exactly as written. |
+| + direction correction | `--correct-directions` | The same cached answers, after `gql_core.correct_relationship_directions`: an arrow is reversed only when the schema makes the written direction impossible and the reverse possible for the labels involved. |
+| GQL-Core pipeline | `--pipeline` | What `gql_core.ask` does (`benchmark/nl_pipeline.py`): the schema in the prompt is followed by the stored values of low-cardinality string properties; the model's query is repaired (directions, and string literals that match exactly one stored value ignoring case); and if it fails, returns no rows or returns duplicate rows, the model is shown what happened and may revise it once. |
 
-| Graph | nba | flight_accident | fictional_character | company | geography | movie | politics | **All** |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Execution accuracy | 20.0% | 26.7% | 13.3% | 6.7% | 3.3% | 13.3% | 10.0% | **13.3%** |
+None of these sees a gold query or a gold answer. Every repair and every retry is recorded per
+question in the results file.
 
-92.4% of the predicted queries run, and all 16 that do not are invalid Cypher that Neo4j would also reject. By pattern, the model does best on single-node lookups
-(44%) and one-hop questions (20–38%). It scores 0% on unions, `OPTIONAL MATCH`, comparisons
-and time-sensitive questions, and 5% on three-node group-bys. Every gold query is reproducible
-on GQL-Core (Layer A), so none of these misses is an engine gap. The failures are `OR` between patterns, SQL-style `GROUP BY … HAVING` or SQL
-subqueries, `ORDER BY` without `RETURN`, an unbound variable, and truncated output.
+**Sampling.** On a CPU-only machine the full splits take days to execute. `--per-graph` and
+`--per-hop` draw a fixed, seeded, stratified sample (seed 0 below). The sample size, seed and
+every evaluated id are written to the results. **The pipeline was developed on a disjoint dev
+sample** (`--seed 1 --exclude-sample-seed 0`, sharing no questions with seed 0) and then run
+once on the seed-0 sample.
 
-**MetaQA result** (`qwen2.5-coder:3b`, Q4_K_M, via Ollama on CPU; 100 seeded questions per hop, seed 0):
+### Results (CypherBench at commit `afce555`, MetaQA at `67cd6f8`)
 
-| Split | n (of test size) | Exact match | F1 | Hit | Executable |
+MetaQA has no dates, so the one engine change between the two commits (gap 10 below) does not
+affect it. The dev-sample column was measured during development (CypherBench at `9969830`,
+MetaQA at `f084a69`), before the final engine fixes.
+
+| Benchmark (metric) | Sample | Model only | + direction correction | **GQL-Core pipeline** | Dev sample, pipeline |
 | --- | --- | ---: | ---: | ---: | ---: |
-| 1-hop | 100 (9,947) | 67.0% | 70.2% | 72.0% | 98% |
-| 2-hop | 100 (14,872) | 0.0% | 0.0% | 0.0% | 99% |
-| 3-hop | 100 (14,274) | 0.0% | 0.1% | 2.0% | 99% |
-| **All** | **300** | **22.3%** | **23.5%** | **24.7%** | **98.7%** |
+| CypherBench (execution accuracy) | 210 of 2,348 | 61.4% | 66.2% | **73.3%** | 78.1% |
+| MetaQA 1-hop (exact match) | 100 of 9,947 | 69% | 88% | **88%** | 89% |
+| MetaQA 2-hop | 100 of 14,872 | 40% | 100% | **100%** | 100% |
+| MetaQA 3-hop | 100 of 14,274 | 52% | 80% | **86%** | 88% |
+| MetaQA, all | 300 | 53.7% | 89.3% | **91.3%** | 92.3% |
 
-The 2- and 3-hop zeros were inspected and are model errors: the model stops after one hop,
-links attributes to the wrong node type (for example genre to the actor instead of the movie),
-reverses relationship directions, or reads release year as a property when it is a separate
-node. The queries run, but they return nothing or the wrong entities.
+MetaQA F1 for the pipeline is 93.4% and Hit is 94.7%. On CypherBench, 99.5% of the pipeline's final queries run without error. On the 205 sampled
+questions whose gold query GQL-Core reproduces exactly (Layer A), the pipeline scores 75.1%.
 
-## Engine gaps found and fixed by Layer A
+| CypherBench graph | nba | flight_accident | fictional_character | company | geography | movie | politics |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Model only | 63.3% | 83.3% | 60.0% | 56.7% | 70.0% | 43.3% | 53.3% |
+| + direction correction | 63.3% | 86.7% | 60.0% | 60.0% | 70.0% | 50.0% | 73.3% |
+| GQL-Core pipeline | 83.3% | 86.7% | 63.3% | 70.0% | 70.0% | 56.7% | 83.3% |
 
-Running real gold queries surfaced three engine bugs, each with a regression test in
-`tests/test_cypherbench_regressions.py`:
+### Why the model alone misses, and what the pipeline fixes
+
+Every failed question of the model-only runs was classified by re-running its query.
+
+**MetaQA** (139 of 300 failed):
+
+| Cause | Questions | Fixed by |
+| --- | ---: | --- |
+| Relationship written in the reverse direction, e.g. `(:Person)-[:written_by]->(:Movie)` | 107 | direction correction |
+| Bracketed entity given the wrong type, e.g. the film *Kiss Them for Me* as a `Person`, or a tag read as an actor | about 20 | not fixable without the answer; partly by the retry |
+| Two different films share a title and MetaQA's KB merges them into one node, so the answer includes the other film's director or year | 7 | not fixable: a dataset artefact |
+| Other (a non-existent property such as `m.release_year.name`, a timeout) | 5 | partly by the retry |
+
+The 2-hop questions show the effect most clearly: 60 of the 61 failures were reversed
+arrows, and with them reversed every 2-hop question in the sample is answered exactly.
+
+**CypherBench** (81 of 210 failed):
+
+| Cause | Questions | Fixed by |
+| --- | ---: | --- |
+| Query returns nothing: a stored value written with different capitalisation (`'Swingman'` for `swingman`), a wrong property, or a wrong relationship | 18 | value grounding, stored-value hints, retry |
+| Duplicate rows: no `DISTINCT` although the prompt asks for unique entities | 16 | retry (the feedback names the duplicates) |
+| Relationship in the reverse direction | 13 | direction correction, where the two ends have different labels |
+| A count or aggregate differs (often because of a mis-capitalised filter value) | 12 | value grounding, hints |
+| Too many or too few rows, or different rows: a different reading of the question | 18 | not fixable mechanically |
+| Other (a missing column, a label or relationship not in the schema, one timeout) | 4 | |
+
+Direction correction cannot help when both ends of a relationship have the same label, as in
+`(c:Character)-[:hasStudent]->(teacher:Character)`, where only the meaning tells which way the
+edge goes.
+
+### What the pipeline still gets wrong
+
+**CypherBench** (56 of 210 wrong after the pipeline, commit `afce555`). Each final query was
+re-run and its rows compared with the gold answer:
+
+| Cause | Questions |
+| --- | ---: |
+| Some rows right, others missing or extra: another reading of the question | 21 |
+| A count or aggregate differs | 11 |
+| Returns no rows, even after the retry | 10 |
+| Different rows | 5 |
+| Right rows, different order | 4 |
+| Right rows, but duplicated (no `DISTINCT`) | 2 |
+| Same rows as the gold query on GQL-Core; only the order of tied `ORDER BY` rows differs from Neo4j | 1 |
+| A column missing | 1 |
+| Timed out (120 s) | 1 |
+
+The weakest question types are `ORDER BY` questions (12.5% of 8) and `OPTIONAL MATCH`
+questions (38% of 21). Every question, with the expected answer, each configuration's query and
+answer, and the cause above, is in
+[`gemini_nl_benchmark_answers.xlsx`](../benchmark/results/gemini_nl_benchmark_answers.xlsx).
+
+## Engine gaps found and fixed by these benchmarks
+
+Running real gold queries (Layer A) and real model output (Layer B) surfaced these engine bugs.
+Each has a regression test in `tests/test_cypherbench_regressions.py`.
 
 1. `CALL { … UNION … }` subqueries were not supported (310 of 2,348 test questions).
 2. Keywords were case-sensitive (`RETURN n, m0 as m` failed to parse).
@@ -119,8 +185,23 @@ Running real gold queries surfaced three engine bugs, each with a regression tes
    left-to-right order. The three gold queries that had timed out now finish in
    0.1–2.5 s with correct answers.
 5. Equality and `IN` conditions in `WHERE` (for example `WHERE c.name = 'X'`) were not used to
-   choose the start node, so model-written queries in Layer B timed out. They now choose the start
+   choose the start node, so model-written queries timed out. They now choose the start
    node and prune its candidates; the full `WHERE` is still applied, so results are unchanged.
+6. `EXISTS { … }` was left unparsed: `EXISTS` returned no rows, `NOT EXISTS` returned every row,
+   and a `WHERE` inside the braces failed with "unbound variable". The Neo4j 4 forms
+   `exists((pattern))` and `exists(n.prop)` were unknown functions.
+7. Expanding to `(y:Year)` checked only a node's first label, so a node labelled both `Movie`
+   and `Year` (MetaQA's year *2010*, which is also a film title) never matched. The
+   variable-length operator had the same check.
+8. A relationship with several types, `[:directed_by|written_by]`, matched nothing in queries
+   that use `DISTINCT`, `WITH` or `count(DISTINCT …)`.
+9. Result column names were read from the first `RETURN` in the text, including one inside
+   `CALL { }` or `EXISTS { }`.
+10. A nested property in a single `WHERE` condition, such as `WHERE m.release_date.year = 2010`,
+    was pushed into the scan as a property literally named `release_date.year`, so it matched
+    nothing. It is now read the same way as in a larger `WHERE`.
+
+Items 6 to 10 were fixed after the Layer A measurement at `43cab07`.
 
 A latent parser bug also appeared along the way: parenthesized-expression markers,
 keyed by `id()`, leaked between parses, so chained comparisons depended on earlier

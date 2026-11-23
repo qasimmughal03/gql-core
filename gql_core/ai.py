@@ -235,7 +235,9 @@ def ask(
     max_retries : int, optional
         If the query fails, returns no rows, or returns duplicate rows, show the model
         what happened and let it revise the query, up to this many times (default 1).
-        With ``explain=True`` every attempt is listed under ``attempts``.
+        With ``explain=True`` every attempt is listed under ``attempts``, with the model's
+        query (``model_query``), what was repaired (``repairs``), the query that ran
+        (``query``), and any ``error`` or ``feedback``.
 
     Returns
     -------
@@ -247,9 +249,14 @@ def ask(
     attempts: list[dict[str, Any]] = []
 
     def attempt(raw: str) -> dict[str, Any]:
-        rec: dict[str, Any] = {"query": None, "results": None, "error": None}
+        rec: dict[str, Any] = {"query": None, "model_query": None, "repairs": [],
+                               "results": None, "error": None}
         try:
-            rec["query"] = _finish(raw, graph, correct_directions)
+            rec["model_query"] = _finish(raw, graph, False)
+            rec["query"] = rec["model_query"]
+            if correct_directions:
+                fixed = repair_query(rec["model_query"], graph)
+                rec["query"], rec["repairs"] = fixed.query, fixed.changes
             rec["results"] = run_query(rec["query"], graph)
         except Exception as exc:  # noqa: BLE001 - reported back to the model
             rec["error"] = f"{type(exc).__name__}: {exc}"

@@ -12,7 +12,7 @@ GQL-Core implements:
 9. Fluent programmatic query builder API and LLM-facing operator registry.
 """
 
-__version__ = "0.2.0a2"
+__version__ = "0.2.0a3"
 
 # Graph store and legacy components
 from gql_core.ai import ask, translate_to_gql

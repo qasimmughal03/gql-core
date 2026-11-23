@@ -94,3 +94,13 @@ def test_keep_revision_rules():
     assert not keep_revision(rows, None, [], None)              # never trade rows for no rows
     assert keep_revision([], None, [], None)                    # empty -> empty: take the revision
     assert keep_revision(None, "boom", [], None)                # error -> runs: take the revision
+
+
+def test_ask_explain_reports_the_model_query_and_its_repairs():
+    model_query = "MATCH (p:Position {name: 'Center'})-[:playsPosition]->(x:Player) RETURN x.name AS name"
+    out = ask(_graph(), "Who plays center?", client=lambda p: model_query, explain=True)
+    first = out["attempts"][0]
+    assert first["model_query"] == model_query
+    assert first["query"] == "MATCH (p:Position {name: 'center'})<-[:playsPosition]-(x:Player) RETURN x.name AS name"
+    assert len(first["repairs"]) == 2
+    assert sorted(r["name"] for r in out["results"]) == ["Player 1", "Player 2"]

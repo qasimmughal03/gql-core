@@ -274,3 +274,15 @@ def test_nested_property_in_single_where_condition():
     assert run("MATCH (a:Accident) WHERE a.date.year = 1988 RETURN a.name AS n", g) == [{"n": "Pan Am Flight 103"}]
     assert run("MATCH (a:Accident) WHERE a.date.year > 1990 RETURN a.name AS n", g) == [{"n": "TWA Flight 800"}]
     assert run("MATCH (a:Accident) WHERE a.date.month = 12 RETURN count(a) AS c", g) == [{"c": 1}]
+
+
+def test_pattern_predicate_may_reuse_a_relationship_of_the_enclosing_match():
+    """Relationship uniqueness is per pattern: EXISTS { } and pattern predicates have their own scope."""
+    g = PropertyGraph()
+    g.add_node(Node("a", "Person", {"name": "Alice"}))
+    g.add_node(Node("b", "Person", {"name": "Bob"}))
+    g.add_edge(Edge("e", "KNOWS", "a", "b"))
+    for where in ("EXISTS { (a)-[:KNOWS]->(b) }", "exists((a)-[:KNOWS]->(b))", "(a)-[:KNOWS]->(b)"):
+        q = f"MATCH (a:Person)-[:KNOWS]->(b) WHERE {where} RETURN b.name AS friend"
+        assert run(q, g) == [{"friend": "Bob"}], where
+    assert run("MATCH (a:Person)-[:KNOWS]->(b) WHERE NOT EXISTS { (a)-[:KNOWS]->(b) } RETURN b.name AS f", g) == []

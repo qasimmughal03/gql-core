@@ -351,7 +351,10 @@ def eval_predicate(expr: BoolExpr | None, row: dict[str, Any], graph: PropertyGr
         from gql_core.query.executor import _match_path_pattern
         if graph is None:
             return False
-        matches = _match_path_pattern(expr.pattern, row, graph)
+        # Relationship uniqueness is per pattern: a pattern predicate or EXISTS { } may
+        # traverse a relationship the enclosing MATCH already used.
+        seed = {k: v for k, v in row.items() if k != "__used_edges__"} if "__used_edges__" in row else row
+        matches = _match_path_pattern(expr.pattern, seed, graph)
         if expr.where is None:
             return len(matches) > 0
         return any(eval_predicate(expr.where, m, graph) is True for m in matches)

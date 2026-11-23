@@ -8,7 +8,7 @@ Benchmark datasets, prompts and evaluation harnesses are versioned with their re
 commit stamped in each results file), not with the package: a new benchmark run does not by
 itself produce a new GQL-Core release.
 
-## [Unreleased]
+## [0.2.0a4] - 2026-11-24
 
 ### Fixed
 - A pattern predicate or `EXISTS { … }` could not use a relationship that the enclosing `MATCH`
@@ -71,7 +71,7 @@ First PyPI release since 0.2.0a1. It includes everything in 0.2.0a2.
 First public alpha on PyPI: in-memory property graph, Cypher text queries, typed query plans,
 ontology inference, optional natural-language interface, openCypher TCK and LDBC SNB harnesses.
 
-[Unreleased]: https://github.com/qasimmughal03/gql-core/compare/v0.2.0a3...HEAD
+[0.2.0a4]: https://github.com/qasimmughal03/gql-core/compare/v0.2.0a3...v0.2.0a4
 [0.2.0a3]: https://github.com/qasimmughal03/gql-core/compare/v0.2.0a2...v0.2.0a3
 [0.2.0a2]: https://github.com/qasimmughal03/gql-core/compare/v0.2.0a1...v0.2.0a2
 [0.2.0a1]: https://github.com/qasimmughal03/gql-core/releases/tag/v0.2.0a1

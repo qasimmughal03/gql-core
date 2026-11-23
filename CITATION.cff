@@ -5,8 +5,8 @@ type: software
 authors:
   - given-names: Muhammad
     family-names: Qasim
-version: 0.2.0a3
-date-released: 2026-11-23
+version: 0.2.0a4
+date-released: 2026-11-24
 license: Apache-2.0
 repository-code: "https://github.com/qasimmughal03/gql-core"
 url: "https://pypi.org/project/gql-core/"

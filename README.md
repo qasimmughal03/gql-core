@@ -2,7 +2,7 @@
 
 **Embedded graph querying and rule-based reasoning for Python. No database server.**
 
-**Version:** `0.2.0a3` · **Stage:** alpha · **License:** Apache-2.0 · **Python:** 3.11+ · [PyPI](https://pypi.org/project/gql-core/)
+**Version:** `0.2.0a4` · **Stage:** alpha · **License:** Apache-2.0 · **Python:** 3.11+ · [PyPI](https://pypi.org/project/gql-core/)
 
 ## Why GQL-Core?
 
@@ -170,7 +170,7 @@ reference.
 | [CypherBench](https://huggingface.co/datasets/megagonlabs/cypherbench) test split ([paper](https://arxiv.org/abs/2412.18702)), measured at commit `43cab07` | All 2,348 gold Cypher queries run on GQL-Core over 7 Wikidata-derived graphs (up to 885k nodes and 1.9M relationships), compared with the answers **Neo4j** produced, with the official execution-accuracy metric | **98.21%** (2,306 / 2,348); **100%** when rows that differ only in the order of tied `ORDER BY` keys count as matches |
 | [LDBC SNB](https://ldbcouncil.org/benchmarks/snb/) SF0.1 (unaudited) | Official query parameter cases on a 327,588-node, 1,477,965-relationship graph | **4 / 4** across 2 official query types |
 | Hetionet v1.0 (our own check, not a published benchmark) | 5 Cypher queries and one rule on real biomedical data, each compared with an independent plain-Python computation | **6 / 6** agree; 27,498 derived facts equal the independent join |
-| Test suite | Unit and regression tests | **394 / 394** |
+| Test suite | Unit and regression tests | **395 / 395** |
 
 On CypherBench there were no errors and no timeouts (120 s limit, as in the official
 evaluation). All 42 official failures are `ORDER BY` queries whose tied rows come back in a
@@ -263,7 +263,7 @@ for what changed in each version.
 - [Typed query API](https://github.com/qasimmughal03/gql-core/blob/main/docs/TYPED_QUERY_API.md) · [Logical operators](https://github.com/qasimmughal03/gql-core/blob/main/docs/LOGICAL_OPERATOR_SPEC.md)
 - [Ontology and inference](https://github.com/qasimmughal03/gql-core/blob/main/docs/INFERENCE_ENGINE.md)
 - [Domain evaluations (CypherBench, MetaQA)](https://github.com/qasimmughal03/gql-core/blob/main/docs/NL_BENCHMARKS.md) · [TCK analysis](https://github.com/qasimmughal03/gql-core/blob/main/docs/TCK_FAILURE_ANALYSIS.md) · [Release correctness report](https://github.com/qasimmughal03/gql-core/blob/main/docs/RELEASE_CORRECTNESS_REPORT.md)
-- Release notes: [0.2.0a3](https://github.com/qasimmughal03/gql-core/blob/main/docs/RELEASE_NOTES_0.2.0a3.md) · [0.2.0a2](https://github.com/qasimmughal03/gql-core/blob/main/docs/RELEASE_NOTES_0.2.0a2.md) · [0.2.0a1](https://github.com/qasimmughal03/gql-core/blob/main/docs/RELEASE_NOTES_0.2.0a1.md)
+- Release notes: [0.2.0a4](https://github.com/qasimmughal03/gql-core/blob/main/docs/RELEASE_NOTES_0.2.0a4.md) · [0.2.0a3](https://github.com/qasimmughal03/gql-core/blob/main/docs/RELEASE_NOTES_0.2.0a3.md) · [0.2.0a2](https://github.com/qasimmughal03/gql-core/blob/main/docs/RELEASE_NOTES_0.2.0a2.md) · [0.2.0a1](https://github.com/qasimmughal03/gql-core/blob/main/docs/RELEASE_NOTES_0.2.0a1.md)
 
 ## Citation and license
 

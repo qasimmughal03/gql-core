@@ -1,6 +1,6 @@
 # Implementation Verification Report: GQL-Core Logical Operator and Ontology Reasoning System
 
-**Repository:** `qasimmughal03/knowledge-graoh-with-formal-query`  
+**Repository:** `qasimmughal03/gql-core`  
 **Starting Commit:** `b0be246`  
 **Target Branch:** `feat/implementation`  
 **Date:** October 2026  

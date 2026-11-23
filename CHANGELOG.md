@@ -8,6 +8,17 @@ Benchmark datasets, prompts and evaluation harnesses are versioned with their re
 commit stamped in each results file), not with the package: a new benchmark run does not by
 itself produce a new GQL-Core release.
 
+## [Unreleased]
+
+### Fixed
+- A pattern predicate or `EXISTS { … }` could not use a relationship that the enclosing `MATCH`
+  had already matched, so `MATCH (a)-[:KNOWS]->(b) WHERE EXISTS { (a)-[:KNOWS]->(b) }` returned
+  nothing.
+
+### Changed
+- The repository moved to [`qasimmughal03/gql-core`](https://github.com/qasimmughal03/gql-core);
+  links updated.
+
 ## [0.2.0a3] - 2026-11-23
 
 First PyPI release since 0.2.0a1. It includes everything in 0.2.0a2.
@@ -60,6 +71,7 @@ First PyPI release since 0.2.0a1. It includes everything in 0.2.0a2.
 First public alpha on PyPI: in-memory property graph, Cypher text queries, typed query plans,
 ontology inference, optional natural-language interface, openCypher TCK and LDBC SNB harnesses.
 
-[0.2.0a3]: https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/compare/v0.2.0a2...v0.2.0a3
-[0.2.0a2]: https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/compare/v0.2.0a1...v0.2.0a2
-[0.2.0a1]: https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/releases/tag/v0.2.0a1
+[Unreleased]: https://github.com/qasimmughal03/gql-core/compare/v0.2.0a3...HEAD
+[0.2.0a3]: https://github.com/qasimmughal03/gql-core/compare/v0.2.0a2...v0.2.0a3
+[0.2.0a2]: https://github.com/qasimmughal03/gql-core/compare/v0.2.0a1...v0.2.0a2
+[0.2.0a1]: https://github.com/qasimmughal03/gql-core/releases/tag/v0.2.0a1

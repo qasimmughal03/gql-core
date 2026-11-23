@@ -5,7 +5,7 @@
 **Auditor**: Principal Database & Verification Harness Engineering  
 **Branch**: `feat/implementation`  
 **Base Commit**: `94c57f219f085a997031baa5452bfe1a220cac94`  
-**Repository**: `qasimmughal03/knowledge-graoh-with-formal-query`  
+**Repository**: `qasimmughal03/gql-core`  
 **Source of Truth**: `benchmark/results/tck_compatibility_results.json`, `benchmark/results/snb_interactive_results.json`
 
 ---

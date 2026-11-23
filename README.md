@@ -83,7 +83,7 @@ run("MATCH (u:Unit)-[r:PART_OF]->(:Unit {name: 'Acme'}) "
 
 ### 3. Use it in an application
 
-[`examples/integration_demo/`](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/tree/main/examples/integration_demo)
+[`examples/integration_demo/`](https://github.com/qasimmughal03/gql-core/tree/main/examples/integration_demo)
 is a small impact-analysis application that installs GQL-Core from PyPI. It loads a service
 graph, derives indirect dependencies with their provenance, and answers "what breaks if the
 database fails, and who owns it?":
@@ -114,11 +114,11 @@ out["attempts"]   # per attempt: the model's query, what was repaired, the query
 Pass `correct_directions=False` or `max_retries=0` to turn the checks off. Without a `client`,
 `ask()` uses a local Ollama server. The demo includes a ten-line Gemini client.
 
-More runnable examples: [typed query plans](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/examples/example_b_typed_plan.py),
-[inference rules](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/examples/example_c_ontology_inference.py),
-and domain programs for [legal](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/examples/domains/legal_kg.py),
-[software supply chain](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/examples/domains/software_supply_chain.py) and
-[biomedical](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/examples/domains/biomedical_network.py) graphs.
+More runnable examples: [typed query plans](https://github.com/qasimmughal03/gql-core/blob/main/examples/example_b_typed_plan.py),
+[inference rules](https://github.com/qasimmughal03/gql-core/blob/main/examples/example_c_ontology_inference.py),
+and domain programs for [legal](https://github.com/qasimmughal03/gql-core/blob/main/examples/domains/legal_kg.py),
+[software supply chain](https://github.com/qasimmughal03/gql-core/blob/main/examples/domains/software_supply_chain.py) and
+[biomedical](https://github.com/qasimmughal03/gql-core/blob/main/examples/domains/biomedical_network.py) graphs.
 
 ### Command line
 
@@ -149,9 +149,9 @@ Question ──► model ──► query ──► direction / value repair ─�
 | `gql_core/ontology/`, `inference/` | Typed ontology schemas and rule-based inference |
 | `gql_core/ai.py`, `nl.py` | `ask()`, `translate_to_gql()`, repair and execution feedback |
 
-Details: [system architecture](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/SYSTEM_ARCHITECTURE.md),
-[typed query API](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/TYPED_QUERY_API.md),
-[inference](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/INFERENCE_ENGINE.md).
+Details: [system architecture](https://github.com/qasimmughal03/gql-core/blob/main/docs/SYSTEM_ARCHITECTURE.md),
+[typed query API](https://github.com/qasimmughal03/gql-core/blob/main/docs/TYPED_QUERY_API.md),
+[inference](https://github.com/qasimmughal03/gql-core/blob/main/docs/INFERENCE_ENGINE.md).
 
 ## Benchmarks
 
@@ -204,17 +204,17 @@ Most remaining MetaQA misses come from the dataset: its knowledge base merges di
 that share a title. Most remaining CypherBench misses are a different reading of the question
 from the gold query's. Every question, with the expected answer, each configuration's query and
 answer, and the reason for each miss, is in
-[`gemini_nl_benchmark_answers.xlsx`](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/benchmark/results/gemini_nl_benchmark_answers.xlsx).
+[`gemini_nl_benchmark_answers.xlsx`](https://github.com/qasimmughal03/gql-core/blob/main/benchmark/results/gemini_nl_benchmark_answers.xlsx).
 Methodology, per-graph results and failure analysis:
-[docs/NL_BENCHMARKS.md](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/NL_BENCHMARKS.md).
+[docs/NL_BENCHMARKS.md](https://github.com/qasimmughal03/gql-core/blob/main/docs/NL_BENCHMARKS.md).
 
 ### Reproduce
 
 Datasets are downloaded on demand and are not part of the package.
 
 ```bash
-git clone https://github.com/qasimmughal03/knowledge-graoh-with-formal-query.git
-cd knowledge-graoh-with-formal-query
+git clone https://github.com/qasimmughal03/gql-core.git
+cd gql-core
 python -m pip install -e ".[dev,benchmark]"
 python -m benchmark.tck.runner                                    # openCypher TCK
 python -m benchmark.cypherbench.download
@@ -235,7 +235,7 @@ correction alone. `--provider ollama --model <tag>` runs a local model instead.
 - **A subset of Cypher.** Not an ISO/IEC 39075 (GQL) implementation and not certified
   openCypher. `EXISTS { MATCH … }` supports a single pattern; other unsupported forms raise
   `UnsupportedFeature` rather than answer wrongly. See the
-  [supported query contract](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/SUPPORTED_QUERY_CONTRACT.md).
+  [supported query contract](https://github.com/qasimmughal03/gql-core/blob/main/docs/SUPPORTED_QUERY_CONTRACT.md).
   The text and typed-plan APIs do not have identical coverage.
 - **`ask()` needs a model** and is only as good as the model's reading of the question: about
   one CypherBench question in four is still answered wrongly with the full pipeline.
@@ -251,24 +251,24 @@ python -m pytest tests/
 python -m build && python -m twine check dist/*
 ```
 
-See [CONTRIBUTING.md](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/CONTRIBUTING.md)
-for the branch, test and release process, and [CHANGELOG.md](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/CHANGELOG.md)
+See [CONTRIBUTING.md](https://github.com/qasimmughal03/gql-core/blob/main/CONTRIBUTING.md)
+for the branch, test and release process, and [CHANGELOG.md](https://github.com/qasimmughal03/gql-core/blob/main/CHANGELOG.md)
 for what changed in each version.
 
 ## Documentation
 
-- [Quickstart walkthrough](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/QUICKSTART.md)
-- [Python API reference](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/API_REFERENCE.md)
-- [Supported query contract](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/SUPPORTED_QUERY_CONTRACT.md)
-- [Typed query API](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/TYPED_QUERY_API.md) · [Logical operators](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/LOGICAL_OPERATOR_SPEC.md)
-- [Ontology and inference](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/INFERENCE_ENGINE.md)
-- [Domain evaluations (CypherBench, MetaQA)](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/NL_BENCHMARKS.md) · [TCK analysis](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/TCK_FAILURE_ANALYSIS.md) · [Release correctness report](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/RELEASE_CORRECTNESS_REPORT.md)
-- Release notes: [0.2.0a3](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/RELEASE_NOTES_0.2.0a3.md) · [0.2.0a2](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/RELEASE_NOTES_0.2.0a2.md) · [0.2.0a1](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/docs/RELEASE_NOTES_0.2.0a1.md)
+- [Quickstart walkthrough](https://github.com/qasimmughal03/gql-core/blob/main/docs/QUICKSTART.md)
+- [Python API reference](https://github.com/qasimmughal03/gql-core/blob/main/docs/API_REFERENCE.md)
+- [Supported query contract](https://github.com/qasimmughal03/gql-core/blob/main/docs/SUPPORTED_QUERY_CONTRACT.md)
+- [Typed query API](https://github.com/qasimmughal03/gql-core/blob/main/docs/TYPED_QUERY_API.md) · [Logical operators](https://github.com/qasimmughal03/gql-core/blob/main/docs/LOGICAL_OPERATOR_SPEC.md)
+- [Ontology and inference](https://github.com/qasimmughal03/gql-core/blob/main/docs/INFERENCE_ENGINE.md)
+- [Domain evaluations (CypherBench, MetaQA)](https://github.com/qasimmughal03/gql-core/blob/main/docs/NL_BENCHMARKS.md) · [TCK analysis](https://github.com/qasimmughal03/gql-core/blob/main/docs/TCK_FAILURE_ANALYSIS.md) · [Release correctness report](https://github.com/qasimmughal03/gql-core/blob/main/docs/RELEASE_CORRECTNESS_REPORT.md)
+- Release notes: [0.2.0a3](https://github.com/qasimmughal03/gql-core/blob/main/docs/RELEASE_NOTES_0.2.0a3.md) · [0.2.0a2](https://github.com/qasimmughal03/gql-core/blob/main/docs/RELEASE_NOTES_0.2.0a2.md) · [0.2.0a1](https://github.com/qasimmughal03/gql-core/blob/main/docs/RELEASE_NOTES_0.2.0a1.md)
 
 ## Citation and license
 
-If you use GQL-Core in research, cite it with [CITATION.cff](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/CITATION.cff).
+If you use GQL-Core in research, cite it with [CITATION.cff](https://github.com/qasimmughal03/gql-core/blob/main/CITATION.cff).
 
-[Apache License 2.0](https://github.com/qasimmughal03/knowledge-graoh-with-formal-query/blob/main/LICENSE).
+[Apache License 2.0](https://github.com/qasimmughal03/gql-core/blob/main/LICENSE).
 GQL-Core is an independent project. Referencing ISO, openCypher, Neo4j, LDBC or Google does not
 imply affiliation or certification.

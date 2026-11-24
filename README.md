@@ -234,14 +234,27 @@ Methodology, per-graph results and failure analysis:
 [docs/PERFORMANCE.md](https://github.com/qasimmughal03/gql-core/blob/main/docs/PERFORMANCE.md)
 describes Performance Benchmark v1. It runs 26 workloads, from property lookups to
 variable-length paths, joins, `EXISTS`, quantified typed plans and rule inference, on seeded
-synthetic graphs of 10k to 500k nodes. It checks every answer against an oracle, then times it
-against hand-written Python, SQLite and NetworkX on the same data. The engine under test is the
-PyPI release. The harness and its findings so far are published there. The full timing run is
-still to be done, and no latency table is published until it is.
+synthetic graphs. It checks every answer against an oracle, then times it against hand-written
+Python, SQLite and NetworkX on the same data. The engine under test is the PyPI release.
 
-GQL-Core is a pure-Python interpreter without property indexes or a plan cache, so expect
-milliseconds on small graphs and seconds on large scans and joins. On the CypherBench graphs,
-the median gold query takes about 0.2 s, and the slowest take minutes.
+Measured at 10,000 nodes and 53,735 relationships, single-threaded, on a laptop:
+
+| | GQL-Core 0.2.0a4 | SQLite (in memory) | NetworkX |
+| --- | ---: | ---: | ---: |
+| Find one node by `id` | 10 ms | 2.4 µs | 0.4 µs |
+| One hop from that node | 10 ms | 3.2 µs | 0.6 µs |
+| `KNOWS*1..3` from that node | 29 ms | 0.12 ms | 0.01 ms |
+| Filter returning 6,092 rows | 30 ms | 3.1 ms | – |
+| Group 9,147 people by industry | 120 ms | 17 ms | – |
+| Transitive closure by rule inference | 567 ms | 3.4 ms (recursive CTE) | 4.7 ms |
+| Memory per node or relationship | about 400–460 bytes | about 55 bytes | about 270 bytes |
+
+GQL-Core is a pure-Python interpreter with no property index, so finding a start node scans its
+label, and that cost dominates point queries. Parsing is about 2% of a query's time. Expect
+milliseconds on graphs of thousands of elements and seconds on large scans and joins. Timings at
+100k nodes were invalidated by machine memory pressure, and 300k was not completed, so scaling is
+not yet measured. The page lists what was and wasn't measured, the bottlenecks, and optimization
+candidates.
 
 ### Reproduce
 

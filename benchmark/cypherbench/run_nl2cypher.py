@@ -26,7 +26,7 @@ import random
 import time
 from pathlib import Path
 
-from benchmark.cypherbench.common import QueryTimeout, avg, breakdown, git_commit, load_test, run_with_timeout
+from benchmark.cypherbench.common import QueryTimeout, avg, breakdown, engine_info, git_commit, load_test, run_with_timeout
 from benchmark.cypherbench.download import CACHE_DIR, TEST_GRAPHS, graph_path
 from benchmark.cypherbench.loader import load_simplekg
 from benchmark.cypherbench.metrics import execution_accuracy
@@ -230,6 +230,7 @@ def main() -> None:
         "retried": sum(1 for r in results if len(r.get("attempts", ())) > 1),
         "repaired": sum(1 for r in results if any(a["repairs"] for a in r.get("attempts", ()))),
         "queries_direction_corrected": sum(1 for r in results if r.get("direction_changes")),
+        "engine": engine_info(),
         "git_commit": git_commit(),
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "sample": {"per_graph": args.per_graph, "seed": args.seed, "n": len(results),

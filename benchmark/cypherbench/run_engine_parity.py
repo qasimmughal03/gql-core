@@ -17,7 +17,7 @@ import re
 import time
 from pathlib import Path
 
-from benchmark.cypherbench.common import QueryTimeout, avg, breakdown, git_commit, load_test, run_with_timeout
+from benchmark.cypherbench.common import QueryTimeout, avg, breakdown, engine_info, git_commit, load_test, run_with_timeout
 from benchmark.cypherbench.download import TEST_GRAPHS, graph_path
 from benchmark.cypherbench.loader import load_simplekg
 from benchmark.cypherbench.metrics import execution_accuracy, to_hashable
@@ -118,16 +118,28 @@ def main() -> None:
     ap.add_argument("--graphs", nargs="+", default=TEST_GRAPHS, choices=TEST_GRAPHS)
     ap.add_argument("--timeout", type=float, default=120.0, help="per-query timeout (s); the official eval uses 120")
     ap.add_argument("--out", type=Path, default=OUT)
+    ap.add_argument("--merge", type=Path, nargs="+", default=None,
+                    help="combine results files of separate runs (e.g. one process per graph, "
+                         "to bound memory) into --out instead of running queries")
     args = ap.parse_args()
 
-    test = load_test()
     results, graphs_info = [], {}
-    for g in args.graphs:
-        items = [x for x in test if x["graph"] == g]
-        recs, info = evaluate_graph(g, items, args.timeout)
-        results += recs
-        graphs_info[g] = info
-        print(f"[{g}] execution accuracy vs Neo4j gold: {avg([r['execution_accuracy'] for r in recs]):.4f}", flush=True)
+    if args.merge:
+        parts = [json.loads(p.read_text(encoding="utf-8")) for p in args.merge]
+        engines = {json.dumps(p["engine"], sort_keys=True) for p in parts}
+        if len(engines) != 1 or len({p["timeout_seconds"] for p in parts}) != 1:
+            raise SystemExit("the files to merge were produced by different engines or settings")
+        for p in parts:
+            results += p["results"]
+            graphs_info.update(p["graphs"])
+    else:
+        test = load_test()
+        for g in args.graphs:
+            items = [x for x in test if x["graph"] == g]
+            recs, info = evaluate_graph(g, items, args.timeout)
+            results += recs
+            graphs_info[g] = info
+            print(f"[{g}] execution accuracy vs Neo4j gold: {avg([r['execution_accuracy'] for r in recs]):.4f}", flush=True)
 
     status_counts: dict[str, int] = {}
     for r in results:
@@ -136,9 +148,11 @@ def main() -> None:
     summary = {
         "benchmark": "CypherBench test split (megagonlabs/cypherbench), gold Cypher executed on GQL-Core",
         "metric": "official CypherBench execution accuracy vs Neo4j gold answers (answer_json)",
-        "git_commit": git_commit(),
+        "engine": parts[0]["engine"] if args.merge else engine_info(),
+        "git_commit": parts[0]["git_commit"] if args.merge else git_commit(),
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "timeout_seconds": args.timeout,
+        "timeout_seconds": parts[0]["timeout_seconds"] if args.merge else args.timeout,
+        **({"merged_from": len(args.merge)} if args.merge else {}),
         # Row order among ORDER BY ties depends on set iteration order; pin it for reproducibility.
         "pythonhashseed": os.environ.get("PYTHONHASHSEED"),
         "graphs": graphs_info,

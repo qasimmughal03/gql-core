@@ -183,3 +183,26 @@ jobs:
           name: tck-compatibility-results
           path: benchmark/results/tck_compatibility_results.json
           retention-days: 30
+
+  reference-app:
+    name: Reference App on the Published Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install apps/service-impact with its pinned gql-core from PyPI
+        run: |
+          python -m venv /tmp/app-venv
+          /tmp/app-venv/bin/python -m pip install --upgrade pip
+          /tmp/app-venv/bin/python -m pip install "./apps/service-impact[test]"
+
+      - name: Run the application's integration tests outside the checkout's package
+        working-directory: apps/service-impact
+        run: |
+          /tmp/app-venv/bin/service-impact version
+          /tmp/app-venv/bin/pytest -q -p no:cacheprovider

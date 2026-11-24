@@ -97,3 +97,47 @@ def git_commit() -> str:
     dirty = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no", "--", "gql_core", "benchmark", ":(exclude)benchmark/results"],
                            capture_output=True, text=True).stdout.strip()
     return f"{head}+dirty" if dirty else head
+
+
+def engine_info() -> dict[str, Any]:
+    """Which GQL-Core produced the results: version, and whether it is an installed package.
+
+    ``location`` is relative to the Python environment (``<env>``) or the checkout (``<repo>``),
+    so no local path is written. ``record_sha256`` fingerprints the installed files (the hash of
+    the distribution's RECORD file), identical for everyone who installs the same wheel.
+    """
+    import hashlib
+    import platform
+    import sys
+    from importlib import metadata
+
+    import gql_core
+
+    pkg_dir = Path(gql_core.__file__).resolve().parent
+    repo = Path(__file__).resolve().parents[2]
+    env = Path(sys.prefix).resolve()
+    info: dict[str, Any] = {"package": "gql-core", "version": gql_core.__version__,
+                            "python": platform.python_version()}
+    if pkg_dir.is_relative_to(repo):
+        info["source"] = "repository checkout"
+        info["location"] = "<repo>/" + pkg_dir.relative_to(repo).as_posix()
+    else:
+        info["source"] = "installed package"
+        info["location"] = ("<env>/" + pkg_dir.relative_to(env).as_posix()) if pkg_dir.is_relative_to(env) else "outside the environment"
+    if info["source"] != "installed package":
+        return info
+    try:
+        dist = metadata.distribution("gql-core")
+        if Path(dist.locate_file("gql_core/__init__.py")).resolve() != Path(gql_core.__file__).resolve():
+            info["installed_from"] = "not an installed distribution (imported from source)"
+            return info
+        info["distribution_version"] = dist.version
+        direct = dist.read_text("direct_url.json")
+        info["installed_from"] = "package index (PyPI)" if direct is None else (
+            "editable checkout" if json.loads(direct).get("dir_info", {}).get("editable") else "local file")
+        record = dist.read_text("RECORD")
+        if record:
+            info["record_sha256"] = hashlib.sha256(record.replace("\r\n", "\n").encode()).hexdigest()
+    except metadata.PackageNotFoundError:
+        info["installed_from"] = "not installed"
+    return info

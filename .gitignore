@@ -13,6 +13,11 @@ benchmark/results/*
 !benchmark/results/tck_compatibility_results.json
 !benchmark/results/snb_interactive_results.json
 !benchmark/results/cypherbench_engine_parity.json
+!benchmark/results/cypherbench_engine_parity_failures.json
+!benchmark/results/cypherbench_engine_parity_timeouts.json
+!benchmark/results/nl_failure_taxonomy.json
+!benchmark/results/nl_benchmark_manifest.json
+!benchmark/results/perf/
 !benchmark/results/cypherbench_nl2cypher__*.json
 !benchmark/results/metaqa_nl2cypher__*.json
 !benchmark/results/gemini_nl_benchmark_answers.xlsx

@@ -1,0 +1,3304 @@
+{
+  "method": "Classify the wrong answers of the NL->Cypher benchmark runs. Heuristic; see the module docstring.",
+  "priority": [
+    "syntax error",
+    "semantic validation or runtime error",
+    "timeout",
+    "wrong node label",
+    "wrong relationship type",
+    "relationship direction",
+    "missing filter",
+    "wrong constant value",
+    "EXISTS / NOT / OPTIONAL MATCH logic",
+    "path or traversal shape",
+    "aggregation",
+    "missing DISTINCT",
+    "ORDER BY / LIMIT",
+    "same shape: different binding or projection"
+  ],
+  "runs": {
+    "cypherbench/model-only": {
+      "file": "cypherbench_nl2cypher__gemini_gemini-2.5-flash.json",
+      "questions": 210,
+      "failures": 81,
+      "primary": {
+        "missing DISTINCT": 27,
+        "wrong constant value": 15,
+        "relationship direction": 14,
+        "same shape: different binding or projection": 13,
+        "EXISTS / NOT / OPTIONAL MATCH logic": 4,
+        "wrong node label": 4,
+        "path or traversal shape": 2,
+        "aggregation": 1,
+        "semantic validation or runtime error": 1
+      },
+      "any_tag": {
+        "missing DISTINCT": 49,
+        "wrong constant value": 19,
+        "relationship direction": 14,
+        "same shape: different binding or projection": 13,
+        "EXISTS / NOT / OPTIONAL MATCH logic": 9,
+        "path or traversal shape": 7,
+        "wrong node label": 4,
+        "wrong relationship type": 3,
+        "aggregation": 1,
+        "semantic validation or runtime error": 1
+      },
+      "failures_whose_gold_query_is_not_reproducible_on_gql_core": 5,
+      "items": [
+        {
+          "qid": "dc90d247-c0f6-4411-904a-33c6da3058ce",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": false
+        },
+        {
+          "qid": "d946ab81-43b7-4b81-9db6-345deffac0fe",
+          "primary": "path or traversal shape",
+          "tags": [
+            "path or traversal shape",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "e19cf399-3883-4d92-aded-88d82fb3ccfb",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "EXISTS / NOT / OPTIONAL MATCH logic"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "6da9e493-aa84-4bf9-a7ca-3f2d6bb32379",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "7950c517-8360-4905-879b-3b987f68a48a",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "EXISTS / NOT / OPTIONAL MATCH logic"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "470cd22d-40b3-4459-9649-1ca3d6c47c13",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "EXISTS / NOT / OPTIONAL MATCH logic",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "452aab89-80b8-4b69-8d1a-4cbfd98dc024",
+          "primary": "EXISTS / NOT / OPTIONAL MATCH logic",
+          "tags": [
+            "EXISTS / NOT / OPTIONAL MATCH logic",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "0ca8e2d8-6c25-4108-a5aa-d5c2a83d711d",
+          "primary": "EXISTS / NOT / OPTIONAL MATCH logic",
+          "tags": [
+            "EXISTS / NOT / OPTIONAL MATCH logic",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "50c09ddc-f73d-4f75-b73b-7c9afa53ff5e",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "81fbe95c-c86d-4ea4-a414-53dcc7c0aa81",
+          "primary": "relationship direction",
+          "tags": [
+            "relationship direction",
+            "path or traversal shape"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "0486ad8d-495e-4116-b4b5-f0b38bf0914b",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "23c6b9bd-a6c1-4c0d-a1c9-d45625b56f6e",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "063f4b61-0848-4ec8-afa4-60f353894e05",
+          "primary": "wrong node label",
+          "tags": [
+            "wrong node label",
+            "wrong relationship type",
+            "wrong constant value",
+            "EXISTS / NOT / OPTIONAL MATCH logic",
+            "path or traversal shape",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "11305436-476f-4e74-bbe4-7468a16cd68f",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "75235715-7599-4a36-ae17-f1f3ad87360a",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9d21a2b8-fcb1-4f0c-8631-a7470d481c85",
+          "primary": "relationship direction",
+          "tags": [
+            "relationship direction",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "c540c788-57c0-42a0-add0-498688baf958",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "cac64b27-c60f-40fa-a445-6ee4c0439748",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "207d7f3c-20b6-47cb-a7cd-b7b601ee5397",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9463bb29-dac8-443e-936a-0a5595badf78",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "146e59c8-f352-4106-95c3-0f4a58817b00",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "6ae20ffc-ea3e-4016-b23b-f5ef993a143d",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "75487975-4100-4ed0-bc1b-c5dde0bcf230",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "5d204b48-5ce0-4d51-a664-bd868789bce2",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "d5554f22-cf6d-4219-ac4f-e1fd3e2b2ca9",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "b023bea6-7bc6-4785-9d24-f3cb296aebb9",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "1112cd83-cc47-4b29-a890-268b3ec54fe3",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "6a90777b-5fad-4361-acb4-c46f3bfd5794",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "0df54707-df68-4abb-aee6-fe3a3e929238",
+          "primary": "aggregation",
+          "tags": [
+            "aggregation"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "414df7ab-7e3f-4eda-9621-30d922b3e9ac",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "46db3c98-bf69-4019-a74b-ba7965b5e498",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "1ff5cd1e-bd91-47e4-9345-df0f0f1f0866",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "60d7383c-7ef8-4d63-9cb3-46f89b88142f",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "path or traversal shape"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "2cf29bd3-e77f-447e-b1db-179df8760500",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "33e53558-5934-4c21-889c-e274ce76cf23",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "2cbad489-8031-49bb-b828-9a2d30372d5c",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9ddbb18e-d7a0-4470-8a7b-5088de749d50",
+          "primary": "relationship direction",
+          "tags": [
+            "relationship direction",
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "7c0bcad4-b4fd-408a-85ba-809403fdd14c",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "7a6dfb56-d525-458c-a5e2-4a5d239d83f7",
+          "primary": "relationship direction",
+          "tags": [
+            "relationship direction"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "becaf6a1-ca37-4fa6-84a2-a7df4d49f8ed",
+          "primary": "EXISTS / NOT / OPTIONAL MATCH logic",
+          "tags": [
+            "EXISTS / NOT / OPTIONAL MATCH logic"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "1ad683f1-eec9-4e87-9b70-b318f2d86871",
+          "primary": "path or traversal shape",
+          "tags": [
+            "path or traversal shape",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "85686def-9835-4ba3-8572-6ed416bdf6bb",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "6db2dcce-0919-4d72-8848-28377b43d41d",
+          "primary": "EXISTS / NOT / OPTIONAL MATCH logic",
+          "tags": [
+            "EXISTS / NOT / OPTIONAL MATCH logic"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "b46c6433-b591-4188-b6e1-b33b5cf340b3",
+          "primary": "wrong node label",
+          "tags": [
+            "wrong node label",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "3c242824-4d16-40ab-a462-51416d94f141",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": false
+        },
+        {
+          "qid": "0d51c972-7d99-42a2-9229-35ff20329710",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "d9e2ed74-a64d-40b5-b84f-985fa7a6a412",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "ee934e1b-ed0d-43da-ba30-fcc8e00221bc",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "ec1874cf-318d-44d9-90d0-0cfa93357d7d",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9f0b4e4d-b509-49b3-8668-61673c82dd55",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": false
+        },
+        {
+          "qid": "ae4f5d36-ed39-4fbf-9d0b-c690ad900509",
+          "primary": "relationship direction",
+          "tags": [
+            "relationship direction",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "ebf8f3ae-18a5-466b-8015-b7c7035ff2d0",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "baec6063-e583-406a-929f-55ed823113cd",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "fb6e5787-153f-434e-9968-1efb25307773",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": false
+        },
+        {
+          "qid": "66f69766-8154-4e67-8ae7-ddbe7b51b4e1",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "EXISTS / NOT / OPTIONAL MATCH logic"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "2eed0a89-959c-496f-82f9-cdf75c5e26b6",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "f3b7da1d-e7c1-4f9c-ac7e-d46718ed685a",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "3742dfc9-a326-47df-a310-a74fb0787eeb",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "31e31b5a-bf54-46f4-87ad-89f7f87dddb0",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "d2c0e3eb-59de-485e-9fcf-a5020a7ccc4f",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "51b7cc57-6240-4fc0-8721-0657943f7f3b",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "c69fb679-cac0-4ceb-8f1a-c9a92d851f0d",
+          "primary": "relationship direction",
+          "tags": [
+            "relationship direction"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "8b31ab10-9c4f-43e3-8a80-7f7b72afbb50",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": false
+        },
+        {
+          "qid": "ffda78bf-7f61-49f8-8baa-fcf5fa7f22b8",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9e9b301e-5254-429a-8c90-4ac569d366d5",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "17aa8c66-c159-4de9-a20d-2b2997461f01",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "766dc85c-8239-4cc1-8bb1-cf9096747621",
+          "primary": "relationship direction",
+          "tags": [
+            "relationship direction"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "3a57eccd-c1a5-4c87-9380-d421e29b722c",
+          "primary": "relationship direction",
+          "tags": [
+            "relationship direction",
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "e832ec30-b9e0-4d9d-9ebf-9a3224fdd9fa",
+          "primary": "relationship direction",
+          "tags": [
+            "relationship direction"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "69f14a54-3a27-41d2-af32-6321978e5185",
+          "primary": "semantic validation or runtime error",
+          "tags": [
+            "semantic validation or runtime error"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9ae2c27d-978b-4d6e-8083-c888766b437e",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "0666b5bc-6a41-4ab7-bf4f-1828e6b6a62c",
+          "primary": "relationship direction",
+          "tags": [
+            "relationship direction",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9c8ccca7-20f2-4968-9bf9-1baf24760391",
+          "primary": "relationship direction",
+          "tags": [
+            "relationship direction",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "293f16b9-33d2-4948-a814-91aced77b051",
+          "primary": "relationship direction",
+          "tags": [
+            "relationship direction"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "19458780-c36b-4ab0-bdf5-85e64d32e92a",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9ac6c8de-f0d9-4aa1-9020-23805ab709db",
+          "primary": "relationship direction",
+          "tags": [
+            "relationship direction"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "b6425354-9409-44b5-ad76-f821bf1b25b3",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "138a700e-2d19-49b5-8662-bc0b931a0466",
+          "primary": "relationship direction",
+          "tags": [
+            "relationship direction",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "f161fe9f-5c9f-455b-9776-919fc57d2b9b",
+          "primary": "wrong node label",
+          "tags": [
+            "wrong node label",
+            "wrong relationship type",
+            "wrong constant value",
+            "path or traversal shape",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "99ec8a64-7cee-4be0-a6c5-f93d997fec5f",
+          "primary": "wrong node label",
+          "tags": [
+            "wrong node label",
+            "wrong relationship type",
+            "path or traversal shape"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "0f27bac2-7ba2-4b89-8e48-728266e1d9ec",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        }
+      ]
+    },
+    "cypherbench/direction-corrected": {
+      "file": "cypherbench_nl2cypher__gemini_gemini-2.5-flash__corrected.json",
+      "questions": 210,
+      "failures": 71,
+      "primary": {
+        "missing DISTINCT": 29,
+        "wrong constant value": 16,
+        "same shape: different binding or projection": 13,
+        "EXISTS / NOT / OPTIONAL MATCH logic": 4,
+        "wrong node label": 4,
+        "path or traversal shape": 2,
+        "relationship direction": 1,
+        "aggregation": 1,
+        "semantic validation or runtime error": 1
+      },
+      "any_tag": {
+        "missing DISTINCT": 45,
+        "wrong constant value": 18,
+        "same shape: different binding or projection": 13,
+        "EXISTS / NOT / OPTIONAL MATCH logic": 9,
+        "path or traversal shape": 7,
+        "wrong node label": 4,
+        "wrong relationship type": 3,
+        "relationship direction": 1,
+        "aggregation": 1,
+        "semantic validation or runtime error": 1
+      },
+      "failures_whose_gold_query_is_not_reproducible_on_gql_core": 5,
+      "items": [
+        {
+          "qid": "dc90d247-c0f6-4411-904a-33c6da3058ce",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": false
+        },
+        {
+          "qid": "d946ab81-43b7-4b81-9db6-345deffac0fe",
+          "primary": "path or traversal shape",
+          "tags": [
+            "path or traversal shape",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "e19cf399-3883-4d92-aded-88d82fb3ccfb",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "EXISTS / NOT / OPTIONAL MATCH logic"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "6da9e493-aa84-4bf9-a7ca-3f2d6bb32379",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "7950c517-8360-4905-879b-3b987f68a48a",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "EXISTS / NOT / OPTIONAL MATCH logic"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "470cd22d-40b3-4459-9649-1ca3d6c47c13",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "EXISTS / NOT / OPTIONAL MATCH logic",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "452aab89-80b8-4b69-8d1a-4cbfd98dc024",
+          "primary": "EXISTS / NOT / OPTIONAL MATCH logic",
+          "tags": [
+            "EXISTS / NOT / OPTIONAL MATCH logic",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "0ca8e2d8-6c25-4108-a5aa-d5c2a83d711d",
+          "primary": "EXISTS / NOT / OPTIONAL MATCH logic",
+          "tags": [
+            "EXISTS / NOT / OPTIONAL MATCH logic",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "50c09ddc-f73d-4f75-b73b-7c9afa53ff5e",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "81fbe95c-c86d-4ea4-a414-53dcc7c0aa81",
+          "primary": "relationship direction",
+          "tags": [
+            "relationship direction",
+            "path or traversal shape"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "0486ad8d-495e-4116-b4b5-f0b38bf0914b",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "23c6b9bd-a6c1-4c0d-a1c9-d45625b56f6e",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "063f4b61-0848-4ec8-afa4-60f353894e05",
+          "primary": "wrong node label",
+          "tags": [
+            "wrong node label",
+            "wrong relationship type",
+            "wrong constant value",
+            "EXISTS / NOT / OPTIONAL MATCH logic",
+            "path or traversal shape",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "11305436-476f-4e74-bbe4-7468a16cd68f",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "75235715-7599-4a36-ae17-f1f3ad87360a",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "c540c788-57c0-42a0-add0-498688baf958",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "cac64b27-c60f-40fa-a445-6ee4c0439748",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "207d7f3c-20b6-47cb-a7cd-b7b601ee5397",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9463bb29-dac8-443e-936a-0a5595badf78",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "146e59c8-f352-4106-95c3-0f4a58817b00",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "6ae20ffc-ea3e-4016-b23b-f5ef993a143d",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "75487975-4100-4ed0-bc1b-c5dde0bcf230",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "5d204b48-5ce0-4d51-a664-bd868789bce2",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "d5554f22-cf6d-4219-ac4f-e1fd3e2b2ca9",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "b023bea6-7bc6-4785-9d24-f3cb296aebb9",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "1112cd83-cc47-4b29-a890-268b3ec54fe3",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "6a90777b-5fad-4361-acb4-c46f3bfd5794",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "0df54707-df68-4abb-aee6-fe3a3e929238",
+          "primary": "aggregation",
+          "tags": [
+            "aggregation"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "414df7ab-7e3f-4eda-9621-30d922b3e9ac",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "46db3c98-bf69-4019-a74b-ba7965b5e498",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "1ff5cd1e-bd91-47e4-9345-df0f0f1f0866",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "60d7383c-7ef8-4d63-9cb3-46f89b88142f",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "path or traversal shape"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "2cf29bd3-e77f-447e-b1db-179df8760500",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "33e53558-5934-4c21-889c-e274ce76cf23",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "2cbad489-8031-49bb-b828-9a2d30372d5c",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9ddbb18e-d7a0-4470-8a7b-5088de749d50",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "7c0bcad4-b4fd-408a-85ba-809403fdd14c",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "becaf6a1-ca37-4fa6-84a2-a7df4d49f8ed",
+          "primary": "EXISTS / NOT / OPTIONAL MATCH logic",
+          "tags": [
+            "EXISTS / NOT / OPTIONAL MATCH logic"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "1ad683f1-eec9-4e87-9b70-b318f2d86871",
+          "primary": "path or traversal shape",
+          "tags": [
+            "path or traversal shape",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "85686def-9835-4ba3-8572-6ed416bdf6bb",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "6db2dcce-0919-4d72-8848-28377b43d41d",
+          "primary": "EXISTS / NOT / OPTIONAL MATCH logic",
+          "tags": [
+            "EXISTS / NOT / OPTIONAL MATCH logic"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "b46c6433-b591-4188-b6e1-b33b5cf340b3",
+          "primary": "wrong node label",
+          "tags": [
+            "wrong node label",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "3c242824-4d16-40ab-a462-51416d94f141",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": false
+        },
+        {
+          "qid": "0d51c972-7d99-42a2-9229-35ff20329710",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "d9e2ed74-a64d-40b5-b84f-985fa7a6a412",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "ee934e1b-ed0d-43da-ba30-fcc8e00221bc",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "ec1874cf-318d-44d9-90d0-0cfa93357d7d",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9f0b4e4d-b509-49b3-8668-61673c82dd55",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": false
+        },
+        {
+          "qid": "ae4f5d36-ed39-4fbf-9d0b-c690ad900509",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "ebf8f3ae-18a5-466b-8015-b7c7035ff2d0",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "baec6063-e583-406a-929f-55ed823113cd",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "fb6e5787-153f-434e-9968-1efb25307773",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": false
+        },
+        {
+          "qid": "66f69766-8154-4e67-8ae7-ddbe7b51b4e1",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "EXISTS / NOT / OPTIONAL MATCH logic"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "2eed0a89-959c-496f-82f9-cdf75c5e26b6",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "f3b7da1d-e7c1-4f9c-ac7e-d46718ed685a",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "3742dfc9-a326-47df-a310-a74fb0787eeb",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "31e31b5a-bf54-46f4-87ad-89f7f87dddb0",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "d2c0e3eb-59de-485e-9fcf-a5020a7ccc4f",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "51b7cc57-6240-4fc0-8721-0657943f7f3b",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "8b31ab10-9c4f-43e3-8a80-7f7b72afbb50",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": false
+        },
+        {
+          "qid": "ffda78bf-7f61-49f8-8baa-fcf5fa7f22b8",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9e9b301e-5254-429a-8c90-4ac569d366d5",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "17aa8c66-c159-4de9-a20d-2b2997461f01",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "69f14a54-3a27-41d2-af32-6321978e5185",
+          "primary": "semantic validation or runtime error",
+          "tags": [
+            "semantic validation or runtime error"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9ae2c27d-978b-4d6e-8083-c888766b437e",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9c8ccca7-20f2-4968-9bf9-1baf24760391",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "19458780-c36b-4ab0-bdf5-85e64d32e92a",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "b6425354-9409-44b5-ad76-f821bf1b25b3",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "f161fe9f-5c9f-455b-9776-919fc57d2b9b",
+          "primary": "wrong node label",
+          "tags": [
+            "wrong node label",
+            "wrong relationship type",
+            "wrong constant value",
+            "path or traversal shape",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "99ec8a64-7cee-4be0-a6c5-f93d997fec5f",
+          "primary": "wrong node label",
+          "tags": [
+            "wrong node label",
+            "wrong relationship type",
+            "path or traversal shape"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "0f27bac2-7ba2-4b89-8e48-728266e1d9ec",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        }
+      ]
+    },
+    "cypherbench/pipeline": {
+      "file": "cypherbench_nl2cypher__gemini_gemini-2.5-flash__pipeline.json",
+      "questions": 210,
+      "failures": 56,
+      "primary": {
+        "missing DISTINCT": 20,
+        "same shape: different binding or projection": 15,
+        "wrong constant value": 8,
+        "EXISTS / NOT / OPTIONAL MATCH logic": 7,
+        "wrong node label": 2,
+        "path or traversal shape": 2,
+        "aggregation": 1,
+        "timeout": 1
+      },
+      "any_tag": {
+        "missing DISTINCT": 32,
+        "same shape: different binding or projection": 15,
+        "EXISTS / NOT / OPTIONAL MATCH logic": 9,
+        "wrong constant value": 9,
+        "path or traversal shape": 4,
+        "wrong node label": 2,
+        "aggregation": 2,
+        "wrong relationship type": 1,
+        "timeout": 1
+      },
+      "failures_whose_gold_query_is_not_reproducible_on_gql_core": 5,
+      "items": [
+        {
+          "qid": "dc90d247-c0f6-4411-904a-33c6da3058ce",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": false
+        },
+        {
+          "qid": "e19cf399-3883-4d92-aded-88d82fb3ccfb",
+          "primary": "EXISTS / NOT / OPTIONAL MATCH logic",
+          "tags": [
+            "EXISTS / NOT / OPTIONAL MATCH logic"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "452aab89-80b8-4b69-8d1a-4cbfd98dc024",
+          "primary": "EXISTS / NOT / OPTIONAL MATCH logic",
+          "tags": [
+            "EXISTS / NOT / OPTIONAL MATCH logic"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "0ca8e2d8-6c25-4108-a5aa-d5c2a83d711d",
+          "primary": "EXISTS / NOT / OPTIONAL MATCH logic",
+          "tags": [
+            "EXISTS / NOT / OPTIONAL MATCH logic",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "0486ad8d-495e-4116-b4b5-f0b38bf0914b",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "23c6b9bd-a6c1-4c0d-a1c9-d45625b56f6e",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "063f4b61-0848-4ec8-afa4-60f353894e05",
+          "primary": "wrong node label",
+          "tags": [
+            "wrong node label",
+            "wrong relationship type",
+            "wrong constant value",
+            "EXISTS / NOT / OPTIONAL MATCH logic",
+            "path or traversal shape",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "8617ce5b-3bfc-4e4f-b116-48668fc7f115",
+          "primary": "EXISTS / NOT / OPTIONAL MATCH logic",
+          "tags": [
+            "EXISTS / NOT / OPTIONAL MATCH logic",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "75235715-7599-4a36-ae17-f1f3ad87360a",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "cac64b27-c60f-40fa-a445-6ee4c0439748",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "207d7f3c-20b6-47cb-a7cd-b7b601ee5397",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9463bb29-dac8-443e-936a-0a5595badf78",
+          "primary": "aggregation",
+          "tags": [
+            "aggregation"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "146e59c8-f352-4106-95c3-0f4a58817b00",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "cacc052e-1269-4cd6-aaee-090ccfe0df00",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "6ae20ffc-ea3e-4016-b23b-f5ef993a143d",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "75487975-4100-4ed0-bc1b-c5dde0bcf230",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "d5554f22-cf6d-4219-ac4f-e1fd3e2b2ca9",
+          "primary": "path or traversal shape",
+          "tags": [
+            "path or traversal shape"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "2ed382b8-2a28-4c95-b467-dde2083a4e76",
+          "primary": "path or traversal shape",
+          "tags": [
+            "path or traversal shape"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "1112cd83-cc47-4b29-a890-268b3ec54fe3",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "6a90777b-5fad-4361-acb4-c46f3bfd5794",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "414df7ab-7e3f-4eda-9621-30d922b3e9ac",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "1ff5cd1e-bd91-47e4-9345-df0f0f1f0866",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "65d50423-560c-4e58-b251-40c4b3a5b221",
+          "primary": "EXISTS / NOT / OPTIONAL MATCH logic",
+          "tags": [
+            "EXISTS / NOT / OPTIONAL MATCH logic",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "60d7383c-7ef8-4d63-9cb3-46f89b88142f",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "path or traversal shape"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9f6ad178-b6e1-465a-b74b-8b09eada5392",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "2cbad489-8031-49bb-b828-9a2d30372d5c",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "7c0bcad4-b4fd-408a-85ba-809403fdd14c",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "7a6dfb56-d525-458c-a5e2-4a5d239d83f7",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "becaf6a1-ca37-4fa6-84a2-a7df4d49f8ed",
+          "primary": "EXISTS / NOT / OPTIONAL MATCH logic",
+          "tags": [
+            "EXISTS / NOT / OPTIONAL MATCH logic"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "85686def-9835-4ba3-8572-6ed416bdf6bb",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "6db2dcce-0919-4d72-8848-28377b43d41d",
+          "primary": "EXISTS / NOT / OPTIONAL MATCH logic",
+          "tags": [
+            "EXISTS / NOT / OPTIONAL MATCH logic",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "b46c6433-b591-4188-b6e1-b33b5cf340b3",
+          "primary": "wrong node label",
+          "tags": [
+            "wrong node label",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "3c242824-4d16-40ab-a462-51416d94f141",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": false
+        },
+        {
+          "qid": "0d51c972-7d99-42a2-9229-35ff20329710",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "d9e2ed74-a64d-40b5-b84f-985fa7a6a412",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "ee934e1b-ed0d-43da-ba30-fcc8e00221bc",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "ec1874cf-318d-44d9-90d0-0cfa93357d7d",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "EXISTS / NOT / OPTIONAL MATCH logic",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9f0b4e4d-b509-49b3-8668-61673c82dd55",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": false
+        },
+        {
+          "qid": "ebf8f3ae-18a5-466b-8015-b7c7035ff2d0",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "baec6063-e583-406a-929f-55ed823113cd",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "fb6e5787-153f-434e-9968-1efb25307773",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": false
+        },
+        {
+          "qid": "2eed0a89-959c-496f-82f9-cdf75c5e26b6",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "f3b7da1d-e7c1-4f9c-ac7e-d46718ed685a",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "3742dfc9-a326-47df-a310-a74fb0787eeb",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "31e31b5a-bf54-46f4-87ad-89f7f87dddb0",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "aggregation"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "51b7cc57-6240-4fc0-8721-0657943f7f3b",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "8b31ab10-9c4f-43e3-8a80-7f7b72afbb50",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": false
+        },
+        {
+          "qid": "5cc06786-edd4-4ca2-80c9-9cade85c645b",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "e5ea95a0-3fee-4dea-971b-e514457dd017",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9e9b301e-5254-429a-8c90-4ac569d366d5",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "17aa8c66-c159-4de9-a20d-2b2997461f01",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "69f14a54-3a27-41d2-af32-6321978e5185",
+          "primary": "timeout",
+          "tags": [
+            "timeout"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "9ae2c27d-978b-4d6e-8083-c888766b437e",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "19458780-c36b-4ab0-bdf5-85e64d32e92a",
+          "primary": "missing DISTINCT",
+          "tags": [
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "f161fe9f-5c9f-455b-9776-919fc57d2b9b",
+          "primary": "wrong constant value",
+          "tags": [
+            "wrong constant value",
+            "missing DISTINCT"
+          ],
+          "gold_reproducible_on_engine": true
+        },
+        {
+          "qid": "0f27bac2-7ba2-4b89-8e48-728266e1d9ec",
+          "primary": "same shape: different binding or projection",
+          "tags": [
+            "same shape: different binding or projection"
+          ],
+          "gold_reproducible_on_engine": true
+        }
+      ]
+    },
+    "metaqa/model-only": {
+      "file": "metaqa_nl2cypher__gemini_gemini-2.5-flash.json",
+      "questions": 300,
+      "failures": 139,
+      "primary": {
+        "answer: no rows": 128,
+        "answer: superset of the gold answers": 7,
+        "answer: disjoint from the gold answers": 3,
+        "semantic validation or runtime error": 1
+      },
+      "any_tag": {
+        "answer: no rows": 128,
+        "answer: superset of the gold answers": 7,
+        "answer: disjoint from the gold answers": 3,
+        "semantic validation or runtime error": 1
+      },
+      "failures_whose_gold_query_is_not_reproducible_on_gql_core": 0,
+      "items": [
+        {
+          "qid": "1hop-4496",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-5805",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-1261",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-5724",
+          "primary": "answer: disjoint from the gold answers",
+          "tags": [
+            "answer: disjoint from the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-7492",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-3338",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-760",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-1353",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-6327",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-8774",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-9591",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-1879",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-39",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-1671",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-5468",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-131",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-9922",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-8870",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-107",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-137",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-1154",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-8864",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-431",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-48",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-819",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-29",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-1025",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-716",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-194",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-1285",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-9736",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-7786",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-5878",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-13303",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-2160",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-3314",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-6284",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-4295",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-12025",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-2765",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-1571",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-5029",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-14069",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-4391",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-14789",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-4342",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-4275",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-2242",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-427",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-4655",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-9879",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-13216",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-7536",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-9701",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-14768",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-11488",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-3354",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-8000",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-2049",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-7094",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-12003",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-14624",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-929",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-4951",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-13589",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-2793",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-2914",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-11898",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-83",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-5811",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-5864",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-7674",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-14770",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-14088",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-5783",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-4936",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-14651",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-1945",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-3228",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-14687",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-9155",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-7952",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-568",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-7203",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-11725",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-9126",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-8001",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-9059",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-1538",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-2964",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "2hop-13128",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-5275",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-10566",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-6722",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-2761",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-5583",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-7104",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-4775",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-11413",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-10032",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-2095",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-13099",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-13522",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-7255",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-5898",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-2778",
+          "primary": "answer: disjoint from the gold answers",
+          "tags": [
+            "answer: disjoint from the gold answers"
+          ]
+        },
+        {
+          "qid": "3hop-6072",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-12617",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-11051",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-1094",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-4758",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-13436",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-11258",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-454",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "3hop-702",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-13078",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-3670",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-7248",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-7817",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-7582",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-1642",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-2500",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-11990",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-1340",
+          "primary": "answer: disjoint from the gold answers",
+          "tags": [
+            "answer: disjoint from the gold answers"
+          ]
+        },
+        {
+          "qid": "3hop-8116",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-6454",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-10658",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-7431",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-6458",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-3697",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-14178",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-1190",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-10685",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-13472",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-1932",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-3758",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-2227",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-944",
+          "primary": "semantic validation or runtime error",
+          "tags": [
+            "semantic validation or runtime error"
+          ]
+        },
+        {
+          "qid": "3hop-13900",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        }
+      ]
+    },
+    "metaqa/direction-corrected": {
+      "file": "metaqa_nl2cypher__gemini_gemini-2.5-flash__corrected.json",
+      "questions": 300,
+      "failures": 32,
+      "primary": {
+        "answer: no rows": 21,
+        "answer: superset of the gold answers": 7,
+        "answer: disjoint from the gold answers": 3,
+        "semantic validation or runtime error": 1
+      },
+      "any_tag": {
+        "answer: no rows": 21,
+        "answer: superset of the gold answers": 7,
+        "answer: disjoint from the gold answers": 3,
+        "semantic validation or runtime error": 1
+      },
+      "failures_whose_gold_query_is_not_reproducible_on_gql_core": 0,
+      "items": [
+        {
+          "qid": "1hop-4496",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-5805",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-5724",
+          "primary": "answer: disjoint from the gold answers",
+          "tags": [
+            "answer: disjoint from the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-7492",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-3338",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-6327",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-8774",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-1879",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-1671",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-5468",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-8870",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-8864",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-5275",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-2761",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-7104",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-10032",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-13522",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-7255",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-5898",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-2778",
+          "primary": "answer: disjoint from the gold answers",
+          "tags": [
+            "answer: disjoint from the gold answers"
+          ]
+        },
+        {
+          "qid": "3hop-6072",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-13436",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-454",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "3hop-3670",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-7248",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-11990",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-1340",
+          "primary": "answer: disjoint from the gold answers",
+          "tags": [
+            "answer: disjoint from the gold answers"
+          ]
+        },
+        {
+          "qid": "3hop-8116",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-10658",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-1932",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-944",
+          "primary": "semantic validation or runtime error",
+          "tags": [
+            "semantic validation or runtime error"
+          ]
+        },
+        {
+          "qid": "3hop-13900",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        }
+      ]
+    },
+    "metaqa/pipeline": {
+      "file": "metaqa_nl2cypher__gemini_gemini-2.5-flash__pipeline.json",
+      "questions": 300,
+      "failures": 26,
+      "primary": {
+        "answer: no rows": 13,
+        "answer: superset of the gold answers": 9,
+        "answer: disjoint from the gold answers": 3,
+        "answer: subset of the gold answers": 1
+      },
+      "any_tag": {
+        "answer: no rows": 13,
+        "answer: superset of the gold answers": 9,
+        "answer: disjoint from the gold answers": 3,
+        "answer: subset of the gold answers": 1
+      },
+      "failures_whose_gold_query_is_not_reproducible_on_gql_core": 0,
+      "items": [
+        {
+          "qid": "1hop-4496",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-5805",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-5724",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "1hop-7492",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-3338",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-6327",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-8774",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-1879",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-1671",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-5468",
+          "primary": "answer: disjoint from the gold answers",
+          "tags": [
+            "answer: disjoint from the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-8870",
+          "primary": "answer: disjoint from the gold answers",
+          "tags": [
+            "answer: disjoint from the gold answers"
+          ]
+        },
+        {
+          "qid": "1hop-5810",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "3hop-10032",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-13522",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-7255",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-13359",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-5898",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-11297",
+          "primary": "answer: superset of the gold answers",
+          "tags": [
+            "answer: superset of the gold answers"
+          ]
+        },
+        {
+          "qid": "3hop-6072",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-13436",
+          "primary": "answer: subset of the gold answers",
+          "tags": [
+            "answer: subset of the gold answers"
+          ]
+        },
+        {
+          "qid": "3hop-3670",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-7248",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-11990",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-1340",
+          "primary": "answer: disjoint from the gold answers",
+          "tags": [
+            "answer: disjoint from the gold answers"
+          ]
+        },
+        {
+          "qid": "3hop-8116",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        },
+        {
+          "qid": "3hop-1932",
+          "primary": "answer: no rows",
+          "tags": [
+            "answer: no rows"
+          ]
+        }
+      ]
+    }
+  }
+}

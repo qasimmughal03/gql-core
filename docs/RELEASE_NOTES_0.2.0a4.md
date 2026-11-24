@@ -32,5 +32,7 @@ A bug-fix release.
 | openCypher TCK `2024.3` | 3,879 / 3,879 supported scenarios pass (18 excluded); unchanged |
 | Test suite | 395 / 395 |
 
-The CypherBench and MetaQA results in the README were measured with the 0.2.0a3 engine and were
-not re-run for this release.
+At release, the CypherBench and MetaQA results in the README came from the 0.2.0a3 engine. They
+have since been re-run against this release, installed from PyPI. The NL results are identical,
+and the CypherBench gold check is 98.00% strict and 100% semantic. See
+[NL_BENCHMARKS.md](NL_BENCHMARKS.md).

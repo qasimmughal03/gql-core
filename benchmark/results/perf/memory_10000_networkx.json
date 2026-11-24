@@ -1,0 +1,32 @@
+{
+  "environment": {
+    "engine": {
+      "package": "gql-core",
+      "version": "0.2.0a4",
+      "python": "3.14.7",
+      "source": "installed package",
+      "location": "<env>/Lib/site-packages/gql_core",
+      "distribution_version": "0.2.0a4",
+      "installed_from": "package index (PyPI)",
+      "record_sha256": "7cb51adcbd85b533da893027a2e46f598d115210992b3875f80650b55d5f12d3"
+    },
+    "git_commit": "3dd6d90",
+    "python": "3.14.7",
+    "implementation": "CPython",
+    "os": "Windows 11 (10.0.26300)",
+    "machine": "AMD64",
+    "cpu": "13th Gen Intel(R) Core(TM) i5-1345U",
+    "logical_cpus": 12,
+    "ram_gb": 15.6,
+    "sqlite": "3.50.4",
+    "networkx": "3.5",
+    "pythonhashseed": "0"
+  },
+  "size": 10000,
+  "system": "networkx",
+  "nodes": 10000,
+  "edges": 53735,
+  "rss_delta_mb": 15.67578125,
+  "bytes_per_node_or_edge": 257.89986663528674,
+  "peak_working_set_mb": 88.66796875
+}

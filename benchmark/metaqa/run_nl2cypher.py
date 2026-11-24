@@ -29,7 +29,7 @@ import random
 import time
 from pathlib import Path
 
-from benchmark.cypherbench.common import QueryTimeout, avg, git_commit, run_with_timeout
+from benchmark.cypherbench.common import QueryTimeout, avg, engine_info, git_commit, run_with_timeout
 from benchmark.cypherbench.run_nl2cypher import clean_prediction
 from benchmark.metaqa.loader import HOPS, OBJECT_LABEL, load_graph, load_questions
 from benchmark.gemini_client import make_client, run_slug
@@ -223,6 +223,7 @@ def main() -> None:
         "pipeline": nl_pipeline.__doc__.strip() if args.pipeline else None,
         "retried": sum(1 for r in results if len(r.get("attempts", ())) > 1),
         "repaired": sum(1 for r in results if any(a["repairs"] for a in r.get("attempts", ()))),
+        "engine": engine_info(),
         "git_commit": git_commit(),
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "kb": {"entities": len(graph._nodes), "triples": len(triples)},

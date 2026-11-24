@@ -8,6 +8,33 @@ Benchmark datasets, prompts and evaluation harnesses are versioned with their re
 commit stamped in each results file), not with the package: a new benchmark run does not by
 itself produce a new GQL-Core release.
 
+## Unreleased (benchmarks, documentation and examples only; the package is unchanged)
+
+### Added
+- `benchmark/run_published.py`: runs any harness against an installed `gql-core` and refuses to
+  use this checkout's copy. Results files now record the engine (version, source, PyPI or not,
+  SHA-256 of the installed files) in an `engine` field.
+- CypherBench, MetaQA and the 2,348-query CypherBench gold check re-run against
+  `gql-core==0.2.0a4` from PyPI. Also: `verify_engine_parity` (completeness, full gold and actual
+  rows for every mismatch, `ORDER BY` tie analysis, strict and semantic scores),
+  `rerun_timeouts`, `nl_failure_taxonomy`, `nl_manifest` (dataset revisions, cache hashes), and
+  the answers workbook builder in `benchmark/workbook/`.
+- `apps/service-impact/`: a reference application, installable as its own package, with a
+  CLI, a JSON API and 38 integration tests, which run against the PyPI release in CI.
+- GQL-Core Performance Benchmark v1 (`benchmark/perf/`, `docs/PERFORMANCE.md`): a seeded graph
+  generator, 26 workloads with a correctness oracle, and SQLite, NetworkX and plain-Python
+  baselines. Measured: latency at 10k nodes, memory at 10k, 100k and 300k, and inference
+  scaling. The 100k latency run is kept but marked invalid (machine memory pressure), and 300k
+  latency was not completed.
+
+### Found (not fixed; candidates for a later release)
+- `InferenceEngine`'s default `max_facts=250_000` counts stored facts, so on larger graphs
+  `infer()` stops after one derived fact, with no warning.
+- Rule evaluation scans every fact of a predicate when an index key is absent, which makes
+  inference quadratic on hierarchies whose roots have no other outgoing relationships.
+- `PlanBuilder.expand()` directly after `.filter()` needs `from_var=`.
+- Typed-plan filters execute about 8× slower than the same filter in openCypher.
+
 ## [0.2.0a4] - 2026-11-24
 
 ### Fixed

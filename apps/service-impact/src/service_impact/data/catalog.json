@@ -1,0 +1,62 @@
+{
+  "catalog_version": "2026-11-01",
+  "description": "Fictional e-commerce platform used by the service-impact reference application.",
+  "teams": [
+    {"id": "team-platform", "name": "Platform", "lead": "Ana Ruiz", "channel": "#platform-oncall"},
+    {"id": "team-identity", "name": "Identity", "lead": "Kofi Mensah", "channel": "#identity"},
+    {"id": "team-catalog", "name": "Catalog", "lead": "Mei Lin", "channel": "#catalog"},
+    {"id": "team-checkout", "name": "Checkout", "lead": "Omar Haddad", "channel": "#checkout-oncall"},
+    {"id": "team-payments", "name": "Payments", "lead": "Sara Novak", "channel": "#payments-oncall"},
+    {"id": "team-growth", "name": "Growth", "lead": "Liam Byrne", "channel": "#growth"},
+    {"id": "team-data", "name": "Data", "lead": "Priya Shah", "channel": "#data-eng"}
+  ],
+  "components": [
+    {"id": "k8s-prod-eu", "kind": "deployment", "name": "Kubernetes prod-eu", "tier": 0, "owner": "team-platform"},
+    {"id": "k8s-prod-us", "kind": "deployment", "name": "Kubernetes prod-us", "tier": 0, "owner": "team-platform"},
+
+    {"id": "orders-db", "kind": "database", "name": "Orders Postgres", "tier": 1, "owner": "team-checkout"},
+    {"id": "catalog-db", "kind": "database", "name": "Catalog Postgres", "tier": 1, "owner": "team-catalog"},
+    {"id": "sessions-cache", "kind": "database", "name": "Sessions Redis", "tier": 1, "owner": "team-platform"},
+    {"id": "analytics-warehouse", "kind": "database", "name": "Analytics warehouse", "tier": 3, "owner": "team-data"},
+
+    {"id": "order-events", "kind": "queue", "name": "order-events topic", "tier": 2, "owner": "team-checkout"},
+    {"id": "payment-events", "kind": "queue", "name": "payment-events topic", "tier": 2, "owner": "team-payments"},
+
+    {"id": "stripe-api", "kind": "api", "name": "Stripe API (external)", "tier": 1, "owner": "team-payments"},
+    {"id": "public-gateway", "kind": "api", "name": "Public API gateway", "tier": 1, "owner": "team-platform",
+     "calls": ["auth-svc", "catalog-svc", "cart-svc", "orders-svc", "search-svc"], "deployed_on": ["k8s-prod-eu"]},
+
+    {"id": "web-storefront", "kind": "service", "name": "Web storefront", "tier": 1, "owner": "team-growth",
+     "calls": ["public-gateway", "recommendation-svc"], "deployed_on": ["k8s-prod-eu"]},
+    {"id": "mobile-bff", "kind": "service", "name": "Mobile backend-for-frontend", "tier": 1, "owner": "team-growth",
+     "calls": ["public-gateway"], "deployed_on": ["k8s-prod-eu"]},
+    {"id": "auth-svc", "kind": "service", "name": "Auth service", "tier": 1, "owner": "team-identity",
+     "reads_from": ["sessions-cache"], "writes_to": ["sessions-cache"], "deployed_on": ["k8s-prod-eu"]},
+    {"id": "catalog-svc", "kind": "service", "name": "Catalog service", "tier": 2, "owner": "team-catalog",
+     "reads_from": ["catalog-db"], "deployed_on": ["k8s-prod-eu"]},
+    {"id": "search-svc", "kind": "service", "name": "Search service", "tier": 2, "owner": "team-catalog",
+     "reads_from": ["catalog-db"], "deployed_on": ["k8s-prod-us"]},
+    {"id": "cart-svc", "kind": "service", "name": "Cart service", "tier": 2, "owner": "team-checkout",
+     "depends_on": ["auth-svc"], "calls": ["catalog-svc", "inventory-svc"], "reads_from": ["sessions-cache"],
+     "deployed_on": ["k8s-prod-eu"]},
+    {"id": "orders-svc", "kind": "service", "name": "Orders service", "tier": 1, "owner": "team-checkout",
+     "depends_on": ["auth-svc"], "calls": ["payments-svc", "inventory-svc", "notification-svc"],
+     "reads_from": ["orders-db"], "writes_to": ["orders-db", "order-events"], "deployed_on": ["k8s-prod-eu"]},
+    {"id": "payments-svc", "kind": "service", "name": "Payments service", "tier": 1, "owner": "team-payments",
+     "calls": ["stripe-api"], "reads_from": ["orders-db"], "writes_to": ["payment-events"],
+     "deployed_on": ["k8s-prod-eu"]},
+    {"id": "inventory-svc", "kind": "service", "name": "Inventory service", "tier": 2, "owner": "team-catalog",
+     "reads_from": ["catalog-db"], "writes_to": ["catalog-db"], "deployed_on": ["k8s-prod-eu"]},
+    {"id": "fulfillment-worker", "kind": "service", "name": "Fulfillment worker", "tier": 2, "owner": "team-checkout",
+     "reads_from": ["order-events"], "calls": ["inventory-svc", "notification-svc"], "deployed_on": ["k8s-prod-eu"]},
+    {"id": "notification-svc", "kind": "service", "name": "Notification service", "tier": 3, "owner": "team-growth",
+     "calls": ["orders-svc"], "deployed_on": ["k8s-prod-eu"]},
+    {"id": "recommendation-svc", "kind": "service", "name": "Recommendation service", "tier": 3, "owner": "team-growth",
+     "reads_from": ["analytics-warehouse"], "deployed_on": ["k8s-prod-us"]},
+    {"id": "analytics-etl", "kind": "service", "name": "Analytics ETL", "tier": 3, "owner": "team-data",
+     "reads_from": ["order-events", "payment-events"], "writes_to": ["analytics-warehouse"],
+     "deployed_on": ["k8s-prod-us"]},
+    {"id": "legacy-reporting", "kind": "service", "name": "Legacy reporting job", "tier": 3,
+     "reads_from": ["orders-db"]}
+  ]
+}

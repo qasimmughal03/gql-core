@@ -29,24 +29,50 @@ such cases as failures, and we report that score unchanged. Separately, each
 case is marked `tie_equivalent` only if Neo4j's rows form a valid ordering with
 exactly our key sequence. Both numbers are in the results file.
 
-Results: `benchmark/results/cypherbench_engine_parity.json`.
+Results: `benchmark/results/cypherbench_engine_parity.json`, with
+`cypherbench_engine_parity_failures.json`, which holds the full gold and actual rows of every
+query that did not match and its `ORDER BY` analysis, and `cypherbench_engine_parity_timeouts.json`.
 
-**Result (full test split, 2,348 questions, commit `43cab07`, `PYTHONHASHSEED=0`, 120 s timeout, CPU-only laptop):**
+**Result: `gql-core==0.2.0a4` from PyPI, full test split, `PYTHONHASHSEED=0`, 120 s limit, one
+process per graph, an Intel Core i5-1345U laptop running on battery.**
 
-| Graph | Questions | Official execution accuracy | Counting tied order as a match |
-| --- | --- | --- | --- |
-| nba | 270 | 98.15% | 100% |
-| flight_accident | 189 | 98.94% | 100% |
-| fictional_character | 385 | 100% | 100% |
-| company | 347 | 96.54% | 100% |
-| geography | 366 | 98.36% | 100% |
-| movie | 401 | 98.50% | 100% |
-| politics | 390 | 97.18% | 100% |
-| **All** | **2,348** | **98.21%** | **100%** |
+[`verify_engine_parity`](../benchmark/cypherbench/verify_engine_parity.py) checked the run against
+the official split: all 2,348 questions, each exactly once, with the expected count for each of
+the seven graphs and every gold query identical to the dataset's. The engine stamp is `0.2.0a4`,
+`installed package` from `package index (PyPI)`.
 
-There were no errors and no timeouts. All 42 official failures are `ORDER BY` queries whose rows
-differ from Neo4j's only in the order of rows with equal sort keys, which openCypher leaves
-undefined.
+| Graph | Questions | **Strict** (official, as run) | Mismatch: tied rows only | Timed out (correct without limit) | **Semantic** |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| nba | 270 | 98.15% | 5 | 0 | 100% |
+| flight_accident | 189 | 98.94% | 2 | 0 | 100% |
+| fictional_character | 385 | 100% | 0 | 0 | 100% |
+| company | 347 | 96.54% | 12 (4 at a `LIMIT`) | 0 | 100% |
+| geography | 366 | 98.36% | 6 (1 at a `LIMIT`) | 0 | 100% |
+| movie | 401 | 97.26% | 6 (3 at a `LIMIT`) | 5 | 100% |
+| politics | 390 | 97.18% | 11 (3 at a `LIMIT`) | 0 | 100% |
+| **All** | **2,348** | **98.00%** (2,301) | **42** | **5** | **100%** |
+
+- **Strict** is the official CypherBench execution accuracy, unchanged: an `ORDER BY` query must
+  return rows in Neo4j's order, and a timeout counts as a failure.
+- **Tied rows only.** Each of the 42 mismatches was re-run with its sort key exposed. In 31 the
+  rows are the same, and Neo4j's order is a valid ordering of our rows with the same sequence of
+  sort keys. In 11 the `LIMIT` cuts through a group of rows with equal keys, so which of them are
+  returned is undefined, and each gold row is one of ours with the key its position requires.
+  openCypher leaves both undefined. The harness's own tie check agrees on all 42.
+- **Timeouts.** The five timeouts are the movie graph's slowest queries, which pair two patterns
+  sharing both endpoints (`(n)-[:hasCastMember]->(m), (n)-[:writtenBy]->(m)`). Each took longer
+  than 120 s in this run, and again when re-run alone with the same limit. Run to completion, all
+  five return the correct answer, in 140–158 s. In the earlier run on 22 November, on the same
+  laptop, the same queries took 60–105 s, and the 2,348-query score was 98.21% with no timeouts.
+  Back to back during this run, on battery, the older engine (commit `43cab07`) took 148 s on one
+  of them and 0.2.0a4 took 138 s. So the timeouts come from the machine's state, not from a slower
+  release. The 120 s limit is wall-clock time and depends on the hardware.
+- **Semantic** counts the strict matches, the tie-only mismatches and the timed-out queries that
+  are correct without a limit: 2,348 of 2,348. No answer is wrong; 47 are in an undefined order or
+  slower than 120 s on this machine.
+
+There were no errors. Engine latency per graph, and why these five queries are slow, are covered
+in [PERFORMANCE.md](PERFORMANCE.md).
 
 ## Layer B: NL→Cypher with Gemini 2.5 Flash
 
@@ -91,11 +117,22 @@ every evaluated id are written to the results. **The pipeline was developed on a
 sample** (`--seed 1 --exclude-sample-seed 0`, sharing no questions with seed 0) and then run
 once on the seed-0 sample.
 
-### Results (CypherBench at commit `afce555`, MetaQA at `67cd6f8`)
+### Results (gql-core 0.2.0a4 from PyPI)
 
-MetaQA has no dates, so the one engine change between the two commits (gap 10 below) does not
-affect it. The dev-sample column was measured during development (CypherBench at `9969830`,
-MetaQA at `f084a69`), before the final engine fixes.
+These are the scores of the seed-0 samples, run against `gql-core==0.2.0a4` installed from PyPI
+into a clean environment, through `benchmark/run_published.py` (see the README's *Reproduce* section).
+Every question's query, answer and score is identical to the earlier runs from this repository's
+commits `afce555` (CypherBench) and `67cd6f8` (MetaQA). That's expected: the model's answers come
+from the same cache, and 0.2.0a4's only engine change, `EXISTS` with a relationship of the
+enclosing `MATCH`, does not change any final answer here. The dev-sample column was measured
+during development (CypherBench at `9969830`, MetaQA at `f084a69`), before the final engine
+fixes.
+
+Dataset revisions: CypherBench `megagonlabs/cypherbench` at `fd80c26a9f54`, MetaQA
+`camazlucas/MetaQA` at `f83854092893`. The cached model responses are identified by SHA-256 in
+[`nl_benchmark_manifest.json`](../benchmark/results/nl_benchmark_manifest.json), with the prompt
+and pipeline source hashes and each configuration's results file. The cache itself is not
+published.
 
 | Benchmark (metric) | Sample | Model only | + direction correction | **GQL-Core pipeline** | Dev sample, pipeline |
 | --- | --- | ---: | ---: | ---: | ---: |
@@ -166,6 +203,50 @@ The weakest question types are `ORDER BY` questions (12.5% of 8) and `OPTIONAL M
 questions (38% of 21). Every question, with the expected answer, each configuration's query and
 answer, and the cause above, is in
 [`gemini_nl_benchmark_answers.xlsx`](../benchmark/results/gemini_nl_benchmark_answers.xlsx).
+
+### How the wrong queries differ from the gold queries
+
+[`benchmark/nl_failure_taxonomy.py`](../benchmark/nl_failure_taxonomy.py) compares each wrong
+CypherBench query structurally with its gold query. It looks at node labels, relationship types,
+relationship directions (compared as source label, type and target label, whichever end the
+pattern is written from), string constants, `EXISTS`, `NOT` and `OPTIONAL MATCH`,
+variable-length paths, aggregates, `DISTINCT`, `ORDER BY` and `LIMIT`. Each failure gets every
+tag that applies and one primary category, by a fixed priority. This is a heuristic, and it
+describes how a query differs, not who is at fault. MetaQA has no gold queries, so its failures
+are classified by how the answer set differs. Full output, per question:
+[`nl_failure_taxonomy.json`](../benchmark/results/nl_failure_taxonomy.json).
+
+| CypherBench, primary category | Model only | + direction correction | Pipeline |
+| --- | ---: | ---: | ---: |
+| Missing `DISTINCT` (duplicates, or `count(x)` where gold has `count(DISTINCT x)`) | 27 | 29 | 20 |
+| Same labels, types, constants and clauses; different variable binding or projection | 13 | 13 | 15 |
+| Wrong constant value (for example `'Future Diary'` for `'Future Diary universe'`) | 15 | 16 | 8 |
+| `EXISTS` / `NOT` / `OPTIONAL MATCH` logic differs | 4 | 4 | 7 |
+| Relationship direction | 14 | 1 | 0 |
+| Wrong node label | 4 | 4 | 2 |
+| Path or traversal shape | 2 | 2 | 2 |
+| Aggregation | 1 | 1 | 1 |
+| Semantic validation or runtime error | 1 | 1 | 0 |
+| Timeout | 0 | 0 | 1 |
+| **Wrong answers** | **81** | **71** | **56** |
+
+There are no syntax errors in any configuration. Direction correction removes 13 of the 14
+direction errors, and the pipeline the last one. What remains is mostly a different reading of
+the question: duplicates the gold query removes, a different value or entity, and different
+optional or negated logic. The heuristic cannot see a reversed relationship between two nodes
+with the same label, like `(:Character)-[:killedBy]->(:Character)`. Those cases fall into "same
+labels, types, constants and clauses". Five of the 210 sampled questions have a gold query that
+GQL-Core does not reproduce exactly, all because of `ORDER BY` ties (Layer A). Those questions
+are flagged in the taxonomy file.
+
+| MetaQA, primary category | Model only | + direction correction | Pipeline |
+| --- | ---: | ---: | ---: |
+| No rows | 128 | 21 | 13 |
+| More answers than gold | 7 | 7 | 9 |
+| No answer in common with gold | 3 | 3 | 3 |
+| Fewer answers than gold | 0 | 0 | 1 |
+| Runtime error | 1 | 1 | 0 |
+| **Wrong answers** | **139** | **32** | **26** |
 
 ## Engine gaps found and fixed by these benchmarks
 

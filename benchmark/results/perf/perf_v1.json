@@ -1,0 +1,4300 @@
+{
+  "benchmark": "GQL-Core Performance Benchmark v1",
+  "workload_version": "1.0",
+  "generator_version": "1.0",
+  "seed": 42,
+  "environment": {
+    "engine": {
+      "package": "gql-core",
+      "version": "0.2.0a4",
+      "python": "3.14.7",
+      "source": "installed package",
+      "location": "<env>/Lib/site-packages/gql_core",
+      "distribution_version": "0.2.0a4",
+      "installed_from": "package index (PyPI)",
+      "record_sha256": "7cb51adcbd85b533da893027a2e46f598d115210992b3875f80650b55d5f12d3"
+    },
+    "git_commit": "3dd6d90",
+    "python": "3.14.7",
+    "implementation": "CPython",
+    "os": "Windows 11 (10.0.26300)",
+    "machine": "AMD64",
+    "cpu": "13th Gen Intel(R) Core(TM) i5-1345U",
+    "logical_cpus": 12,
+    "ram_gb": 15.6,
+    "sqlite": "3.50.4",
+    "networkx": "3.5",
+    "pythonhashseed": "0"
+  },
+  "timestamp": "2026-11-24T11:36:06Z",
+  "sizes": [
+    {
+      "workload_version": "1.0",
+      "generator_version": "1.0",
+      "seed": 42,
+      "budget_seconds": 5.0,
+      "size": 10000,
+      "graph": {
+        "generator_version": "1.0",
+        "seed": 42,
+        "total_nodes": 10000,
+        "nodes": 10000,
+        "edges": 53735,
+        "nodes_by_label": {
+          "Person": 9147,
+          "Company": 833,
+          "City": 20
+        },
+        "edges_by_type": {
+          "KNOWS": 33859,
+          "WORKS_AT": 9147,
+          "LIVES_IN": 9147,
+          "LOCATED_IN": 833,
+          "SUBSIDIARY_OF": 749
+        },
+        "knows_out_degree": {
+          "mean": 3.702,
+          "median": 2,
+          "p90": 9,
+          "p99": 18,
+          "max": 300,
+          "zero": 1996
+        },
+        "knows_in_degree": {
+          "mean": 3.702,
+          "median": 2,
+          "p90": 7,
+          "p99": 27,
+          "max": 1313,
+          "zero": 1187
+        }
+      },
+      "generate_seconds": 0.10947650001617149,
+      "load": {
+        "gql_core_from_dict_s": 0.235608,
+        "gql_core_add_node_edge_s": 0.1203832,
+        "sqlite_memory_with_indexes_s": 0.0869369,
+        "networkx_s": 0.131933
+      },
+      "materialize_inferred": {
+        "edges_added": 2030,
+        "seconds": 0.4334612
+      },
+      "workloads": {
+        "W01_lookup": {
+          "category": "exact property lookup",
+          "description": "one person by id (no property index: label scan + filter)",
+          "query": "MATCH (p:Person {id: 'p4573'}) RETURN p.name AS name, p.age AS age",
+          "sql": "SELECT name, age FROM person WHERE id = 'p4573'",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              "Person 4573",
+              57
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 23.1229,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 7.0201,
+              "p25_ms": 9.0618,
+              "median_ms": 10.0778,
+              "p75_ms": 11.7924,
+              "p90_ms": 13.5988,
+              "p95_ms": 14.7804,
+              "p99_ms": 17.1591,
+              "max_ms": 17.8852,
+              "mean_ms": 10.5829235,
+              "stdev_ms": 2.197676746774721
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0052,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0003,
+              "p25_ms": 0.0003,
+              "median_ms": 0.0003,
+              "p75_ms": 0.0003,
+              "p90_ms": 0.0004,
+              "p95_ms": 0.0004,
+              "p99_ms": 0.0004,
+              "max_ms": 0.0006,
+              "mean_ms": 0.000318,
+              "stdev_ms": 4.342150545154315e-05
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.0911,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0023,
+              "p25_ms": 0.0024,
+              "median_ms": 0.0024,
+              "p75_ms": 0.0025,
+              "p90_ms": 0.0027,
+              "p95_ms": 0.0028,
+              "p99_ms": 0.0046,
+              "max_ms": 0.0109,
+              "mean_ms": 0.0025595,
+              "stdev_ms": 0.0007662541858854245
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 0.0213,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0003,
+              "p25_ms": 0.0004,
+              "median_ms": 0.0004,
+              "p75_ms": 0.0005,
+              "p90_ms": 0.0005,
+              "p95_ms": 0.0006,
+              "p99_ms": 0.0006,
+              "max_ms": 0.0249,
+              "mean_ms": 0.0005505,
+              "stdev_ms": 0.001731528429890075
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.5357,
+            "validate": 0.0468,
+            "plan": 0.0226,
+            "execute": 8.1913,
+            "samples": 100
+          }
+        },
+        "W02a_label_count": {
+          "category": "label scan",
+          "description": "count every Company",
+          "query": "MATCH (c:Company) RETURN count(c) AS n",
+          "sql": "SELECT count(*) FROM company",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              833
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 3.7618,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 1.4932,
+              "p25_ms": 1.7978,
+              "median_ms": 1.8448,
+              "p75_ms": 2.0063,
+              "p90_ms": 2.4657,
+              "p95_ms": 3.5068,
+              "p99_ms": 4.3882,
+              "max_ms": 5.49,
+              "mean_ms": 2.036139,
+              "stdev_ms": 0.6304806339037212
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.004,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0001,
+              "p25_ms": 0.0002,
+              "median_ms": 0.0002,
+              "p75_ms": 0.0002,
+              "p90_ms": 0.0002,
+              "p95_ms": 0.0003,
+              "p99_ms": 0.0003,
+              "max_ms": 0.0004,
+              "mean_ms": 0.000207,
+              "stdev_ms": 3.818758250120623e-05
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.373,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0014,
+              "p25_ms": 0.0015,
+              "median_ms": 0.0016,
+              "p75_ms": 0.0016,
+              "p90_ms": 0.0018,
+              "p95_ms": 0.0019,
+              "p99_ms": 0.0024,
+              "max_ms": 0.0055,
+              "mean_ms": 0.0016305,
+              "stdev_ms": 0.00031863362492786816
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 1.0363,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.9862,
+              "p25_ms": 1.9264,
+              "median_ms": 2.47975,
+              "p75_ms": 2.7629,
+              "p90_ms": 3.4993,
+              "p95_ms": 4.3927,
+              "p99_ms": 6.3518,
+              "max_ms": 16.4566,
+              "mean_ms": 2.4838435,
+              "stdev_ms": 1.4319047689684967
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.612,
+            "validate": 0.0476,
+            "plan": 0.0378,
+            "execute": 3.2967,
+            "samples": 100
+          }
+        },
+        "W02b_label_rows": {
+          "category": "label scan",
+          "description": "return every City id",
+          "query": "MATCH (x:City) RETURN x.id AS id",
+          "sql": "SELECT id FROM city",
+          "typed_plan": false,
+          "rows_expected": 20,
+          "expected": null,
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 0.6265,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.2468,
+              "p25_ms": 0.259,
+              "median_ms": 0.2626,
+              "p75_ms": 0.2816,
+              "p90_ms": 0.4022,
+              "p95_ms": 0.5599,
+              "p99_ms": 0.7493,
+              "max_ms": 0.9828,
+              "mean_ms": 0.303997,
+              "stdev_ms": 0.11180457596643877
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0068,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0017,
+              "p25_ms": 0.0018,
+              "median_ms": 0.0018,
+              "p75_ms": 0.0018,
+              "p90_ms": 0.0019,
+              "p95_ms": 0.002,
+              "p99_ms": 0.0021,
+              "max_ms": 0.0022,
+              "mean_ms": 0.00181,
+              "stdev_ms": 8.68198620259849e-05
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.1049,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.02,
+              "p25_ms": 0.0202,
+              "median_ms": 0.0204,
+              "p75_ms": 0.0206,
+              "p90_ms": 0.0211,
+              "p95_ms": 0.0218,
+              "p99_ms": 0.0348,
+              "max_ms": 0.1305,
+              "mean_ms": 0.021329,
+              "stdev_ms": 0.008007958290344643
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.1802,
+            "validate": 0.0212,
+            "plan": 0.0128,
+            "execute": 0.0345,
+            "samples": 100
+          }
+        },
+        "W03a_filter_selective": {
+          "category": "predicate filtering",
+          "description": "age = 42 AND score > 0.9 (about 0.16% of people)",
+          "query": "MATCH (p:Person) WHERE p.age = 42 AND p.score > 0.9 RETURN p.id AS id",
+          "sql": "SELECT id FROM person WHERE age = 42 AND score > 0.9",
+          "typed_plan": false,
+          "rows_expected": 18,
+          "expected": null,
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 21.0402,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 5.5744,
+              "p25_ms": 8.3272,
+              "median_ms": 9.4073,
+              "p75_ms": 10.4608,
+              "p90_ms": 12.1336,
+              "p95_ms": 12.6089,
+              "p99_ms": 14.2425,
+              "max_ms": 17.483,
+              "mean_ms": 9.512789,
+              "stdev_ms": 1.8979433041870726
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.379,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.327,
+              "p25_ms": 0.3403,
+              "median_ms": 0.34425,
+              "p75_ms": 0.3502,
+              "p90_ms": 0.3579,
+              "p95_ms": 0.3865,
+              "p99_ms": 0.4758,
+              "max_ms": 0.5969,
+              "mean_ms": 0.349952,
+              "stdev_ms": 0.026139740360811795
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.6543,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.2849,
+              "p25_ms": 0.2882,
+              "median_ms": 0.29065,
+              "p75_ms": 0.2964,
+              "p90_ms": 0.3299,
+              "p95_ms": 0.3653,
+              "p99_ms": 0.4671,
+              "max_ms": 0.5143,
+              "mean_ms": 0.302599,
+              "stdev_ms": 0.035305670235158675
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 0.5129,
+            "validate": 0.0559,
+            "plan": 0.0,
+            "execute": 9.1473,
+            "samples": 100
+          }
+        },
+        "W03b_filter_broad_count": {
+          "category": "predicate filtering",
+          "description": "age < 60 AND active, counted (about 53%)",
+          "query": "MATCH (p:Person) WHERE p.age < 60 AND p.active = true RETURN count(p) AS n",
+          "sql": "SELECT count(*) FROM person WHERE age < 60 AND active = 1",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              4885
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 102.3187,
+              "warmup_runs": 2,
+              "samples": 44,
+              "min_ms": 91.5443,
+              "p25_ms": 97.6129,
+              "median_ms": 104.0082,
+              "p75_ms": 109.8931,
+              "p90_ms": 168.8222,
+              "p95_ms": 201.926,
+              "p99_ms": null,
+              "max_ms": 233.8587,
+              "mean_ms": 115.47558181818181,
+              "stdev_ms": 34.77296937413521
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.5491,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.4771,
+              "p25_ms": 0.4934,
+              "median_ms": 0.51625,
+              "p75_ms": 0.5558,
+              "p90_ms": 0.6652,
+              "p95_ms": 0.9038,
+              "p99_ms": 1.7672,
+              "max_ms": 1.8023,
+              "mean_ms": 0.5758795,
+              "stdev_ms": 0.20377173067149001
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 37.15,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.348,
+              "p25_ms": 0.3573,
+              "median_ms": 0.3603,
+              "p75_ms": 0.3665,
+              "p90_ms": 0.4145,
+              "p95_ms": 0.5143,
+              "p99_ms": 0.5725,
+              "max_ms": 0.5941,
+              "mean_ms": 0.378032,
+              "stdev_ms": 0.05006370691178135
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 0.5671,
+            "validate": 0.0598,
+            "plan": 0.0,
+            "execute": 100.71,
+            "samples": 24
+          }
+        },
+        "W03c_filter_broad_rows": {
+          "category": "predicate filtering",
+          "description": "age < 60, every matching id returned (about 67%)",
+          "query": "MATCH (p:Person) WHERE p.age < 60 RETURN p.id AS id",
+          "sql": "SELECT id FROM person WHERE age < 60",
+          "typed_plan": false,
+          "rows_expected": 6092,
+          "expected": null,
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 30.3867,
+              "warmup_runs": 2,
+              "samples": 151,
+              "min_ms": 21.6436,
+              "p25_ms": 25.0967,
+              "median_ms": 30.3258,
+              "p75_ms": 35.4724,
+              "p90_ms": 39.2183,
+              "p95_ms": 43.2482,
+              "p99_ms": 108.6498,
+              "max_ms": 125.0409,
+              "mean_ms": 33.3096880794702,
+              "stdev_ms": 15.750368486829876
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.714,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.6465,
+              "p25_ms": 0.6838,
+              "median_ms": 0.6995,
+              "p75_ms": 0.7283,
+              "p90_ms": 1.0189,
+              "p95_ms": 1.4272,
+              "p99_ms": 1.7222,
+              "max_ms": 1.8352,
+              "mean_ms": 0.7844295,
+              "stdev_ms": 0.23244514061759536
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 2.8243,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 2.4852,
+              "p25_ms": 2.7091,
+              "median_ms": 3.10475,
+              "p75_ms": 3.784,
+              "p90_ms": 4.7238,
+              "p95_ms": 5.0571,
+              "p99_ms": 5.5421,
+              "max_ms": 5.5685,
+              "mean_ms": 3.37219,
+              "stdev_ms": 0.8192902273818583
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.5078,
+            "validate": 0.0583,
+            "plan": 0.0321,
+            "execute": 19.5255,
+            "samples": 100
+          }
+        },
+        "W04a_hop_typical": {
+          "category": "single-hop traversal",
+          "description": "people a typical person (out-degree 4) knows",
+          "query": "MATCH (p:Person {id: 'p3052'})-[:KNOWS]->(f:Person) RETURN f.id AS id",
+          "sql": "SELECT dst FROM knows WHERE src = 'p3052'",
+          "typed_plan": false,
+          "rows_expected": 4,
+          "expected": [
+            [
+              "p1037"
+            ],
+            [
+              "p127"
+            ],
+            [
+              "p424"
+            ],
+            [
+              "p6872"
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 13.9948,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 6.8903,
+              "p25_ms": 9.4196,
+              "median_ms": 10.24165,
+              "p75_ms": 12.3737,
+              "p90_ms": 13.6955,
+              "p95_ms": 14.7277,
+              "p99_ms": 15.8229,
+              "max_ms": 15.9761,
+              "mean_ms": 10.854273,
+              "stdev_ms": 1.9993651003741086
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.005,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0003,
+              "p25_ms": 0.0003,
+              "median_ms": 0.0004,
+              "p75_ms": 0.0004,
+              "p90_ms": 0.0004,
+              "p95_ms": 0.0004,
+              "p99_ms": 0.0006,
+              "max_ms": 0.0007,
+              "mean_ms": 0.0003605,
+              "stdev_ms": 6.33229736744483e-05
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.0779,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.003,
+              "p25_ms": 0.0031,
+              "median_ms": 0.0032,
+              "p75_ms": 0.0032,
+              "p90_ms": 0.0033,
+              "p95_ms": 0.0035,
+              "p99_ms": 0.0043,
+              "max_ms": 0.0072,
+              "mean_ms": 0.0032105,
+              "stdev_ms": 0.00034704748925614624
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 0.0086,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0005,
+              "p25_ms": 0.0005,
+              "median_ms": 0.0006,
+              "p75_ms": 0.0006,
+              "p90_ms": 0.0006,
+              "p95_ms": 0.0007,
+              "p99_ms": 0.0008,
+              "max_ms": 0.0008,
+              "mean_ms": 0.0005695,
+              "stdev_ms": 6.512261338328913e-05
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.5484,
+            "validate": 0.0455,
+            "plan": 0.0248,
+            "execute": 8.8273,
+            "samples": 100
+          }
+        },
+        "W04b_hop_hub": {
+          "category": "single-hop traversal",
+          "description": "people a hub (out-degree 300) knows",
+          "query": "MATCH (p:Person {id: 'p0'})-[:KNOWS]->(f:Person) RETURN f.id AS id",
+          "sql": "SELECT dst FROM knows WHERE src = 'p0'",
+          "typed_plan": false,
+          "rows_expected": 300,
+          "expected": null,
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 10.5775,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 5.4763,
+              "p25_ms": 9.0874,
+              "median_ms": 9.88,
+              "p75_ms": 10.6847,
+              "p90_ms": 12.6281,
+              "p95_ms": 13.954,
+              "p99_ms": 15.9844,
+              "max_ms": 16.6954,
+              "mean_ms": 10.097628,
+              "stdev_ms": 2.0001993547166856
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0117,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0082,
+              "p25_ms": 0.0085,
+              "median_ms": 0.0086,
+              "p75_ms": 0.0088,
+              "p90_ms": 0.0118,
+              "p95_ms": 0.0148,
+              "p99_ms": 0.0191,
+              "max_ms": 0.1339,
+              "mean_ms": 0.009808,
+              "stdev_ms": 0.009015895287723565
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.1854,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.1105,
+              "p25_ms": 0.1112,
+              "median_ms": 0.1117,
+              "p75_ms": 0.1129,
+              "p90_ms": 0.1172,
+              "p95_ms": 0.1295,
+              "p99_ms": 0.2192,
+              "max_ms": 0.3751,
+              "mean_ms": 0.1166265,
+              "stdev_ms": 0.02389050499454694
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 0.0156,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0093,
+              "p25_ms": 0.0097,
+              "median_ms": 0.0098,
+              "p75_ms": 0.0099,
+              "p90_ms": 0.01,
+              "p95_ms": 0.0101,
+              "p99_ms": 0.0104,
+              "max_ms": 0.0151,
+              "mean_ms": 0.0098055,
+              "stdev_ms": 0.00042440588091919034
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.3967,
+            "validate": 0.0318,
+            "plan": 0.018,
+            "execute": 5.7965,
+            "samples": 100
+          }
+        },
+        "W05a_two_hop_distinct": {
+          "category": "multi-hop traversal",
+          "description": "distinct friends-of-friends of a typical person",
+          "query": "MATCH (p:Person {id: 'p3052'})-[:KNOWS]->(:Person)-[:KNOWS]->(f:Person) RETURN DISTINCT f.id AS id",
+          "sql": "SELECT DISTINCT k2.dst FROM knows k1 JOIN knows k2 ON k2.src = k1.dst WHERE k1.src = 'p3052'",
+          "typed_plan": false,
+          "rows_expected": 8,
+          "expected": [
+            [
+              "p227"
+            ],
+            [
+              "p289"
+            ],
+            [
+              "p3094"
+            ],
+            [
+              "p45"
+            ],
+            [
+              "p4566"
+            ],
+            [
+              "p54"
+            ],
+            [
+              "p584"
+            ],
+            [
+              "p6244"
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 35.952,
+              "warmup_runs": 2,
+              "samples": 158,
+              "min_ms": 20.1574,
+              "p25_ms": 25.3216,
+              "median_ms": 29.91335,
+              "p75_ms": 35.979,
+              "p90_ms": 42.5061,
+              "p95_ms": 48.006,
+              "p99_ms": 56.9051,
+              "max_ms": 63.0261,
+              "mean_ms": 31.680914556962023,
+              "stdev_ms": 8.30317332045598
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0327,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0101,
+              "p25_ms": 0.0105,
+              "median_ms": 0.0108,
+              "p75_ms": 0.0112,
+              "p90_ms": 0.0118,
+              "p95_ms": 0.0123,
+              "p99_ms": 0.0506,
+              "max_ms": 0.3035,
+              "mean_ms": 0.013294,
+              "stdev_ms": 0.021720910518871997
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.795,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.011,
+              "p25_ms": 0.0116,
+              "median_ms": 0.012,
+              "p75_ms": 0.0268,
+              "p90_ms": 0.0283,
+              "p95_ms": 0.0291,
+              "p99_ms": 0.0411,
+              "max_ms": 0.096,
+              "mean_ms": 0.017989,
+              "stdev_ms": 0.009888030376349886
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 0.0194,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0017,
+              "p25_ms": 0.0018,
+              "median_ms": 0.0019,
+              "p75_ms": 0.0019,
+              "p90_ms": 0.002,
+              "p95_ms": 0.0021,
+              "p99_ms": 0.0022,
+              "max_ms": 0.0023,
+              "mean_ms": 0.001882,
+              "stdev_ms": 0.00011723789326873138
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 0.6584,
+            "validate": 0.0488,
+            "plan": 0.0,
+            "execute": 36.0337,
+            "samples": 66
+          }
+        },
+        "W05b_three_hop_count": {
+          "category": "multi-hop traversal",
+          "description": "distinct people exactly three KNOWS hops away",
+          "query": "MATCH (p:Person {id: 'p3052'})-[:KNOWS]->(:Person)-[:KNOWS]->(:Person)-[:KNOWS]->(f:Person) RETURN count(DISTINCT f) AS n",
+          "sql": null,
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              53
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 37.3119,
+              "warmup_runs": 2,
+              "samples": 142,
+              "min_ms": 22.8214,
+              "p25_ms": 27.8186,
+              "median_ms": 31.94445,
+              "p75_ms": 40.4363,
+              "p90_ms": 52.5392,
+              "p95_ms": 55.1031,
+              "p99_ms": 61.3664,
+              "max_ms": 62.9421,
+              "mean_ms": 35.40751408450704,
+              "stdev_ms": 9.77824718372579
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0515,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0229,
+              "p25_ms": 0.0241,
+              "median_ms": 0.0246,
+              "p75_ms": 0.0255,
+              "p90_ms": 0.0303,
+              "p95_ms": 0.0336,
+              "p99_ms": 0.0479,
+              "max_ms": 0.1995,
+              "mean_ms": 0.0267425,
+              "stdev_ms": 0.013192671322865807
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 0.7157,
+            "validate": 0.0425,
+            "plan": 0.0,
+            "execute": 31.5036,
+            "samples": 73
+          }
+        },
+        "W06a_var_len_1_3": {
+          "category": "variable-length path",
+          "description": "distinct people within 1..3 KNOWS hops",
+          "query": "MATCH (p:Person {id: 'p3052'})-[:KNOWS*1..3]->(f:Person) RETURN count(DISTINCT f) AS n",
+          "sql": "WITH RECURSIVE r(n, d) AS (SELECT dst, 1 FROM knows WHERE src = 'p3052' UNION SELECT k.dst, r.d + 1 FROM r JOIN knows k ON k.src = r.n WHERE r.d < 3) SELECT count(DISTINCT n) FROM r",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              65
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 31.0724,
+              "warmup_runs": 2,
+              "samples": 165,
+              "min_ms": 20.6583,
+              "p25_ms": 25.8673,
+              "median_ms": 28.9877,
+              "p75_ms": 33.7725,
+              "p90_ms": 39.5733,
+              "p95_ms": 42.0484,
+              "p99_ms": 50.597,
+              "max_ms": 55.207,
+              "mean_ms": 30.361624848484848,
+              "stdev_ms": 6.708424206788078
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0443,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0182,
+              "p25_ms": 0.0186,
+              "median_ms": 0.0188,
+              "p75_ms": 0.0189,
+              "p90_ms": 0.0201,
+              "p95_ms": 0.0211,
+              "p99_ms": 0.0251,
+              "max_ms": 0.2026,
+              "mean_ms": 0.0199975,
+              "stdev_ms": 0.013029789747124524
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 45.2378,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0569,
+              "p25_ms": 0.0688,
+              "median_ms": 0.1194,
+              "p75_ms": 0.1909,
+              "p90_ms": 0.2132,
+              "p95_ms": 0.2379,
+              "p99_ms": 0.2603,
+              "max_ms": 0.4535,
+              "mean_ms": 0.1333785,
+              "stdev_ms": 0.06856393478730335
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 0.3534,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0125,
+              "p25_ms": 0.0132,
+              "median_ms": 0.0138,
+              "p75_ms": 0.0205,
+              "p90_ms": 0.0215,
+              "p95_ms": 0.0235,
+              "p99_ms": 0.0391,
+              "max_ms": 0.1531,
+              "mean_ms": 0.0171285,
+              "stdev_ms": 0.010875542509427835
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 0.6402,
+            "validate": 0.0393,
+            "plan": 0.0,
+            "execute": 28.9652,
+            "samples": 78
+          }
+        },
+        "W06b_var_len_unbounded": {
+          "category": "variable-length path",
+          "description": "every ancestor of a leaf company",
+          "query": "MATCH (c:Company {id: 'c832'})-[:SUBSIDIARY_OF*]->(r:Company) RETURN r.id AS id",
+          "sql": "WITH RECURSIVE a(id) AS (SELECT parent FROM company WHERE id = 'c832' UNION SELECT c.parent FROM a JOIN company c ON c.id = a.id WHERE c.parent IS NOT NULL) SELECT id FROM a WHERE id IS NOT NULL",
+          "typed_plan": false,
+          "rows_expected": 5,
+          "expected": [
+            [
+              "c0"
+            ],
+            [
+              "c12"
+            ],
+            [
+              "c2"
+            ],
+            [
+              "c207"
+            ],
+            [
+              "c51"
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 1.6129,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.8051,
+              "p25_ms": 0.8558,
+              "median_ms": 0.91555,
+              "p75_ms": 1.1336,
+              "p90_ms": 1.6777,
+              "p95_ms": 2.0979,
+              "p99_ms": 2.4822,
+              "max_ms": 2.7698,
+              "mean_ms": 1.096834,
+              "stdev_ms": 0.40556559172339773
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.007,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0007,
+              "p25_ms": 0.0008,
+              "median_ms": 0.0008,
+              "p75_ms": 0.0009,
+              "p90_ms": 0.0009,
+              "p95_ms": 0.0009,
+              "p99_ms": 0.001,
+              "max_ms": 0.0012,
+              "mean_ms": 0.0008475,
+              "stdev_ms": 6.794728965053921e-05
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.1654,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0119,
+              "p25_ms": 0.0121,
+              "median_ms": 0.0122,
+              "p75_ms": 0.0123,
+              "p90_ms": 0.0125,
+              "p95_ms": 0.0127,
+              "p99_ms": 0.0168,
+              "max_ms": 0.0623,
+              "mean_ms": 0.012608,
+              "stdev_ms": 0.003742911021460818
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 0.6888,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0057,
+              "p25_ms": 0.0059,
+              "median_ms": 0.006,
+              "p75_ms": 0.0062,
+              "p90_ms": 0.0064,
+              "p95_ms": 0.0065,
+              "p99_ms": 0.007,
+              "max_ms": 0.0072,
+              "mean_ms": 0.006081,
+              "stdev_ms": 0.00024869306626046123
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.5373,
+            "validate": 0.0406,
+            "plan": 0.0236,
+            "execute": 0.8184,
+            "samples": 100
+          }
+        },
+        "W07a_join_coworkers": {
+          "category": "multi-pattern join",
+          "description": "co-workers of a typical person (two comma patterns)",
+          "query": "MATCH (a:Person {id: 'p3052'})-[:WORKS_AT]->(c:Company), (b:Person)-[:WORKS_AT]->(c) RETURN count(b) AS n",
+          "sql": "SELECT count(*) FROM works_at w1 JOIN works_at w2 ON w2.company = w1.company WHERE w1.person = 'p3052' AND w2.person <> w1.person",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              12
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 31.0982,
+              "warmup_runs": 2,
+              "samples": 179,
+              "min_ms": 18.9674,
+              "p25_ms": 22.3262,
+              "median_ms": 23.8387,
+              "p75_ms": 31.5734,
+              "p90_ms": 40.4031,
+              "p95_ms": 48.9415,
+              "p99_ms": 54.0184,
+              "max_ms": 56.7869,
+              "mean_ms": 27.989096648044693,
+              "stdev_ms": 8.587532584233355
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0049,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0001,
+              "p25_ms": 0.0002,
+              "median_ms": 0.0002,
+              "p75_ms": 0.0002,
+              "p90_ms": 0.0002,
+              "p95_ms": 0.0002,
+              "p99_ms": 0.0003,
+              "max_ms": 0.0003,
+              "mean_ms": 0.0001935,
+              "stdev_ms": 3.625357372784373e-05
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.1008,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0034,
+              "p25_ms": 0.0035,
+              "median_ms": 0.0036,
+              "p75_ms": 0.0037,
+              "p90_ms": 0.0038,
+              "p95_ms": 0.004,
+              "p99_ms": 0.0059,
+              "max_ms": 0.0086,
+              "mean_ms": 0.003679,
+              "stdev_ms": 0.00047717657888583125
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 0.0108,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0011,
+              "p25_ms": 0.0012,
+              "median_ms": 0.0012,
+              "p75_ms": 0.0012,
+              "p90_ms": 0.0013,
+              "p95_ms": 0.0013,
+              "p99_ms": 0.002,
+              "max_ms": 0.0026,
+              "mean_ms": 0.001221,
+              "stdev_ms": 0.0001636855669389351
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 0.6515,
+            "validate": 0.0411,
+            "plan": 0.0,
+            "execute": 28.7137,
+            "samples": 85
+          }
+        },
+        "W07b_join_full_graph": {
+          "category": "multi-pattern join",
+          "description": "people who live in the city their employer is in (three patterns over the whole graph)",
+          "query": "MATCH (p:Person)-[:WORKS_AT]->(c:Company), (p)-[:LIVES_IN]->(x:City), (c)-[:LOCATED_IN]->(x) RETURN count(p) AS n",
+          "sql": "SELECT count(*) FROM works_at w JOIN person p ON p.id = w.person JOIN company c ON c.id = w.company WHERE p.city = c.city",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              428
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 278.4036,
+              "warmup_runs": 2,
+              "samples": 16,
+              "min_ms": 271.7288,
+              "p25_ms": 281.6837,
+              "median_ms": 294.5485,
+              "p75_ms": 329.2632,
+              "p90_ms": 404.0835,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 442.5714,
+              "mean_ms": 318.08808125,
+              "stdev_ms": 51.968910242659746
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 1.0828,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 1.0332,
+              "p25_ms": 1.1426,
+              "median_ms": 1.2356,
+              "p75_ms": 1.9304,
+              "p90_ms": 2.0955,
+              "p95_ms": 2.2034,
+              "p99_ms": 2.3265,
+              "max_ms": 2.6641,
+              "mean_ms": 1.4947265,
+              "stdev_ms": 0.42307606019639843
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 7.9983,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 7.1217,
+              "p25_ms": 7.8323,
+              "median_ms": 9.08545,
+              "p75_ms": 11.8562,
+              "p90_ms": 13.4268,
+              "p95_ms": 13.6201,
+              "p99_ms": 14.0213,
+              "max_ms": 14.7168,
+              "mean_ms": 9.872504,
+              "stdev_ms": 2.2973866505432805
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 1.1939,
+            "validate": 0.0692,
+            "plan": 0.0,
+            "execute": 448.988,
+            "samples": 6
+          }
+        },
+        "W08a_group_industry": {
+          "category": "aggregation and grouping",
+          "description": "employees and mean age per industry",
+          "query": "MATCH (p:Person)-[:WORKS_AT]->(c:Company) RETURN c.industry AS industry, count(p) AS n, avg(p.age) AS avg_age ORDER BY industry ASC",
+          "sql": "SELECT c.industry, count(*), avg(p.age) FROM works_at w JOIN person p ON p.id = w.person JOIN company c ON c.id = w.company GROUP BY c.industry ORDER BY c.industry",
+          "typed_plan": false,
+          "rows_expected": 8,
+          "expected": [
+            [
+              "energy",
+              1188,
+              49.072391
+            ],
+            [
+              "finance",
+              1090,
+              48.766972
+            ],
+            [
+              "health",
+              1008,
+              48.210317
+            ],
+            [
+              "logistics",
+              1293,
+              48.665893
+            ],
+            [
+              "media",
+              1180,
+              49.055932
+            ],
+            [
+              "retail",
+              1080,
+              49.599074
+            ],
+            [
+              "software",
+              1147,
+              48.741064
+            ],
+            [
+              "telecom",
+              1161,
+              48.990525
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 116.0939,
+              "warmup_runs": 2,
+              "samples": 40,
+              "min_ms": 85.9117,
+              "p25_ms": 111.0083,
+              "median_ms": 120.1088,
+              "p75_ms": 141.1696,
+              "p90_ms": 158.0854,
+              "p95_ms": 165.7058,
+              "p99_ms": null,
+              "max_ms": 239.6112,
+              "mean_ms": 126.4387975,
+              "stdev_ms": 28.44401758395159
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 4.8297,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 2.5239,
+              "p25_ms": 3.7149,
+              "median_ms": 5.0351,
+              "p75_ms": 5.9118,
+              "p90_ms": 6.6489,
+              "p95_ms": 7.2396,
+              "p99_ms": 9.1574,
+              "max_ms": 11.1472,
+              "mean_ms": 4.954562,
+              "stdev_ms": 1.536494034399328
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 21.697,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 9.3334,
+              "p25_ms": 12.4605,
+              "median_ms": 16.80945,
+              "p75_ms": 20.4448,
+              "p90_ms": 23.3435,
+              "p95_ms": 24.6662,
+              "p99_ms": 26.9138,
+              "max_ms": 28.2014,
+              "mean_ms": 16.7893855,
+              "stdev_ms": 4.878716776331461
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.8221,
+            "validate": 0.0812,
+            "plan": 0.0312,
+            "execute": 104.5325,
+            "samples": 23
+          }
+        },
+        "W08b_group_city_top5": {
+          "category": "aggregation and grouping",
+          "description": "five most populous cities (tie-broken by id)",
+          "query": "MATCH (p:Person)-[:LIVES_IN]->(x:City) RETURN x.id AS city, count(p) AS n ORDER BY n DESC, city ASC LIMIT 5",
+          "sql": "SELECT city, count(*) AS n FROM person GROUP BY city ORDER BY n DESC, city ASC LIMIT 5",
+          "typed_plan": false,
+          "rows_expected": 5,
+          "expected": [
+            [
+              "city17",
+              510
+            ],
+            [
+              "city8",
+              502
+            ],
+            [
+              "city16",
+              492
+            ],
+            [
+              "city11",
+              478
+            ],
+            [
+              "city3",
+              469
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 97.8287,
+              "warmup_runs": 2,
+              "samples": 52,
+              "min_ms": 69.8505,
+              "p25_ms": 84.2362,
+              "median_ms": 94.76865,
+              "p75_ms": 104.6651,
+              "p90_ms": 121.0231,
+              "p95_ms": 128.6441,
+              "p99_ms": null,
+              "max_ms": 159.8173,
+              "mean_ms": 97.30963846153847,
+              "stdev_ms": 18.568378740711093
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 1.4255,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 1.0627,
+              "p25_ms": 1.2507,
+              "median_ms": 1.61185,
+              "p75_ms": 2.0292,
+              "p90_ms": 2.4722,
+              "p95_ms": 2.6036,
+              "p99_ms": 3.9431,
+              "max_ms": 4.3946,
+              "mean_ms": 1.720719,
+              "stdev_ms": 0.578223701158911
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.7507,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.4894,
+              "p25_ms": 0.5192,
+              "median_ms": 0.53715,
+              "p75_ms": 0.5814,
+              "p90_ms": 0.7855,
+              "p95_ms": 0.978,
+              "p99_ms": 1.1796,
+              "max_ms": 1.3049,
+              "mean_ms": 0.601214,
+              "stdev_ms": 0.15109787870365263
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.7438,
+            "validate": 0.0773,
+            "plan": 0.0291,
+            "execute": 84.1665,
+            "samples": 28
+          }
+        },
+        "W09_sort_limit": {
+          "category": "sorting and limits",
+          "description": "top 10 people by score (scores are unique)",
+          "query": "MATCH (p:Person) RETURN p.id AS id, p.score AS score ORDER BY score DESC LIMIT 10",
+          "sql": "SELECT id, score FROM person ORDER BY score DESC LIMIT 10",
+          "typed_plan": false,
+          "rows_expected": 10,
+          "expected": [
+            [
+              "p7191",
+              0.999891
+            ],
+            [
+              "p7675",
+              0.999781
+            ],
+            [
+              "p4904",
+              0.999672
+            ],
+            [
+              "p740",
+              0.999563
+            ],
+            [
+              "p6456",
+              0.999453
+            ],
+            [
+              "p6027",
+              0.999344
+            ],
+            [
+              "p6758",
+              0.999235
+            ],
+            [
+              "p4585",
+              0.999125
+            ],
+            [
+              "p7190",
+              0.999016
+            ],
+            [
+              "p1541",
+              0.998907
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 33.6047,
+              "warmup_runs": 2,
+              "samples": 124,
+              "min_ms": 26.7915,
+              "p25_ms": 33.1313,
+              "median_ms": 34.9527,
+              "p75_ms": 38.1115,
+              "p90_ms": 48.0407,
+              "p95_ms": 93.0923,
+              "p99_ms": 107.2881,
+              "max_ms": 112.3149,
+              "mean_ms": 40.547365322580646,
+              "stdev_ms": 18.25263985496253
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 1.8045,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 1.5482,
+              "p25_ms": 1.619,
+              "median_ms": 1.64725,
+              "p75_ms": 1.7003,
+              "p90_ms": 1.7845,
+              "p95_ms": 1.8993,
+              "p99_ms": 2.2438,
+              "max_ms": 3.0657,
+              "mean_ms": 1.6847765,
+              "stdev_ms": 0.15170007137780175
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.5962,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.4433,
+              "p25_ms": 0.4527,
+              "median_ms": 0.4593,
+              "p75_ms": 0.468,
+              "p90_ms": 0.5066,
+              "p95_ms": 0.5581,
+              "p99_ms": 0.7582,
+              "max_ms": 0.9423,
+              "mean_ms": 0.4736635,
+              "stdev_ms": 0.05387722332970207
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.5972,
+            "validate": 0.0748,
+            "plan": 0.025,
+            "execute": 45.115,
+            "samples": 48
+          }
+        },
+        "W10a_exists": {
+          "category": "correlated existence",
+          "description": "companies employing at least one 25-year-old",
+          "query": "MATCH (c:Company) WHERE EXISTS { (c)<-[:WORKS_AT]-(:Person {age: 25}) } RETURN count(c) AS n",
+          "sql": "SELECT count(*) FROM company c WHERE EXISTS (SELECT 1 FROM works_at w JOIN person p ON p.id = w.person WHERE w.company = c.id AND p.age = 25)",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              138
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 88.7457,
+              "warmup_runs": 2,
+              "samples": 77,
+              "min_ms": 51.8996,
+              "p25_ms": 56.5366,
+              "median_ms": 62.564,
+              "p75_ms": 69.7581,
+              "p90_ms": 79.7737,
+              "p95_ms": 82.829,
+              "p99_ms": null,
+              "max_ms": 98.2289,
+              "mean_ms": 65.01327922077921,
+              "stdev_ms": 10.243601498667834
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 3.7488,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 1.0128,
+              "p25_ms": 1.0522,
+              "median_ms": 1.08725,
+              "p75_ms": 1.1848,
+              "p90_ms": 1.3556,
+              "p95_ms": 1.4721,
+              "p99_ms": 2.653,
+              "max_ms": 4.9706,
+              "mean_ms": 1.1784835,
+              "stdev_ms": 0.34918003761828303
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 6.9903,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 5.8412,
+              "p25_ms": 6.2177,
+              "median_ms": 6.3928,
+              "p75_ms": 6.8133,
+              "p90_ms": 7.5194,
+              "p95_ms": 8.3148,
+              "p99_ms": 9.6565,
+              "max_ms": 10.3337,
+              "mean_ms": 6.668828,
+              "stdev_ms": 0.7604457087760966
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 0.6355,
+            "validate": 0.0435,
+            "plan": 0.0,
+            "execute": 62.4808,
+            "samples": 39
+          }
+        },
+        "W10b_not_exists": {
+          "category": "correlated existence",
+          "description": "people who know nobody (negated pattern predicate)",
+          "query": "MATCH (p:Person) WHERE NOT (p)-[:KNOWS]->(:Person) RETURN count(p) AS n",
+          "sql": "SELECT count(*) FROM person p WHERE NOT EXISTS (SELECT 1 FROM knows k WHERE k.src = p.id)",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              1996
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 286.6925,
+              "warmup_runs": 2,
+              "samples": 21,
+              "min_ms": 210.374,
+              "p25_ms": 233.4311,
+              "median_ms": 247.4138,
+              "p75_ms": 267.6256,
+              "p90_ms": 281.0841,
+              "p95_ms": 281.3631,
+              "p99_ms": null,
+              "max_ms": 284.7376,
+              "mean_ms": 250.20024285714285,
+              "stdev_ms": 21.815753611635134
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 1.461,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.8286,
+              "p25_ms": 0.8649,
+              "median_ms": 0.9652,
+              "p75_ms": 1.4416,
+              "p90_ms": 1.7566,
+              "p95_ms": 1.9558,
+              "p99_ms": 2.2842,
+              "max_ms": 3.2107,
+              "mean_ms": 1.1743025,
+              "stdev_ms": 0.40805490583329973
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 3.3605,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 2.4958,
+              "p25_ms": 2.5981,
+              "median_ms": 2.6706,
+              "p75_ms": 2.8625,
+              "p90_ms": 3.1045,
+              "p95_ms": 3.3405,
+              "p99_ms": 4.2337,
+              "max_ms": 4.4189,
+              "mean_ms": 2.78671,
+              "stdev_ms": 0.33116671384939794
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 0.5326,
+            "validate": 0.0464,
+            "plan": 0.0,
+            "execute": 225.5717,
+            "samples": 11
+          }
+        },
+        "W11a_at_least": {
+          "category": "quantified relationship predicate",
+          "description": "people who know at least 20 people (typed plan)",
+          "query": null,
+          "sql": "SELECT src FROM knows GROUP BY src HAVING count(*) >= 20",
+          "typed_plan": true,
+          "rows_expected": 63,
+          "expected": null,
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 96.2041,
+              "warmup_runs": 2,
+              "samples": 57,
+              "min_ms": 62.6151,
+              "p25_ms": 76.515,
+              "median_ms": 86.9561,
+              "p75_ms": 98.1193,
+              "p90_ms": 105.5887,
+              "p95_ms": 111.0141,
+              "p99_ms": null,
+              "max_ms": 125.4902,
+              "mean_ms": 88.0853894736842,
+              "stdev_ms": 13.96257179458053
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 1.4653,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.9068,
+              "p25_ms": 0.9695,
+              "median_ms": 1.0027,
+              "p75_ms": 1.0535,
+              "p90_ms": 1.1553,
+              "p95_ms": 1.3481,
+              "p99_ms": 1.8742,
+              "max_ms": 2.2069,
+              "mean_ms": 1.0515855,
+              "stdev_ms": 0.17927761252177457
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 3.7167,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 3.387,
+              "p25_ms": 3.5551,
+              "median_ms": 3.6969,
+              "p75_ms": 4.0868,
+              "p90_ms": 5.2639,
+              "p95_ms": 5.6353,
+              "p99_ms": 7.0446,
+              "max_ms": 7.2993,
+              "mean_ms": 4.0303795,
+              "stdev_ms": 0.7882912371723815
+            }
+          },
+          "gql_core_stages": {
+            "path": "typed_plan",
+            "build": 0.0413,
+            "validate": 0.0205,
+            "execute": 70.2837,
+            "samples": 36
+          }
+        },
+        "W11b_all": {
+          "category": "quantified relationship predicate",
+          "description": "companies whose every parent shares their industry (vacuously true for roots; typed plan)",
+          "query": null,
+          "sql": "SELECT c.id FROM company c LEFT JOIN company p ON p.id = c.parent WHERE c.parent IS NULL OR p.industry = c.industry",
+          "typed_plan": true,
+          "rows_expected": 186,
+          "expected": null,
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 10.9259,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 9.3684,
+              "p25_ms": 10.9554,
+              "median_ms": 13.3075,
+              "p75_ms": 19.9888,
+              "p90_ms": 25.2035,
+              "p95_ms": 28.0913,
+              "p99_ms": 31.4328,
+              "max_ms": 38.3676,
+              "mean_ms": 15.877871,
+              "stdev_ms": 6.154339798306893
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.2006,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.1598,
+              "p25_ms": 0.1665,
+              "median_ms": 0.2512,
+              "p75_ms": 0.2938,
+              "p90_ms": 0.3128,
+              "p95_ms": 0.3275,
+              "p99_ms": 0.4585,
+              "max_ms": 0.6039,
+              "mean_ms": 0.2425715,
+              "stdev_ms": 0.07297671851333735
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.7058,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.34,
+              "p25_ms": 0.3436,
+              "median_ms": 0.35025,
+              "p75_ms": 0.3802,
+              "p90_ms": 0.6213,
+              "p95_ms": 0.6285,
+              "p99_ms": 0.6765,
+              "max_ms": 0.7344,
+              "mean_ms": 0.405679,
+              "stdev_ms": 0.10860180624926556
+            }
+          },
+          "gql_core_stages": {
+            "path": "typed_plan",
+            "build": 0.044,
+            "validate": 0.021,
+            "execute": 11.0622,
+            "samples": 100
+          }
+        },
+        "W12a_typed_filter": {
+          "category": "typed-plan execution",
+          "description": "typed-plan version of W03a",
+          "query": null,
+          "sql": null,
+          "typed_plan": true,
+          "rows_expected": 18,
+          "expected": null,
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 90.0509,
+              "warmup_runs": 2,
+              "samples": 65,
+              "min_ms": 58.1387,
+              "p25_ms": 67.5496,
+              "median_ms": 77.299,
+              "p75_ms": 84.5053,
+              "p90_ms": 91.8756,
+              "p95_ms": 99.9514,
+              "p99_ms": null,
+              "max_ms": 108.5849,
+              "mean_ms": 77.1234553846154,
+              "stdev_ms": 11.910764710415727
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.7181,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.3494,
+              "p25_ms": 0.3604,
+              "median_ms": 0.36745,
+              "p75_ms": 0.3738,
+              "p90_ms": 0.4014,
+              "p95_ms": 0.4393,
+              "p99_ms": 0.5786,
+              "max_ms": 0.8416,
+              "mean_ms": 0.3774065,
+              "stdev_ms": 0.0458870604783825
+            }
+          },
+          "gql_core_stages": {
+            "path": "typed_plan",
+            "build": 0.046,
+            "validate": 0.0255,
+            "execute": 71.1628,
+            "samples": 33
+          }
+        },
+        "W12b_typed_hop": {
+          "category": "typed-plan execution",
+          "description": "typed-plan version of W04a",
+          "query": null,
+          "sql": null,
+          "typed_plan": true,
+          "rows_expected": 4,
+          "expected": [
+            [
+              "p1037"
+            ],
+            [
+              "p127"
+            ],
+            [
+              "p424"
+            ],
+            [
+              "p6872"
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 8.2832,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 1.8366,
+              "p25_ms": 3.3987,
+              "median_ms": 4.50075,
+              "p75_ms": 5.7472,
+              "p90_ms": 6.5115,
+              "p95_ms": 7.8066,
+              "p99_ms": 9.6537,
+              "max_ms": 9.8363,
+              "mean_ms": 4.5840695,
+              "stdev_ms": 1.7589741364452083
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.006,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0002,
+              "p25_ms": 0.0003,
+              "median_ms": 0.0003,
+              "p75_ms": 0.0003,
+              "p90_ms": 0.0003,
+              "p95_ms": 0.0004,
+              "p99_ms": 0.0005,
+              "max_ms": 0.001,
+              "mean_ms": 0.0003015,
+              "stdev_ms": 6.907682708550679e-05
+            }
+          },
+          "gql_core_stages": {
+            "path": "typed_plan",
+            "build": 0.0319,
+            "validate": 0.0138,
+            "execute": 3.9463,
+            "samples": 100
+          }
+        },
+        "W13_transitive_inference": {
+          "category": "ontology transitive inference",
+          "description": "derive every indirect SUBSIDIARY_OF pair with InferenceEngine (whole graph as facts)",
+          "query": null,
+          "sql": "WITH RECURSIVE a(c, anc, d) AS (SELECT id, parent, 1 FROM company WHERE parent IS NOT NULL UNION ALL SELECT a.c, p.parent, a.d + 1 FROM a JOIN company p ON p.id = a.anc WHERE p.parent IS NOT NULL) SELECT count(*) FROM a WHERE d >= 2",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              2030
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 449.8694,
+              "warmup_runs": 2,
+              "samples": 9,
+              "min_ms": 427.6551,
+              "p25_ms": 527.6062,
+              "median_ms": 567.1688,
+              "p75_ms": 631.6969,
+              "p90_ms": 666.6337,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 680.4108,
+              "mean_ms": 574.7421111111112,
+              "stdev_ms": 82.6823781300835
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.8893,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.357,
+              "p25_ms": 0.6291,
+              "median_ms": 0.6508,
+              "p75_ms": 0.6704,
+              "p90_ms": 0.7009,
+              "p95_ms": 0.7307,
+              "p99_ms": 0.8354,
+              "max_ms": 0.9315,
+              "mean_ms": 0.6049165,
+              "stdev_ms": 0.12821747886768764
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 5.2499,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 2.6033,
+              "p25_ms": 2.919,
+              "median_ms": 3.41355,
+              "p75_ms": 4.7861,
+              "p90_ms": 5.4249,
+              "p95_ms": 5.7894,
+              "p99_ms": 6.7177,
+              "max_ms": 8.3022,
+              "mean_ms": 3.876805,
+              "stdev_ms": 1.1209877123013674
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 5.1607,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 4.1814,
+              "p25_ms": 4.5142,
+              "median_ms": 4.7194,
+              "p75_ms": 5.2295,
+              "p90_ms": 7.3072,
+              "p95_ms": 8.5609,
+              "p99_ms": 9.4867,
+              "max_ms": 10.9064,
+              "mean_ms": 5.242025,
+              "stdev_ms": 1.3159819537088788
+            }
+          },
+          "default_engine_derived": 2030
+        },
+        "W14b_derived_via_var_len": {
+          "category": "derived relation query",
+          "description": "the same answer with a variable-length path on the base graph",
+          "query": "MATCH (c:Company {id: 'c832'})-[:SUBSIDIARY_OF*]->(r:Company) WHERE NOT (r)-[:SUBSIDIARY_OF]->(:Company) RETURN r.id AS id",
+          "sql": null,
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              "c0"
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 6.5771,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 2.7475,
+              "p25_ms": 3.087,
+              "median_ms": 3.43115,
+              "p75_ms": 3.9307,
+              "p90_ms": 4.6285,
+              "p95_ms": 5.3042,
+              "p99_ms": 6.1621,
+              "max_ms": 7.6184,
+              "mean_ms": 3.6371355,
+              "stdev_ms": 0.7756654833755665
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0081,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0006,
+              "p25_ms": 0.0007,
+              "median_ms": 0.0007,
+              "p75_ms": 0.0007,
+              "p90_ms": 0.0008,
+              "p95_ms": 0.0008,
+              "p99_ms": 0.0009,
+              "max_ms": 0.0009,
+              "mean_ms": 0.0007165,
+              "stdev_ms": 6.322767347821156e-05
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 0.5974,
+            "validate": 0.0469,
+            "plan": 0.0,
+            "execute": 2.4348,
+            "samples": 100
+          }
+        },
+        "W14a_derived_query": {
+          "category": "derived relation query",
+          "description": "ultimate parent of a leaf company over materialized SUBSIDIARY_OF edges",
+          "query": "MATCH (c:Company {id: 'c832'})-[:SUBSIDIARY_OF]->(r:Company) WHERE NOT (r)-[:SUBSIDIARY_OF]->(:Company) RETURN r.id AS id",
+          "sql": null,
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              "c0"
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 3.5886,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 2.2516,
+              "p25_ms": 3.0041,
+              "median_ms": 3.3392,
+              "p75_ms": 3.9166,
+              "p90_ms": 5.01,
+              "p95_ms": 5.6358,
+              "p99_ms": 6.5563,
+              "max_ms": 7.8189,
+              "mean_ms": 3.6122815,
+              "stdev_ms": 0.9355973715847707
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.007,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0007,
+              "p25_ms": 0.0007,
+              "median_ms": 0.0008,
+              "p75_ms": 0.0008,
+              "p90_ms": 0.0008,
+              "p95_ms": 0.0009,
+              "p99_ms": 0.001,
+              "max_ms": 0.0011,
+              "mean_ms": 0.0007625,
+              "stdev_ms": 7.189991648082596e-05
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 0.6972,
+            "validate": 0.0587,
+            "plan": 0.0,
+            "execute": 2.8098,
+            "samples": 100
+          }
+        }
+      },
+      "valid": true
+    },
+    {
+      "workload_version": "1.0",
+      "generator_version": "1.0",
+      "seed": 42,
+      "budget_seconds": 5.0,
+      "size": 100000,
+      "graph": {
+        "generator_version": "1.0",
+        "seed": 42,
+        "total_nodes": 100000,
+        "nodes": 100000,
+        "edges": 521961,
+        "nodes_by_label": {
+          "Person": 91467,
+          "Company": 8333,
+          "City": 200
+        },
+        "edges_by_type": {
+          "KNOWS": 323195,
+          "WORKS_AT": 91467,
+          "LIVES_IN": 91467,
+          "LOCATED_IN": 8333,
+          "SUBSIDIARY_OF": 7499
+        },
+        "knows_out_degree": {
+          "mean": 3.533,
+          "median": 2,
+          "p90": 9,
+          "p99": 18,
+          "max": 300,
+          "zero": 20086
+        },
+        "knows_in_degree": {
+          "mean": 3.533,
+          "median": 2,
+          "p90": 6,
+          "p99": 26,
+          "max": 6636,
+          "zero": 13482
+        }
+      },
+      "generate_seconds": 1.2315744999796152,
+      "load": {
+        "gql_core_from_dict_s": 4.8879897,
+        "gql_core_add_node_edge_s": 3.0896037,
+        "sqlite_memory_with_indexes_s": 1.9528446,
+        "networkx_s": 2.922514
+      },
+      "materialize_inferred": {
+        "edges_added": 28041,
+        "seconds": 11.7925507
+      },
+      "workloads": {
+        "W01_lookup": {
+          "category": "exact property lookup",
+          "description": "one person by id (no property index: label scan + filter)",
+          "query": "MATCH (p:Person {id: 'p45733'}) RETURN p.name AS name, p.age AS age",
+          "sql": "SELECT name, age FROM person WHERE id = 'p45733'",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              "Person 45733",
+              38
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 169.2433,
+              "warmup_runs": 2,
+              "samples": 33,
+              "min_ms": 125.9148,
+              "p25_ms": 144.9688,
+              "median_ms": 152.295,
+              "p75_ms": 162.3182,
+              "p90_ms": 171.9286,
+              "p95_ms": 186.4082,
+              "p99_ms": null,
+              "max_ms": 219.0155,
+              "mean_ms": 155.61524545454546,
+              "stdev_ms": 18.57107578415106
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0092,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0003,
+              "p25_ms": 0.0003,
+              "median_ms": 0.0004,
+              "p75_ms": 0.0004,
+              "p90_ms": 0.0006,
+              "p95_ms": 0.0006,
+              "p99_ms": 0.0007,
+              "max_ms": 0.0078,
+              "mean_ms": 0.0004485,
+              "stdev_ms": 0.0005329332408435224
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.1031,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0027,
+              "p25_ms": 0.0028,
+              "median_ms": 0.0029,
+              "p75_ms": 0.0031,
+              "p90_ms": 0.0045,
+              "p95_ms": 0.0051,
+              "p99_ms": 0.0533,
+              "max_ms": 0.0699,
+              "mean_ms": 0.00415,
+              "stdev_ms": 0.007563586397733545
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 0.026,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0004,
+              "p25_ms": 0.0005,
+              "median_ms": 0.0005,
+              "p75_ms": 0.0006,
+              "p90_ms": 0.0008,
+              "p95_ms": 0.0008,
+              "p99_ms": 0.001,
+              "max_ms": 0.0011,
+              "mean_ms": 0.0005455,
+              "stdev_ms": 0.0001366496087732762
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.8385,
+            "validate": 0.0654,
+            "plan": 0.0316,
+            "execute": 165.6293,
+            "samples": 16
+          }
+        },
+        "W02a_label_count": {
+          "category": "label scan",
+          "description": "count every Company",
+          "query": "MATCH (c:Company) RETURN count(c) AS n",
+          "sql": "SELECT count(*) FROM company",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              8333
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 40.24,
+              "warmup_runs": 2,
+              "samples": 110,
+              "min_ms": 17.9307,
+              "p25_ms": 35.2059,
+              "median_ms": 45.37735,
+              "p75_ms": 53.0595,
+              "p90_ms": 63.9826,
+              "p95_ms": 78.0407,
+              "p99_ms": 90.9842,
+              "max_ms": 101.6934,
+              "mean_ms": 45.57072090909091,
+              "stdev_ms": 16.391599700277762
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0072,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0001,
+              "p25_ms": 0.0002,
+              "median_ms": 0.0002,
+              "p75_ms": 0.0002,
+              "p90_ms": 0.0002,
+              "p95_ms": 0.0003,
+              "p99_ms": 0.0003,
+              "max_ms": 0.0004,
+              "mean_ms": 0.0001955,
+              "stdev_ms": 4.288291878613314e-05
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 7.0674,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0018,
+              "p25_ms": 0.0019,
+              "median_ms": 0.002,
+              "p75_ms": 0.0022,
+              "p90_ms": 0.0024,
+              "p95_ms": 0.0027,
+              "p99_ms": 0.0073,
+              "max_ms": 0.0545,
+              "mean_ms": 0.002464,
+              "stdev_ms": 0.0038467768927131136
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 14.0721,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 8.4564,
+              "p25_ms": 9.2648,
+              "median_ms": 9.8012,
+              "p75_ms": 10.3183,
+              "p90_ms": 11.0052,
+              "p95_ms": 11.8772,
+              "p99_ms": 14.148,
+              "max_ms": 21.6533,
+              "mean_ms": 10.005675,
+              "stdev_ms": 1.3407180892901194
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.4157,
+            "validate": 0.0364,
+            "plan": 0.0232,
+            "execute": 18.3778,
+            "samples": 96
+          }
+        },
+        "W02b_label_rows": {
+          "category": "label scan",
+          "description": "return every City id",
+          "query": "MATCH (x:City) RETURN x.id AS id",
+          "sql": "SELECT id FROM city",
+          "typed_plan": false,
+          "rows_expected": 200,
+          "expected": null,
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 1.3375,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.5669,
+              "p25_ms": 0.6173,
+              "median_ms": 0.8763,
+              "p75_ms": 1.7203,
+              "p90_ms": 2.2096,
+              "p95_ms": 2.9302,
+              "p99_ms": 4.9541,
+              "max_ms": 7.1045,
+              "mean_ms": 1.312117,
+              "stdev_ms": 0.9930741570588223
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0112,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0075,
+              "p25_ms": 0.0078,
+              "median_ms": 0.0082,
+              "p75_ms": 0.0149,
+              "p90_ms": 0.0162,
+              "p95_ms": 0.0172,
+              "p99_ms": 0.0702,
+              "max_ms": 0.8346,
+              "mean_ms": 0.0157195,
+              "stdev_ms": 0.05878089261343486
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.2632,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0817,
+              "p25_ms": 0.1192,
+              "median_ms": 0.1424,
+              "p75_ms": 0.227,
+              "p90_ms": 0.2624,
+              "p95_ms": 0.2935,
+              "p99_ms": 0.4804,
+              "max_ms": 0.5596,
+              "mean_ms": 0.168014,
+              "stdev_ms": 0.07975168373957055
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.6163,
+            "validate": 0.0685,
+            "plan": 0.0362,
+            "execute": 0.6011,
+            "samples": 100
+          }
+        },
+        "W03a_filter_selective": {
+          "category": "predicate filtering",
+          "description": "age = 42 AND score > 0.9 (about 0.16% of people)",
+          "query": "MATCH (p:Person) WHERE p.age = 42 AND p.score > 0.9 RETURN p.id AS id",
+          "sql": "SELECT id FROM person WHERE age = 42 AND score > 0.9",
+          "typed_plan": false,
+          "rows_expected": 155,
+          "expected": null,
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 398.0981,
+              "warmup_runs": 2,
+              "samples": 20,
+              "min_ms": 172.1479,
+              "p25_ms": 228.1153,
+              "median_ms": 244.5019,
+              "p75_ms": 266.1899,
+              "p90_ms": 306.4967,
+              "p95_ms": 311.7848,
+              "p99_ms": null,
+              "max_ms": 388.6498,
+              "mean_ms": 252.87841,
+              "stdev_ms": 49.9414672265538
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 5.9264,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 2.7962,
+              "p25_ms": 2.9034,
+              "median_ms": 3.0008,
+              "p75_ms": 3.7974,
+              "p90_ms": 4.3591,
+              "p95_ms": 4.8434,
+              "p99_ms": 5.7666,
+              "max_ms": 6.0556,
+              "mean_ms": 3.391221,
+              "stdev_ms": 0.729308833025244
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 20.0612,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 2.2594,
+              "p25_ms": 2.339,
+              "median_ms": 2.47675,
+              "p75_ms": 3.0905,
+              "p90_ms": 3.7211,
+              "p95_ms": 4.109,
+              "p99_ms": 4.521,
+              "max_ms": 5.442,
+              "mean_ms": 2.7677655,
+              "stdev_ms": 0.612046253843588
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 0.6631,
+            "validate": 0.0669,
+            "plan": 0.0,
+            "execute": 206.1589,
+            "samples": 13
+          }
+        },
+        "W03b_filter_broad_count": {
+          "category": "predicate filtering",
+          "description": "age < 60 AND active, counted (about 53%)",
+          "query": "MATCH (p:Person) WHERE p.age < 60 AND p.active = true RETURN count(p) AS n",
+          "sql": "SELECT count(*) FROM person WHERE age < 60 AND active = 1",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              48848
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 2348.0335,
+              "warmup_runs": 1,
+              "samples": 5,
+              "min_ms": 974.7407,
+              "p25_ms": 1058.9334,
+              "median_ms": 1062.6291,
+              "p75_ms": 1106.1405,
+              "p90_ms": 1188.2267,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 1188.2267,
+              "mean_ms": 1078.13408,
+              "stdev_ms": 77.78818368616149
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 8.9797,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 4.4733,
+              "p25_ms": 5.4185,
+              "median_ms": 7.82525,
+              "p75_ms": 8.8631,
+              "p90_ms": 9.7022,
+              "p95_ms": 10.4231,
+              "p99_ms": 14.0014,
+              "max_ms": 20.273,
+              "mean_ms": 7.537863,
+              "stdev_ms": 2.3030269034514355
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 4.4054,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 3.0094,
+              "p25_ms": 3.2089,
+              "median_ms": 3.4608,
+              "p75_ms": 4.4878,
+              "p90_ms": 5.6696,
+              "p95_ms": 5.9041,
+              "p99_ms": 6.8519,
+              "max_ms": 8.0529,
+              "mean_ms": 3.9682395,
+              "stdev_ms": 1.0406429408502502
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 0.5513,
+            "validate": 0.0608,
+            "plan": 0.0,
+            "execute": 1305.4185,
+            "samples": 5
+          }
+        },
+        "W03c_filter_broad_rows": {
+          "category": "predicate filtering",
+          "description": "age < 60, every matching id returned (about 67%)",
+          "query": "MATCH (p:Person) WHERE p.age < 60 RETURN p.id AS id",
+          "sql": "SELECT id FROM person WHERE age < 60",
+          "typed_plan": false,
+          "rows_expected": 60996,
+          "expected": null,
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 429.3762,
+              "warmup_runs": 2,
+              "samples": 14,
+              "min_ms": 249.8751,
+              "p25_ms": 264.2544,
+              "median_ms": 276.6195,
+              "p75_ms": 334.781,
+              "p90_ms": 842.0942,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 989.9807,
+              "mean_ms": 374.6397928571429,
+              "stdev_ms": 233.01048915094083
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 5.2042,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 4.7413,
+              "p25_ms": 5.3639,
+              "median_ms": 5.5397,
+              "p75_ms": 6.1296,
+              "p90_ms": 7.2828,
+              "p95_ms": 7.5865,
+              "p99_ms": 8.3813,
+              "max_ms": 12.04,
+              "mean_ms": 5.878005,
+              "stdev_ms": 0.8982660201128879
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 23.6155,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 21.196,
+              "p25_ms": 21.5791,
+              "median_ms": 22.6714,
+              "p75_ms": 24.0295,
+              "p90_ms": 24.8575,
+              "p95_ms": 25.6404,
+              "p99_ms": 27.1018,
+              "max_ms": 30.7198,
+              "mean_ms": 22.994556,
+              "stdev_ms": 1.5547224501010595
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.7706,
+            "validate": 0.1114,
+            "plan": 0.0485,
+            "execute": 419.1632,
+            "samples": 5
+          }
+        },
+        "W04a_hop_typical": {
+          "category": "single-hop traversal",
+          "description": "people a typical person (out-degree 4) knows",
+          "query": "MATCH (p:Person {id: 'p30502'})-[:KNOWS]->(f:Person) RETURN f.id AS id",
+          "sql": "SELECT dst FROM knows WHERE src = 'p30502'",
+          "typed_plan": false,
+          "rows_expected": 4,
+          "expected": [
+            [
+              "p10290"
+            ],
+            [
+              "p10988"
+            ],
+            [
+              "p4248"
+            ],
+            [
+              "p5"
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 143.6106,
+              "warmup_runs": 2,
+              "samples": 29,
+              "min_ms": 126.9917,
+              "p25_ms": 144.4047,
+              "median_ms": 152.9467,
+              "p75_ms": 215.6645,
+              "p90_ms": 223.1264,
+              "p95_ms": 229.6701,
+              "p99_ms": null,
+              "max_ms": 253.5933,
+              "mean_ms": 173.00870689655173,
+              "stdev_ms": 36.65157566685942
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0047,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0002,
+              "p25_ms": 0.0003,
+              "median_ms": 0.0003,
+              "p75_ms": 0.0004,
+              "p90_ms": 0.0004,
+              "p95_ms": 0.0004,
+              "p99_ms": 0.0004,
+              "max_ms": 0.0007,
+              "mean_ms": 0.000325,
+              "stdev_ms": 5.6488536658948304e-05
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.076,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0026,
+              "p25_ms": 0.0026,
+              "median_ms": 0.0027,
+              "p75_ms": 0.0027,
+              "p90_ms": 0.0028,
+              "p95_ms": 0.0029,
+              "p99_ms": 0.0037,
+              "max_ms": 0.0122,
+              "mean_ms": 0.002759,
+              "stdev_ms": 0.0007310892266245155
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 0.0077,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0003,
+              "p25_ms": 0.0004,
+              "median_ms": 0.0004,
+              "p75_ms": 0.0005,
+              "p90_ms": 0.0005,
+              "p95_ms": 0.0005,
+              "p99_ms": 0.0006,
+              "max_ms": 0.0007,
+              "mean_ms": 0.0004385,
+              "stdev_ms": 5.642400501301324e-05
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.7685,
+            "validate": 0.0531,
+            "plan": 0.0311,
+            "execute": 145.1178,
+            "samples": 18
+          }
+        },
+        "W04b_hop_hub": {
+          "category": "single-hop traversal",
+          "description": "people a hub (out-degree 300) knows",
+          "query": "MATCH (p:Person {id: 'p0'})-[:KNOWS]->(f:Person) RETURN f.id AS id",
+          "sql": "SELECT dst FROM knows WHERE src = 'p0'",
+          "typed_plan": false,
+          "rows_expected": 300,
+          "expected": null,
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 178.4855,
+              "warmup_runs": 2,
+              "samples": 39,
+              "min_ms": 104.3834,
+              "p25_ms": 113.6614,
+              "median_ms": 125.1487,
+              "p75_ms": 141.5189,
+              "p90_ms": 152.8809,
+              "p95_ms": 156.769,
+              "p99_ms": null,
+              "max_ms": 185.1499,
+              "mean_ms": 128.6711871794872,
+              "stdev_ms": 18.639813599223
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.023,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0117,
+              "p25_ms": 0.0118,
+              "median_ms": 0.0119,
+              "p75_ms": 0.0123,
+              "p90_ms": 0.0138,
+              "p95_ms": 0.016,
+              "p99_ms": 0.0276,
+              "max_ms": 0.0811,
+              "mean_ms": 0.0129875,
+              "stdev_ms": 0.0054745453678752744
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.2462,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0838,
+              "p25_ms": 0.0843,
+              "median_ms": 0.0866,
+              "p75_ms": 0.0959,
+              "p90_ms": 0.1267,
+              "p95_ms": 0.1887,
+              "p99_ms": 0.4282,
+              "max_ms": 0.649,
+              "mean_ms": 0.1062475,
+              "stdev_ms": 0.06712765453796851
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 0.0137,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0069,
+              "p25_ms": 0.0071,
+              "median_ms": 0.0072,
+              "p75_ms": 0.0076,
+              "p90_ms": 0.0084,
+              "p95_ms": 0.0134,
+              "p99_ms": 0.0741,
+              "max_ms": 0.0896,
+              "mean_ms": 0.0101265,
+              "stdev_ms": 0.012543309804603862
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.7316,
+            "validate": 0.0524,
+            "plan": 0.031,
+            "execute": 141.9394,
+            "samples": 18
+          }
+        },
+        "W05a_two_hop_distinct": {
+          "category": "multi-hop traversal",
+          "description": "distinct friends-of-friends of a typical person",
+          "query": "MATCH (p:Person {id: 'p30502'})-[:KNOWS]->(:Person)-[:KNOWS]->(f:Person) RETURN DISTINCT f.id AS id",
+          "sql": "SELECT DISTINCT k2.dst FROM knows k1 JOIN knows k2 ON k2.src = k1.dst WHERE k1.src = 'p30502'",
+          "typed_plan": false,
+          "rows_expected": 13,
+          "expected": null,
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 519.0175,
+              "warmup_runs": 2,
+              "samples": 13,
+              "min_ms": 256.3159,
+              "p25_ms": 287.5683,
+              "median_ms": 380.6535,
+              "p75_ms": 488.7834,
+              "p90_ms": 509.4039,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 527.3045,
+              "mean_ms": 391.2359307692308,
+              "stdev_ms": 105.53239040663759
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0331,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0089,
+              "p25_ms": 0.0095,
+              "median_ms": 0.0099,
+              "p75_ms": 0.0101,
+              "p90_ms": 0.0106,
+              "p95_ms": 0.011,
+              "p99_ms": 0.0787,
+              "max_ms": 0.1967,
+              "mean_ms": 0.0115655,
+              "stdev_ms": 0.015291869280124062
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.6966,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0227,
+              "p25_ms": 0.0232,
+              "median_ms": 0.0235,
+              "p75_ms": 0.0257,
+              "p90_ms": 0.0291,
+              "p95_ms": 0.0322,
+              "p99_ms": 0.0723,
+              "max_ms": 0.0842,
+              "mean_ms": 0.0259335,
+              "stdev_ms": 0.007884328820817526
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 0.0246,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0023,
+              "p25_ms": 0.0023,
+              "median_ms": 0.0024,
+              "p75_ms": 0.0025,
+              "p90_ms": 0.0027,
+              "p95_ms": 0.0028,
+              "p99_ms": 0.0031,
+              "max_ms": 0.0373,
+              "mean_ms": 0.0026265,
+              "stdev_ms": 0.0024698071761652136
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 0.5634,
+            "validate": 0.0401,
+            "plan": 0.0,
+            "execute": 336.7485,
+            "samples": 8
+          }
+        },
+        "W05b_three_hop_count": {
+          "category": "multi-hop traversal",
+          "description": "distinct people exactly three KNOWS hops away",
+          "query": "MATCH (p:Person {id: 'p30502'})-[:KNOWS]->(:Person)-[:KNOWS]->(:Person)-[:KNOWS]->(f:Person) RETURN count(DISTINCT f) AS n",
+          "sql": null,
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              34
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 369.421,
+              "warmup_runs": 2,
+              "samples": 15,
+              "min_ms": 264.3551,
+              "p25_ms": 316.5985,
+              "median_ms": 359.4348,
+              "p75_ms": 380.643,
+              "p90_ms": 394.4064,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 437.3662,
+              "mean_ms": 351.2545533333333,
+              "stdev_ms": 45.26706559858892
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0617,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0126,
+              "p25_ms": 0.0229,
+              "median_ms": 0.0233,
+              "p75_ms": 0.024,
+              "p90_ms": 0.025,
+              "p95_ms": 0.0273,
+              "p99_ms": 0.1075,
+              "max_ms": 0.2506,
+              "mean_ms": 0.024914,
+              "stdev_ms": 0.02272754298313505
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 1.0132,
+            "validate": 0.048,
+            "plan": 0.0,
+            "execute": 393.3477,
+            "samples": 7
+          }
+        },
+        "W06a_var_len_1_3": {
+          "category": "variable-length path",
+          "description": "distinct people within 1..3 KNOWS hops",
+          "query": "MATCH (p:Person {id: 'p30502'})-[:KNOWS*1..3]->(f:Person) RETURN count(DISTINCT f) AS n",
+          "sql": "WITH RECURSIVE r(n, d) AS (SELECT dst, 1 FROM knows WHERE src = 'p30502' UNION SELECT k.dst, r.d + 1 FROM r JOIN knows k ON k.src = r.n WHERE r.d < 3) SELECT count(DISTINCT n) FROM r",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              51
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 335.1598,
+              "warmup_runs": 2,
+              "samples": 13,
+              "min_ms": 323.7062,
+              "p25_ms": 344.7428,
+              "median_ms": 377.2255,
+              "p75_ms": 422.2135,
+              "p90_ms": 437.1631,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 466.8902,
+              "mean_ms": 385.48075384615385,
+              "stdev_ms": 46.44691422237892
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0482,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0151,
+              "p25_ms": 0.0156,
+              "median_ms": 0.01605,
+              "p75_ms": 0.022,
+              "p90_ms": 0.0293,
+              "p95_ms": 0.0297,
+              "p99_ms": 0.0586,
+              "max_ms": 0.4107,
+              "mean_ms": 0.021968,
+              "stdev_ms": 0.029795260761052177
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 2.2987,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0509,
+              "p25_ms": 0.0515,
+              "median_ms": 0.0529,
+              "p75_ms": 0.0583,
+              "p90_ms": 0.114,
+              "p95_ms": 0.1628,
+              "p99_ms": 0.4222,
+              "max_ms": 0.6955,
+              "mean_ms": 0.0757895,
+              "stdev_ms": 0.07861194648653606
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 0.3849,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0114,
+              "p25_ms": 0.0121,
+              "median_ms": 0.0122,
+              "p75_ms": 0.0125,
+              "p90_ms": 0.0127,
+              "p95_ms": 0.013,
+              "p99_ms": 0.0276,
+              "max_ms": 0.1577,
+              "mean_ms": 0.013297,
+              "stdev_ms": 0.01053468981257807
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 0.8886,
+            "validate": 0.0469,
+            "plan": 0.0,
+            "execute": 457.7167,
+            "samples": 6
+          }
+        },
+        "W06b_var_len_unbounded": {
+          "category": "variable-length path",
+          "description": "every ancestor of a leaf company",
+          "query": "MATCH (c:Company {id: 'c8332'})-[:SUBSIDIARY_OF*]->(r:Company) RETURN r.id AS id",
+          "sql": "WITH RECURSIVE a(id) AS (SELECT parent FROM company WHERE id = 'c8332' UNION SELECT c.parent FROM a JOIN company c ON c.id = a.id WHERE c.parent IS NOT NULL) SELECT id FROM a WHERE id IS NOT NULL",
+          "typed_plan": false,
+          "rows_expected": 2,
+          "expected": [
+            [
+              "c2082"
+            ],
+            [
+              "c520"
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 12.8724,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 4.5574,
+              "p25_ms": 10.008,
+              "median_ms": 12.21155,
+              "p75_ms": 14.0192,
+              "p90_ms": 15.8436,
+              "p95_ms": 17.1814,
+              "p99_ms": 19.4836,
+              "max_ms": 24.2722,
+              "mean_ms": 12.1449395,
+              "stdev_ms": 3.0945771074347213
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0083,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0007,
+              "p25_ms": 0.0008,
+              "median_ms": 0.0008,
+              "p75_ms": 0.0008,
+              "p90_ms": 0.0009,
+              "p95_ms": 0.001,
+              "p99_ms": 0.0012,
+              "max_ms": 0.0014,
+              "mean_ms": 0.0008145,
+              "stdev_ms": 9.893782627153622e-05
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.2259,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0066,
+              "p25_ms": 0.0069,
+              "median_ms": 0.0071,
+              "p75_ms": 0.0073,
+              "p90_ms": 0.0204,
+              "p95_ms": 0.0208,
+              "p99_ms": 0.0326,
+              "max_ms": 0.3998,
+              "mean_ms": 0.012071,
+              "stdev_ms": 0.030252587563237576
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 0.5648,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0032,
+              "p25_ms": 0.0034,
+              "median_ms": 0.00345,
+              "p75_ms": 0.0035,
+              "p90_ms": 0.0036,
+              "p95_ms": 0.0038,
+              "p99_ms": 0.0041,
+              "max_ms": 0.0053,
+              "mean_ms": 0.0034855,
+              "stdev_ms": 0.0001995969556972703
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 0.7823,
+            "validate": 0.0555,
+            "plan": 0.0316,
+            "execute": 10.9781,
+            "samples": 100
+          }
+        },
+        "W07a_join_coworkers": {
+          "category": "multi-pattern join",
+          "description": "co-workers of a typical person (two comma patterns)",
+          "query": "MATCH (a:Person {id: 'p30502'})-[:WORKS_AT]->(c:Company), (b:Person)-[:WORKS_AT]->(c) RETURN count(b) AS n",
+          "sql": "SELECT count(*) FROM works_at w1 JOIN works_at w2 ON w2.company = w1.company WHERE w1.person = 'p30502' AND w2.person <> w1.person",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              16
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 329.7452,
+              "warmup_runs": 2,
+              "samples": 15,
+              "min_ms": 267.2794,
+              "p25_ms": 298.2093,
+              "median_ms": 324.3312,
+              "p75_ms": 362.8674,
+              "p90_ms": 386.3165,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 436.1557,
+              "mean_ms": 334.29358,
+              "stdev_ms": 48.23665891631444
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0048,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0001,
+              "p25_ms": 0.0002,
+              "median_ms": 0.0002,
+              "p75_ms": 0.0002,
+              "p90_ms": 0.0003,
+              "p95_ms": 0.0003,
+              "p99_ms": 0.0003,
+              "max_ms": 0.0004,
+              "mean_ms": 0.000209,
+              "stdev_ms": 3.9072153329822324e-05
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 0.1225,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.005,
+              "p25_ms": 0.0052,
+              "median_ms": 0.0053,
+              "p75_ms": 0.0054,
+              "p90_ms": 0.0056,
+              "p95_ms": 0.0057,
+              "p99_ms": 0.0073,
+              "max_ms": 0.0216,
+              "mean_ms": 0.0054285,
+              "stdev_ms": 0.0012020241512970974
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 0.0125,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0013,
+              "p25_ms": 0.0013,
+              "median_ms": 0.0014,
+              "p75_ms": 0.0015,
+              "p90_ms": 0.0016,
+              "p95_ms": 0.0016,
+              "p99_ms": 0.0025,
+              "max_ms": 0.0294,
+              "mean_ms": 0.0016655,
+              "stdev_ms": 0.00227595244847925
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 0.6103,
+            "validate": 0.0354,
+            "plan": 0.0,
+            "execute": 316.9028,
+            "samples": 8
+          }
+        },
+        "W07b_join_full_graph": {
+          "category": "multi-pattern join",
+          "description": "people who live in the city their employer is in (three patterns over the whole graph)",
+          "query": "MATCH (p:Person)-[:WORKS_AT]->(c:Company), (p)-[:LIVES_IN]->(x:City), (c)-[:LOCATED_IN]->(x) RETURN count(p) AS n",
+          "sql": "SELECT count(*) FROM works_at w JOIN person p ON p.id = w.person JOIN company c ON c.id = w.company WHERE p.city = c.city",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              471
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 2540.0869,
+              "warmup_runs": 1,
+              "samples": 5,
+              "min_ms": 4843.0455,
+              "p25_ms": 5761.2009,
+              "median_ms": 5809.9478,
+              "p75_ms": 7921.5054,
+              "p90_ms": 8184.4531,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 8184.4531,
+              "mean_ms": 6504.03054,
+              "stdev_ms": 1468.4577782508093
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 43.0317,
+              "warmup_runs": 2,
+              "samples": 131,
+              "min_ms": 14.1647,
+              "p25_ms": 27.7403,
+              "median_ms": 36.5426,
+              "p75_ms": 48.3234,
+              "p90_ms": 54.0868,
+              "p95_ms": 67.9908,
+              "p99_ms": 76.7516,
+              "max_ms": 95.6009,
+              "mean_ms": 38.25929236641222,
+              "stdev_ms": 14.495551348972915
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 326.4167,
+              "warmup_runs": 2,
+              "samples": 30,
+              "min_ms": 113.4579,
+              "p25_ms": 144.2236,
+              "median_ms": 152.8443,
+              "p75_ms": 180.3029,
+              "p90_ms": 227.1951,
+              "p95_ms": 248.433,
+              "p99_ms": null,
+              "max_ms": 281.3605,
+              "mean_ms": 168.77547666666666,
+              "stdev_ms": 38.747659514115824
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 1.06,
+            "validate": 0.0457,
+            "plan": 0.0,
+            "execute": 6146.2204,
+            "samples": 5
+          }
+        },
+        "W08a_group_industry": {
+          "category": "aggregation and grouping",
+          "description": "employees and mean age per industry",
+          "query": "MATCH (p:Person)-[:WORKS_AT]->(c:Company) RETURN c.industry AS industry, count(p) AS n, avg(p.age) AS avg_age ORDER BY industry ASC",
+          "sql": "SELECT c.industry, count(*), avg(p.age) FROM works_at w JOIN person p ON p.id = w.person JOIN company c ON c.id = w.company GROUP BY c.industry ORDER BY c.industry",
+          "typed_plan": false,
+          "rows_expected": 8,
+          "expected": [
+            [
+              "energy",
+              11081,
+              49.077971
+            ],
+            [
+              "finance",
+              11791,
+              48.881011
+            ],
+            [
+              "health",
+              11536,
+              48.851595
+            ],
+            [
+              "logistics",
+              11179,
+              48.740943
+            ],
+            [
+              "media",
+              11445,
+              49.15474
+            ],
+            [
+              "retail",
+              11292,
+              49.074035
+            ],
+            [
+              "software",
+              11795,
+              49.112336
+            ],
+            [
+              "telecom",
+              11348,
+              49.278111
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 2089.577,
+              "warmup_runs": 1,
+              "samples": 5,
+              "min_ms": 1320.4227,
+              "p25_ms": 1734.363,
+              "median_ms": 2752.2571,
+              "p75_ms": 3327.3213,
+              "p90_ms": 3416.0325,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 3416.0325,
+              "mean_ms": 2510.07932,
+              "stdev_ms": 943.9682698555507
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 145.9865,
+              "warmup_runs": 2,
+              "samples": 44,
+              "min_ms": 96.4168,
+              "p25_ms": 102.9088,
+              "median_ms": 108.08945,
+              "p75_ms": 117.5595,
+              "p90_ms": 132.286,
+              "p95_ms": 153.1894,
+              "p99_ms": null,
+              "max_ms": 172.6437,
+              "mean_ms": 113.65723636363636,
+              "stdev_ms": 16.39061261604778
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 749.4404,
+              "warmup_runs": 2,
+              "samples": 10,
+              "min_ms": 451.0677,
+              "p25_ms": 482.6674,
+              "median_ms": 513.6049,
+              "p75_ms": 527.6885,
+              "p90_ms": 566.148,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 728.6785,
+              "mean_ms": 527.15333,
+              "stdev_ms": 78.0661172149046
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 1.6224,
+            "validate": 0.1425,
+            "plan": 0.0545,
+            "execute": 2870.276,
+            "samples": 5
+          }
+        },
+        "W08b_group_city_top5": {
+          "category": "aggregation and grouping",
+          "description": "five most populous cities (tie-broken by id)",
+          "query": "MATCH (p:Person)-[:LIVES_IN]->(x:City) RETURN x.id AS city, count(p) AS n ORDER BY n DESC, city ASC LIMIT 5",
+          "sql": "SELECT city, count(*) AS n FROM person GROUP BY city ORDER BY n DESC, city ASC LIMIT 5",
+          "typed_plan": false,
+          "rows_expected": 5,
+          "expected": [
+            [
+              "city101",
+              510
+            ],
+            [
+              "city142",
+              510
+            ],
+            [
+              "city141",
+              508
+            ],
+            [
+              "city167",
+              507
+            ],
+            [
+              "city177",
+              503
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 2482.5598,
+              "warmup_runs": 1,
+              "samples": 5,
+              "min_ms": 2273.6833,
+              "p25_ms": 2443.0145,
+              "median_ms": 2528.6769,
+              "p75_ms": 3049.8614,
+              "p90_ms": 3670.0222,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 3670.0222,
+              "mean_ms": 2793.05166,
+              "stdev_ms": 569.4717049735158
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 42.5393,
+              "warmup_runs": 2,
+              "samples": 142,
+              "min_ms": 27.1552,
+              "p25_ms": 30.2948,
+              "median_ms": 32.3338,
+              "p75_ms": 36.5382,
+              "p90_ms": 44.2815,
+              "p95_ms": 55.96,
+              "p99_ms": 66.6551,
+              "max_ms": 86.9483,
+              "mean_ms": 35.238133802816904,
+              "stdev_ms": 8.83942167554756
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 20.5814,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 10.5508,
+              "p25_ms": 11.5622,
+              "median_ms": 12.5579,
+              "p75_ms": 13.7707,
+              "p90_ms": 15.4355,
+              "p95_ms": 16.598,
+              "p99_ms": 20.4696,
+              "max_ms": 25.0758,
+              "mean_ms": 13.0363555,
+              "stdev_ms": 2.0643155206541994
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 2.2829,
+            "validate": 0.1951,
+            "plan": 0.0699,
+            "execute": 2530.0938,
+            "samples": 5
+          }
+        },
+        "W09_sort_limit": {
+          "category": "sorting and limits",
+          "description": "top 10 people by score (scores are unique)",
+          "query": "MATCH (p:Person) RETURN p.id AS id, p.score AS score ORDER BY score DESC LIMIT 10",
+          "sql": "SELECT id, score FROM person ORDER BY score DESC LIMIT 10",
+          "typed_plan": false,
+          "rows_expected": 10,
+          "expected": [
+            [
+              "p3410",
+              0.999989
+            ],
+            [
+              "p67611",
+              0.999978
+            ],
+            [
+              "p40563",
+              0.999967
+            ],
+            [
+              "p30577",
+              0.999956
+            ],
+            [
+              "p21275",
+              0.999945
+            ],
+            [
+              "p42281",
+              0.999934
+            ],
+            [
+              "p83368",
+              0.999923
+            ],
+            [
+              "p36289",
+              0.999913
+            ],
+            [
+              "p73376",
+              0.999902
+            ],
+            [
+              "p613",
+              0.999891
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 1139.4383,
+              "warmup_runs": 2,
+              "samples": 5,
+              "min_ms": 1140.894,
+              "p25_ms": 1159.4272,
+              "median_ms": 1244.8864,
+              "p75_ms": 1299.7844,
+              "p90_ms": 2094.4579,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 2094.4579,
+              "mean_ms": 1387.88998,
+              "stdev_ms": 400.20404129474
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 69.5744,
+              "warmup_runs": 2,
+              "samples": 71,
+              "min_ms": 58.8078,
+              "p25_ms": 64.9353,
+              "median_ms": 69.0506,
+              "p75_ms": 73.1496,
+              "p90_ms": 80.1832,
+              "p95_ms": 86.3787,
+              "p99_ms": null,
+              "max_ms": 107.5918,
+              "mean_ms": 70.9035661971831,
+              "stdev_ms": 9.52885103312107
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 14.2023,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 10.7387,
+              "p25_ms": 11.882,
+              "median_ms": 13.2111,
+              "p75_ms": 14.7905,
+              "p90_ms": 16.1334,
+              "p95_ms": 17.3381,
+              "p99_ms": 21.4231,
+              "max_ms": 25.166,
+              "mean_ms": 13.609641,
+              "stdev_ms": 2.1984914376284546
+            }
+          },
+          "gql_core_stages": {
+            "path": "planner",
+            "parse": 1.511,
+            "validate": 0.2122,
+            "plan": 0.0704,
+            "execute": 1247.5088,
+            "samples": 5
+          }
+        },
+        "W10a_exists": {
+          "category": "correlated existence",
+          "description": "companies employing at least one 25-year-old",
+          "query": "MATCH (c:Company) WHERE EXISTS { (c)<-[:WORKS_AT]-(:Person {age: 25}) } RETURN count(c) AS n",
+          "sql": "SELECT count(*) FROM company c WHERE EXISTS (SELECT 1 FROM works_at w JOIN person p ON p.id = w.person WHERE w.company = c.id AND p.age = 25)",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              1343
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 2127.1788,
+              "warmup_runs": 1,
+              "samples": 5,
+              "min_ms": 1822.8446,
+              "p25_ms": 1826.1193,
+              "median_ms": 1906.6699,
+              "p75_ms": 1939.2004,
+              "p90_ms": 2049.3666,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 2049.3666,
+              "mean_ms": 1908.84016,
+              "stdev_ms": 93.42391497798089
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 119.6928,
+              "warmup_runs": 2,
+              "samples": 43,
+              "min_ms": 103.798,
+              "p25_ms": 113.4714,
+              "median_ms": 118.7946,
+              "p75_ms": 124.5295,
+              "p90_ms": 126.6612,
+              "p95_ms": 130.4158,
+              "p99_ms": null,
+              "max_ms": 138.0269,
+              "mean_ms": 118.90295581395348,
+              "stdev_ms": 7.502996520035696
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 395.5406,
+              "warmup_runs": 2,
+              "samples": 12,
+              "min_ms": 385.5419,
+              "p25_ms": 403.7322,
+              "median_ms": 425.9057,
+              "p75_ms": 437.9767,
+              "p90_ms": 440.8603,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 452.5507,
+              "mean_ms": 420.76510833333333,
+              "stdev_ms": 21.0598711729401
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 1.4819,
+            "validate": 0.0967,
+            "plan": 0.0,
+            "execute": 2025.031,
+            "samples": 5
+          }
+        },
+        "W10b_not_exists": {
+          "category": "correlated existence",
+          "description": "people who know nobody (negated pattern predicate)",
+          "query": "MATCH (p:Person) WHERE NOT (p)-[:KNOWS]->(:Person) RETURN count(p) AS n",
+          "sql": "SELECT count(*) FROM person p WHERE NOT EXISTS (SELECT 1 FROM knows k WHERE k.src = p.id)",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              20086
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 7207.983,
+              "warmup_runs": 1,
+              "samples": 5,
+              "min_ms": 6880.9445,
+              "p25_ms": 6891.676,
+              "median_ms": 6896.7077,
+              "p75_ms": 7090.7306,
+              "p90_ms": 7660.2478,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 7660.2478,
+              "mean_ms": 7084.06132,
+              "stdev_ms": 333.6934490951343
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 51.5175,
+              "warmup_runs": 2,
+              "samples": 127,
+              "min_ms": 28.7317,
+              "p25_ms": 34.6849,
+              "median_ms": 38.0903,
+              "p75_ms": 41.6961,
+              "p90_ms": 44.8569,
+              "p95_ms": 52.2307,
+              "p99_ms": 71.6947,
+              "max_ms": 78.143,
+              "mean_ms": 39.47005039370079,
+              "stdev_ms": 7.407590153530257
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 111.6625,
+              "warmup_runs": 2,
+              "samples": 85,
+              "min_ms": 44.5873,
+              "p25_ms": 55.2127,
+              "median_ms": 57.8849,
+              "p75_ms": 63.4115,
+              "p90_ms": 66.3106,
+              "p95_ms": 69.1675,
+              "p99_ms": null,
+              "max_ms": 72.0799,
+              "mean_ms": 58.9218694117647,
+              "stdev_ms": 5.723446999260056
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 1.2088,
+            "validate": 0.1023,
+            "plan": 0.0,
+            "execute": 6768.3992,
+            "samples": 5
+          }
+        },
+        "W11a_at_least": {
+          "category": "quantified relationship predicate",
+          "description": "people who know at least 20 people (typed plan)",
+          "query": null,
+          "sql": "SELECT src FROM knows GROUP BY src HAVING count(*) >= 20",
+          "typed_plan": true,
+          "rows_expected": 627,
+          "expected": null,
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 1727.6401,
+              "warmup_runs": 2,
+              "samples": 5,
+              "min_ms": 1721.1275,
+              "p25_ms": 1725.0061,
+              "median_ms": 1868.1078,
+              "p75_ms": 2081.7743,
+              "p90_ms": 2117.4873,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 2117.4873,
+              "mean_ms": 1902.7006,
+              "stdev_ms": 189.69811827893813
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 44.8951,
+              "warmup_runs": 2,
+              "samples": 117,
+              "min_ms": 32.8704,
+              "p25_ms": 38.36,
+              "median_ms": 41.3306,
+              "p75_ms": 45.0438,
+              "p90_ms": 49.1846,
+              "p95_ms": 54.8311,
+              "p99_ms": 66.2148,
+              "max_ms": 79.0306,
+              "mean_ms": 42.77581025641025,
+              "stdev_ms": 6.8216212359140265
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 88.3292,
+              "warmup_runs": 2,
+              "samples": 61,
+              "min_ms": 71.5653,
+              "p25_ms": 79.5128,
+              "median_ms": 81.4165,
+              "p75_ms": 85.2356,
+              "p90_ms": 92.046,
+              "p95_ms": 97.5549,
+              "p99_ms": null,
+              "max_ms": 113.0765,
+              "mean_ms": 83.14211639344262,
+              "stdev_ms": 7.6949144920131145
+            }
+          },
+          "gql_core_stages": {
+            "path": "typed_plan",
+            "build": 0.0661,
+            "validate": 0.0357,
+            "execute": 1876.3346,
+            "samples": 5
+          }
+        },
+        "W11b_all": {
+          "category": "quantified relationship predicate",
+          "description": "companies whose every parent shares their industry (vacuously true for roots; typed plan)",
+          "query": null,
+          "sql": "SELECT c.id FROM company c LEFT JOIN company p ON p.id = c.parent WHERE c.parent IS NULL OR p.industry = c.industry",
+          "typed_plan": true,
+          "rows_expected": 1765,
+          "expected": null,
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 364.0339,
+              "warmup_runs": 2,
+              "samples": 16,
+              "min_ms": 295.5137,
+              "p25_ms": 306.9392,
+              "median_ms": 331.59155,
+              "p75_ms": 341.2264,
+              "p90_ms": 363.2004,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 393.8391,
+              "mean_ms": 328.3187875,
+              "stdev_ms": 26.79141445015237
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 7.4621,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 2.9127,
+              "p25_ms": 4.0232,
+              "median_ms": 4.639,
+              "p75_ms": 5.9706,
+              "p90_ms": 7.2151,
+              "p95_ms": 7.9132,
+              "p99_ms": 9.2631,
+              "max_ms": 9.7556,
+              "mean_ms": 5.0971895,
+              "stdev_ms": 1.419208923408092
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 7.34,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 4.3131,
+              "p25_ms": 6.6491,
+              "median_ms": 7.78825,
+              "p75_ms": 9.1908,
+              "p90_ms": 10.8769,
+              "p95_ms": 11.4858,
+              "p99_ms": 12.7301,
+              "max_ms": 14.385,
+              "mean_ms": 8.019664,
+              "stdev_ms": 1.908610416932201
+            }
+          },
+          "gql_core_stages": {
+            "path": "typed_plan",
+            "build": 0.0819,
+            "validate": 0.0395,
+            "execute": 306.4184,
+            "samples": 8
+          }
+        },
+        "W12a_typed_filter": {
+          "category": "typed-plan execution",
+          "description": "typed-plan version of W03a",
+          "query": null,
+          "sql": null,
+          "typed_plan": true,
+          "rows_expected": 155,
+          "expected": null,
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 1530.8087,
+              "warmup_runs": 2,
+              "samples": 5,
+              "min_ms": 1413.3716,
+              "p25_ms": 1451.7487,
+              "median_ms": 1477.0605,
+              "p75_ms": 1495.5966,
+              "p90_ms": 1563.2265,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 1563.2265,
+              "mean_ms": 1480.20078,
+              "stdev_ms": 55.71315591776326
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 20.0966,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 7.4481,
+              "p25_ms": 9.5391,
+              "median_ms": 10.54385,
+              "p75_ms": 11.7818,
+              "p90_ms": 14.2353,
+              "p95_ms": 15.4129,
+              "p99_ms": 16.7864,
+              "max_ms": 19.93,
+              "mean_ms": 10.9688025,
+              "stdev_ms": 2.1815914292471383
+            }
+          },
+          "gql_core_stages": {
+            "path": "typed_plan",
+            "build": 0.0812,
+            "validate": 0.0431,
+            "execute": 1502.7506,
+            "samples": 5
+          }
+        },
+        "W12b_typed_hop": {
+          "category": "typed-plan execution",
+          "description": "typed-plan version of W04a",
+          "query": null,
+          "sql": null,
+          "typed_plan": true,
+          "rows_expected": 4,
+          "expected": [
+            [
+              "p10290"
+            ],
+            [
+              "p10988"
+            ],
+            [
+              "p4248"
+            ],
+            [
+              "p5"
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 132.5069,
+              "warmup_runs": 2,
+              "samples": 31,
+              "min_ms": 120.0251,
+              "p25_ms": 142.1793,
+              "median_ms": 162.4011,
+              "p75_ms": 179.7498,
+              "p90_ms": 203.4256,
+              "p95_ms": 234.0441,
+              "p99_ms": null,
+              "max_ms": 355.8994,
+              "mean_ms": 169.14042258064518,
+              "stdev_ms": 47.20890729835992
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0107,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0006,
+              "p25_ms": 0.0007,
+              "median_ms": 0.0007,
+              "p75_ms": 0.0008,
+              "p90_ms": 0.0008,
+              "p95_ms": 0.0009,
+              "p99_ms": 0.0012,
+              "max_ms": 0.0015,
+              "mean_ms": 0.0007385,
+              "stdev_ms": 0.00010498982961033912
+            }
+          },
+          "gql_core_stages": {
+            "path": "typed_plan",
+            "build": 0.0774,
+            "validate": 0.0322,
+            "execute": 364.0064,
+            "samples": 7
+          }
+        },
+        "W13_transitive_inference": {
+          "category": "ontology transitive inference",
+          "description": "derive every indirect SUBSIDIARY_OF pair with InferenceEngine (whole graph as facts)",
+          "query": null,
+          "sql": "WITH RECURSIVE a(c, anc, d) AS (SELECT id, parent, 1 FROM company WHERE parent IS NOT NULL UNION ALL SELECT a.c, p.parent, a.d + 1 FROM a JOIN company p ON p.id = a.anc WHERE p.parent IS NOT NULL) SELECT count(*) FROM a WHERE d >= 2",
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              28041
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 12302.7658,
+              "warmup_runs": 1,
+              "samples": 5,
+              "min_ms": 11534.3508,
+              "p25_ms": 11596.0176,
+              "median_ms": 11841.9555,
+              "p75_ms": 12040.2027,
+              "p90_ms": 12635.4975,
+              "p95_ms": null,
+              "p99_ms": null,
+              "max_ms": 12635.4975,
+              "mean_ms": 11929.60482,
+              "stdev_ms": 443.1999954050169
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 14.0073,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 5.4947,
+              "p25_ms": 8.1832,
+              "median_ms": 9.72035,
+              "p75_ms": 12.0716,
+              "p90_ms": 15.711,
+              "p95_ms": 18.0724,
+              "p99_ms": 24.6596,
+              "max_ms": 26.5714,
+              "mean_ms": 10.793066,
+              "stdev_ms": 3.802369344884659
+            },
+            "sqlite": {
+              "status": "ok",
+              "first_run_ms": 313.7668,
+              "warmup_runs": 2,
+              "samples": 74,
+              "min_ms": 49.3276,
+              "p25_ms": 57.0605,
+              "median_ms": 66.37155,
+              "p75_ms": 73.6379,
+              "p90_ms": 87.083,
+              "p95_ms": 96.2388,
+              "p99_ms": null,
+              "max_ms": 121.4521,
+              "mean_ms": 68.21855,
+              "stdev_ms": 14.691180514948696
+            },
+            "networkx": {
+              "status": "ok",
+              "first_run_ms": 92.622,
+              "warmup_runs": 2,
+              "samples": 37,
+              "min_ms": 78.0478,
+              "p25_ms": 101.1084,
+              "median_ms": 128.3083,
+              "p75_ms": 157.3299,
+              "p90_ms": 194.9689,
+              "p95_ms": 215.7812,
+              "p99_ms": null,
+              "max_ms": 240.0959,
+              "mean_ms": 137.1603864864865,
+              "stdev_ms": 44.28191832861079
+            }
+          },
+          "default_engine_derived": 1
+        },
+        "W14b_derived_via_var_len": {
+          "category": "derived relation query",
+          "description": "the same answer with a variable-length path on the base graph",
+          "query": "MATCH (c:Company {id: 'c8332'})-[:SUBSIDIARY_OF*]->(r:Company) WHERE NOT (r)-[:SUBSIDIARY_OF]->(:Company) RETURN r.id AS id",
+          "sql": null,
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              "c520"
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 64.9603,
+              "warmup_runs": 2,
+              "samples": 70,
+              "min_ms": 53.2321,
+              "p25_ms": 62.7904,
+              "median_ms": 68.0188,
+              "p75_ms": 73.0154,
+              "p90_ms": 83.924,
+              "p95_ms": 88.2615,
+              "p99_ms": null,
+              "max_ms": 232.6406,
+              "mean_ms": 71.45558571428572,
+              "stdev_ms": 21.9588282939125
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0077,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0007,
+              "p25_ms": 0.001,
+              "median_ms": 0.0012,
+              "p75_ms": 0.0013,
+              "p90_ms": 0.0014,
+              "p95_ms": 0.0014,
+              "p99_ms": 0.0016,
+              "max_ms": 0.0277,
+              "mean_ms": 0.001289,
+              "stdev_ms": 0.0018897977876989804
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 1.7492,
+            "validate": 0.1221,
+            "plan": 0.0,
+            "execute": 63.1732,
+            "samples": 37
+          }
+        },
+        "W14a_derived_query": {
+          "category": "derived relation query",
+          "description": "ultimate parent of a leaf company over materialized SUBSIDIARY_OF edges",
+          "query": "MATCH (c:Company {id: 'c8332'})-[:SUBSIDIARY_OF]->(r:Company) WHERE NOT (r)-[:SUBSIDIARY_OF]->(:Company) RETURN r.id AS id",
+          "sql": null,
+          "typed_plan": false,
+          "rows_expected": 1,
+          "expected": [
+            [
+              "c520"
+            ]
+          ],
+          "systems": {
+            "gql_core": {
+              "status": "ok",
+              "first_run_ms": 77.9533,
+              "warmup_runs": 2,
+              "samples": 77,
+              "min_ms": 50.912,
+              "p25_ms": 59.245,
+              "median_ms": 63.0434,
+              "p75_ms": 71.0679,
+              "p90_ms": 77.1295,
+              "p95_ms": 83.145,
+              "p99_ms": null,
+              "max_ms": 105.1684,
+              "mean_ms": 65.52027922077922,
+              "stdev_ms": 9.825177727793042
+            },
+            "python": {
+              "status": "ok",
+              "first_run_ms": 0.0086,
+              "warmup_runs": 2,
+              "samples": 200,
+              "min_ms": 0.0006,
+              "p25_ms": 0.0007,
+              "median_ms": 0.0007,
+              "p75_ms": 0.0008,
+              "p90_ms": 0.0009,
+              "p95_ms": 0.0009,
+              "p99_ms": 0.0011,
+              "max_ms": 0.0012,
+              "mean_ms": 0.0007485,
+              "stdev_ms": 8.965455760022724e-05
+            }
+          },
+          "gql_core_stages": {
+            "path": "pipeline",
+            "parse": 1.4521,
+            "validate": 0.1072,
+            "plan": 0.0,
+            "execute": 60.2546,
+            "samples": 41
+          }
+        }
+      },
+      "valid": false,
+      "invalid_reason": "Machine slowdown during the run: about 0.8 GB of RAM was available when it started, and Docker Desktop restarted WSL during it. From W07b_join_full_graph on, every system, SQLite and the plain-Python oracle included, slowed 15-109x for 10x the data, which the work itself cannot explain. Measurements are kept unchanged for inspection; do not use them as timings."
+    }
+  ],
+  "memory": [
+    {
+      "size": 100000,
+      "system": "gql_core",
+      "nodes": 100000,
+      "edges": 521961,
+      "rss_delta_mb": 248.66015625,
+      "bytes_per_node_or_edge": 419.22093507470726,
+      "peak_working_set_mb": 597.78515625
+    },
+    {
+      "size": 100000,
+      "system": "networkx",
+      "nodes": 100000,
+      "edges": 521961,
+      "rss_delta_mb": 168.2421875,
+      "bytes_per_node_or_edge": 283.642736441674,
+      "peak_working_set_mb": 353.14453125
+    },
+    {
+      "size": 100000,
+      "system": "sqlite",
+      "nodes": 100000,
+      "edges": 521961,
+      "rss_delta_mb": 32.09375,
+      "bytes_per_node_or_edge": 54.10746976096572,
+      "peak_working_set_mb": 215.6953125
+    },
+    {
+      "size": 10000,
+      "system": "gql_core",
+      "nodes": 10000,
+      "edges": 53735,
+      "rss_delta_mb": 28.21875,
+      "bytes_per_node_or_edge": 464.25831960461284,
+      "peak_working_set_mb": 115.62109375
+    },
+    {
+      "size": 10000,
+      "system": "networkx",
+      "nodes": 10000,
+      "edges": 53735,
+      "rss_delta_mb": 15.67578125,
+      "bytes_per_node_or_edge": 257.89986663528674,
+      "peak_working_set_mb": 88.66796875
+    },
+    {
+      "size": 10000,
+      "system": "sqlite",
+      "nodes": 10000,
+      "edges": 53735,
+      "rss_delta_mb": 4.9140625,
+      "bytes_per_node_or_edge": 80.84675609947439,
+      "peak_working_set_mb": 78.12890625
+    },
+    {
+      "size": 300000,
+      "system": "gql_core",
+      "nodes": 300000,
+      "edges": 1562226,
+      "rss_delta_mb": 707.44921875,
+      "bytes_per_node_or_edge": 398.34814463980206,
+      "peak_working_set_mb": 1645.3671875
+    },
+    {
+      "size": 300000,
+      "system": "networkx",
+      "nodes": 300000,
+      "edges": 1562226,
+      "rss_delta_mb": 486.90234375,
+      "bytes_per_node_or_edge": 274.1633464466719,
+      "peak_working_set_mb": 907.43359375
+    },
+    {
+      "size": 300000,
+      "system": "sqlite",
+      "nodes": 300000,
+      "edges": 1562226,
+      "rss_delta_mb": 100.078125,
+      "bytes_per_node_or_edge": 56.35165656585183,
+      "peak_working_set_mb": 520.75
+    }
+  ],
+  "inference_scaling": [
+    {
+      "companies": 250,
+      "asserted_edges": 225,
+      "derived_expected": 485,
+      "derived": 485,
+      "correct": true,
+      "warmup_runs": 2,
+      "samples": 42,
+      "min_ms": 78.5064,
+      "p25_ms": 101.4825,
+      "median_ms": 112.9421,
+      "p75_ms": 129.7525,
+      "p90_ms": 145.8379,
+      "p95_ms": 153.9759,
+      "p99_ms": null,
+      "max_ms": 241.2569,
+      "mean_ms": 119.27009761904762,
+      "stdev_ms": 27.96638581138024
+    },
+    {
+      "companies": 500,
+      "asserted_edges": 450,
+      "derived_expected": 1146,
+      "derived": 1146,
+      "correct": true,
+      "warmup_runs": 2,
+      "samples": 8,
+      "min_ms": 592.1986,
+      "p25_ms": 607.9227,
+      "median_ms": 653.99415,
+      "p75_ms": 707.6285,
+      "p90_ms": 754.2469,
+      "p95_ms": null,
+      "p99_ms": null,
+      "max_ms": 792.7939,
+      "mean_ms": 669.777325,
+      "stdev_ms": 77.23817494053702
+    },
+    {
+      "companies": 1000,
+      "asserted_edges": 900,
+      "derived_expected": 2528,
+      "derived": 2528,
+      "correct": true,
+      "warmup_runs": 1,
+      "samples": 5,
+      "min_ms": 2090.7151,
+      "p25_ms": 2149.0483,
+      "median_ms": 2315.4477,
+      "p75_ms": 2466.9425,
+      "p90_ms": 2863.231,
+      "p95_ms": null,
+      "p99_ms": null,
+      "max_ms": 2863.231,
+      "mean_ms": 2377.07692,
+      "stdev_ms": 309.11968403031534
+    },
+    {
+      "companies": 2000,
+      "asserted_edges": 1800,
+      "derived_expected": 5682,
+      "derived": 5682,
+      "correct": true,
+      "warmup_runs": 1,
+      "samples": 5,
+      "min_ms": 9727.3654,
+      "p25_ms": 10263.6986,
+      "median_ms": 10911.5429,
+      "p75_ms": 13734.7594,
+      "p90_ms": 16465.1538,
+      "p95_ms": null,
+      "p99_ms": null,
+      "max_ms": 16465.1538,
+      "mean_ms": 12220.50402,
+      "stdev_ms": 2831.440797308922
+    }
+  ]
+}

@@ -354,3 +354,28 @@ def test_three_valued_logic_null_semantics():
     q_and = "MATCH (n:Item) WHERE n.x = 4 AND n.x > 0 RETURN n.id AS id"
     assert gql_core.run(q_and, g) == [{"id": "n2"}]
 
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        # No input rows at all (global aggregation over an empty match).
+        "MATCH (n:Missing) RETURN sum(n.x) AS s, avg(n.x) AS a, min(n.x) AS mn, "
+        "max(n.x) AS mx, collect(n.x) AS c, count(n.x) AS k",
+        # Input rows exist, but every aggregated value is null.
+        "MATCH (n:Item) RETURN sum(n.x) AS s, avg(n.x) AS a, min(n.x) AS mn, "
+        "max(n.x) AS mx, collect(n.x) AS c, count(n.x) AS k",
+        # Same, through WITH and with DISTINCT.
+        "MATCH (n:Item) WITH sum(DISTINCT n.x) AS s, avg(n.x) AS a, min(n.x) AS mn, "
+        "max(n.x) AS mx, collect(DISTINCT n.x) AS c, count(DISTINCT n.x) AS k "
+        "RETURN s, a, mn, mx, c, k",
+    ],
+)
+def test_aggregates_over_no_values(query):
+    """openCypher (and Neo4j): sum() of no values is 0, collect() is [], count() is 0;
+    avg/min/max of no values is null."""
+    g = PropertyGraph()
+    g.add_node(Node(id="n1", label="Item", props={"name": "no x"}))
+    assert gql_core.run(query, g) == [
+        {"s": 0, "a": None, "mn": None, "mx": None, "c": [], "k": 0}
+    ]

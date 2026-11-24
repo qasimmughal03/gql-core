@@ -8,7 +8,14 @@ Benchmark datasets, prompts and evaluation harnesses are versioned with their re
 commit stamped in each results file), not with the package: a new benchmark run does not by
 itself produce a new GQL-Core release.
 
-## Unreleased (benchmarks, documentation and examples only; the package is unchanged)
+## Unreleased
+
+### Fixed
+- `sum()` over no values (no input rows, or only nulls) now returns `0` instead of `null`, and
+  `collect()` over no input rows returns `[]` instead of `null`, matching openCypher and Neo4j.
+  `avg()`, `min()` and `max()` still return `null`. The TCK has no scenario for this case; a
+  differential test against another engine found it. Regression test in
+  `tests/test_audit_regressions.py`.
 
 ### Added
 - `benchmark/run_published.py`: runs any harness against an installed `gql-core` and refuses to

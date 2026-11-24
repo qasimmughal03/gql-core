@@ -430,9 +430,12 @@ def _compute_aggregate(expr: ValueExpr, group_rows: list[dict[str, Any]], graph:
 
     if func == "COUNT":
         return len(non_null_vals)
+    if func == "COLLECT":
+        return non_null_vals
 
     if not non_null_vals:
-        return None  # SUM, AVG, MIN, MAX over empty set is null
+        # openCypher: sum() of no values is 0; avg/min/max of no values is null.
+        return 0 if func == "SUM" else None
 
     if func == "SUM":
         return sum(non_null_vals)
@@ -442,8 +445,6 @@ def _compute_aggregate(expr: ValueExpr, group_rows: list[dict[str, Any]], graph:
         return min(non_null_vals)
     if func == "MAX":
         return max(non_null_vals)
-    if func == "COLLECT":
-        return non_null_vals
 
     return None
 

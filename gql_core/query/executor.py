@@ -837,7 +837,8 @@ def _apply_agg(
     if agg_up == "COLLECT":
         return values
     if not values:
-        return None
+        # openCypher: sum() of no values is 0; avg/min/max of no values is null.
+        return 0 if agg_up == "SUM" else None
     numeric = [_to_number(v) for v in values if _to_number(v) is not None]
     if agg_up == "SUM":
         return sum(numeric) if numeric else 0
